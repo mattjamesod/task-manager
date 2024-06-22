@@ -20,83 +20,80 @@ actor Database {
     }
     
     func fetchTasks() -> [KillerTask] {
-        var records: AnySequence<SQLite.Row> = .init([])
-        
         do {
-            records = try connectionManager.activeConnection!.prepare(Schema.Tasks.tableExpression)
+            let records = try connectionManager.activeConnection!.prepare(
+                Schema.Tasks.tableExpression
+                    .filter(!Schema.Tasks.isCompleted)
+                    .filter(!Schema.Tasks.isDeleted)
+            )
+            
+            return makeTasks(from: records)
         }
         catch {
             // log error somewhere in analytics, display generic message to user
+            print(error.localizedDescription)
+            return []
         }
-        
-        return makeTasks(
-            from: records
-        )
     }
     
-    func newTask() -> KillerTask {
-        let newTask = KillerTask(id: newId(), body: "I am a brand new baby task")
-        
+    func newTask() -> KillerTask? {
         do {
+            let newTask = KillerTask(id: newId(), body: "I am a brand new baby task")
+            
             try connectionManager.activeConnection!.run(
                 Schema.Tasks.tableExpression.insert(
-                    Schema.id <- newTask.id,
+                    Schema.Tasks.id <- newTask.id,
                     Schema.Tasks.body <- newTask.body,
                     Schema.Tasks.isCompleted <- newTask.isCompleted,
-                    Schema.isDeleted <- newTask.isDeleted
+                    Schema.Tasks.isDeleted <- newTask.isDeleted
                 )
+            )
+            
+            return newTask
+        }
+        catch {
+            // log error somewhere in analytics, display generic message to user
+            print(error.localizedDescription)
+            return nil
+        }
+    }
+    
+    func update<T>(task: KillerTask, suchThat path: KeyPath<KillerTask, T>, is value: T) where T: SQLite.Value {
+        do {
+            try connectionManager.activeConnection!.run(
+                Schema.Tasks.tableExpression
+                    .filter(Schema.Tasks.id == task.id)
+                    .update(Schema.Tasks.from(keyPath: path) <- value)
             )
         }
         catch {
             // log error somewhere in analytics, display generic message to user
+            print(error.localizedDescription)
         }
-        
-        return newTask
-    }
-    
-    func update<T>(task: KillerTask, suchThat path: WritableKeyPath<KillerTask, T>, is value: T) {
-//        do {
-//            try connectionManager.activeConnection!.run(
-//                Schema.Tasks.tableExpression.update(
-//                    Schema.id <- newTask.id,
-//                    Schema.Tasks.body <- newTask.body,
-//                    Schema.Tasks.isCompleted <- newTask.isCompleted,
-//                    Schema.isDeleted <- newTask.isDeleted
-//                )
-//            )
-//        }
-//        catch {
-//            // log error somewhere in analytics, display generic message to user
-//        }
     }
     
     private func newId() -> Int {
         do {
             let max: Int? = try connectionManager.activeConnection!.scalar(
-                Schema.Tasks.tableExpression.select(Schema.id.max)
+                Schema.Tasks.tableExpression.select(Schema.Tasks.id.max)
             )
             return max?.advanced(by: 1) ?? 1
         }
         catch {
             // log error somewhere in analytics, display generic message to user
+            print(error.localizedDescription)
             
             return 1
         }
     }
     
-    private var taskDatabase: [KillerTask] = [
-        KillerTask(id: 1, body: "Take out the trash"),
-        KillerTask(id: 2, body: "Buy milk"),
-        KillerTask(id: 3, body: "Work on important project")
-    ]
-    
     private func makeTasks(from rows: AnySequence<SQLite.Row>) -> [KillerTask] {
         rows.map {
             KillerTask(
-                id: $0[Schema.id],
+                id: $0[Schema.Tasks.id],
                 body: $0[Schema.Tasks.body],
                 isCompleted: $0[Schema.Tasks.isCompleted],
-                isDeleted: $0[Schema.isDeleted]
+                isDeleted: $0[Schema.Tasks.isDeleted]
             )
         }
     }
@@ -139,13 +136,23 @@ extension Database {
 
 extension Database {
     enum Schema {
-        static let id = SQLite.Expression<Int>("id")
-        static let isDeleted = SQLite.Expression<Bool>("isDeleted")
-        
         enum Tasks {
             static let tableExpression: SQLite.Table = Table("tasks")
+            
+            static let id = SQLite.Expression<Int>("id")
             static let body = SQLite.Expression<String>("body")
             static let isCompleted = SQLite.Expression<Bool>("isCompleted")
+            static let isDeleted = SQLite.Expression<Bool>("isDeleted")
+            
+            static func from<T>(keyPath: KeyPath<KillerTask, T>) throws -> SQLite.Expression<T> where T: SQLite.Value {
+                switch keyPath {
+                case \.id: id as! SQLite.Expression<T>
+                case \.body: body as! SQLite.Expression<T>
+                case \.isCompleted: isCompleted as! SQLite.Expression<T>
+                case \.isDeleted: isDeleted as! SQLite.Expression<T>
+                default: fatalError()
+                }
+            }
         }
     }
     
@@ -159,10 +166,10 @@ extension Database {
         func create() throws {
             try connectionManager.activeConnection!.run(
                 Schema.Tasks.tableExpression.create(ifNotExists: true) {
-                    $0.column(Schema.id, primaryKey: .autoincrement)
+                    $0.column(Schema.Tasks.id, primaryKey: .autoincrement)
                     $0.column(Schema.Tasks.body)
                     $0.column(Schema.Tasks.isCompleted)
-                    $0.column(Schema.isDeleted)
+                    $0.column(Schema.Tasks.isDeleted)
                 }
             )
         }
