@@ -58,15 +58,25 @@ struct TaskView: View {
     @Environment(\.database) var database
     let task: KillerTask
     
+    private func completeButtonAction() {
+        guard taskListManager.remove(task: self.task) else { return }
+        
+        Task.detached {
+            await database?.update(task: task, suchThat: \.isCompleted, is: true)
+        }
+    }
+    
+    private func deleteButtonAction() {
+        guard taskListManager.remove(task: self.task) else { return }
+        
+        Task.detached {
+            await database?.update(task: task, suchThat: \.isDeleted, is: true)
+        }
+    }
+    
     var body: some View {
         HStack {
-            Button {
-                guard taskListManager.remove(task: self.task) else { return }
-                
-                Task.detached {
-                    await database?.update(task: task, suchThat: \.isCompleted, is: true)
-                }
-            } label: {
+            Button(action: completeButtonAction) {
                 Label("Complete", systemImage: "checkmark")
                     .labelStyle(.iconOnly)
             }
@@ -75,12 +85,8 @@ struct TaskView: View {
         }
         .transition(.scale(scale: 0.95).combined(with: .opacity))
         .contextMenu(menuItems: {
-            Button("Delete") {
-                guard taskListManager.remove(task: self.task) else { return }
-                
-                Task.detached {
-                    await database?.update(task: task, suchThat: \.isDeleted, is: true)
-                }
+            Button(action: deleteButtonAction) {
+                Label("Delete", systemImage: "trash")
             }
         })
     }

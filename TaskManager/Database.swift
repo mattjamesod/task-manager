@@ -1,8 +1,12 @@
 import SwiftUI
 import SQLite
 
+actor DesiredDB {
+}
+
 actor Database {
     private let connectionManager: ConnectionManager
+    private var connection: Connection { connectionManager.activeConnection! }
     
     init(name: String) {
         self.connectionManager = ConnectionManager(databaseName: name)
@@ -21,7 +25,7 @@ actor Database {
     
     func fetchTasks() -> [KillerTask] {
         do {
-            let records = try connectionManager.activeConnection!.prepare(
+            let records = try connection.prepare(
                 Schema.Tasks.tableExpression
                     .filter(!Schema.Tasks.isCompleted)
                     .filter(!Schema.Tasks.isDeleted)
@@ -30,9 +34,11 @@ actor Database {
             return makeTasks(from: records)
         }
         catch {
-            // log error somewhere in analytics, display generic message to user
             print(error.localizedDescription)
-            return []
+            fatalError("""
+                Unrecoverable Database Error! Could not fetch from database. \
+                Details: \(error).
+            """)
         }
     }
     
@@ -40,7 +46,7 @@ actor Database {
         do {
             let newTask = KillerTask(id: newId(), body: "I am a brand new baby task")
             
-            try connectionManager.activeConnection!.run(
+            try connection.run(
                 Schema.Tasks.tableExpression.insert(
                     Schema.Tasks.id <- newTask.id,
                     Schema.Tasks.body <- newTask.body,
@@ -52,23 +58,28 @@ actor Database {
             return newTask
         }
         catch {
-            // log error somewhere in analytics, display generic message to user
             print(error.localizedDescription)
-            return nil
+            fatalError("""
+                Unrecoverable Database Error! Could not write to database. \
+                Details: \(error).
+            """)
         }
     }
     
     func update<T>(task: KillerTask, suchThat path: KeyPath<KillerTask, T>, is value: T) where T: SQLite.Value {
         do {
-            try connectionManager.activeConnection!.run(
+            try connection.run(
                 Schema.Tasks.tableExpression
                     .filter(Schema.Tasks.id == task.id)
                     .update(Schema.Tasks.from(keyPath: path) <- value)
             )
         }
         catch {
-            // log error somewhere in analytics, display generic message to user
             print(error.localizedDescription)
+            fatalError("""
+                Unrecoverable Database Error! Could not write to database. \
+                Details: \(error).
+            """)
         }
     }
     
@@ -80,10 +91,11 @@ actor Database {
             return max?.advanced(by: 1) ?? 1
         }
         catch {
-            // log error somewhere in analytics, display generic message to user
             print(error.localizedDescription)
-            
-            return 1
+            fatalError("""
+                Unrecoverable Database Error! Could not read from database. \
+                Details: \(error).
+            """)
         }
     }
     
