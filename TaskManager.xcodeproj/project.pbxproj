@@ -8,11 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		A055B5BE2C25E52200BCB5C2 /* TaskManagerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */; };
-		A055B5C02C25E52200BCB5C2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5BF2C25E52200BCB5C2 /* ContentView.swift */; };
+		A055B5C02C25E52200BCB5C2 /* ExampleTaskCrudView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5BF2C25E52200BCB5C2 /* ExampleTaskCrudView.swift */; };
 		A055B5C22C25E52300BCB5C2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A055B5C12C25E52300BCB5C2 /* Assets.xcassets */; };
 		A055B5C62C25E52300BCB5C2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A055B5C52C25E52300BCB5C2 /* Preview Assets.xcassets */; };
 		A055B5D02C25E52300BCB5C2 /* TaskManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5CF2C25E52300BCB5C2 /* TaskManagerTests.swift */; };
-		A055B5EB2C26018F00BCB5C2 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = A055B5EA2C26018F00BCB5C2 /* AsyncAlgorithms */; };
+		A055B5ED2C26C49C00BCB5C2 /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5EC2C26C49600BCB5C2 /* Database.swift */; };
+		A0D1EBED2C26C5C7008636CB /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = A0D1EBEC2C26C5C7008636CB /* SQLite */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,13 +36,14 @@
 /* Begin PBXFileReference section */
 		A055B5BA2C25E52200BCB5C2 /* TaskManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TaskManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManagerApp.swift; sourceTree = "<group>"; };
-		A055B5BF2C25E52200BCB5C2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A055B5BF2C25E52200BCB5C2 /* ExampleTaskCrudView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleTaskCrudView.swift; sourceTree = "<group>"; };
 		A055B5C12C25E52300BCB5C2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A055B5C32C25E52300BCB5C2 /* TaskManager.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TaskManager.entitlements; sourceTree = "<group>"; };
 		A055B5C52C25E52300BCB5C2 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		A055B5CB2C25E52300BCB5C2 /* TaskManagerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TaskManagerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A055B5CF2C25E52300BCB5C2 /* TaskManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManagerTests.swift; sourceTree = "<group>"; };
 		A055B5D52C25E52300BCB5C2 /* TaskManagerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TaskManagerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A055B5EC2C26C49600BCB5C2 /* Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Database.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,7 +51,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A055B5EB2C26018F00BCB5C2 /* AsyncAlgorithms in Frameworks */,
+				A0D1EBED2C26C5C7008636CB /* SQLite in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -93,8 +95,9 @@
 		A055B5BC2C25E52200BCB5C2 /* TaskManager */ = {
 			isa = PBXGroup;
 			children = (
+				A055B5EC2C26C49600BCB5C2 /* Database.swift */,
 				A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */,
-				A055B5BF2C25E52200BCB5C2 /* ContentView.swift */,
+				A055B5BF2C25E52200BCB5C2 /* ExampleTaskCrudView.swift */,
 				A055B5C12C25E52300BCB5C2 /* Assets.xcassets */,
 				A055B5C32C25E52300BCB5C2 /* TaskManager.entitlements */,
 				A055B5C42C25E52300BCB5C2 /* Preview Content */,
@@ -142,7 +145,7 @@
 			);
 			name = TaskManager;
 			packageProductDependencies = (
-				A055B5EA2C26018F00BCB5C2 /* AsyncAlgorithms */,
+				A0D1EBEC2C26C5C7008636CB /* SQLite */,
 			);
 			productName = TaskManager;
 			productReference = A055B5BA2C25E52200BCB5C2 /* TaskManager.app */;
@@ -218,6 +221,7 @@
 			mainGroup = A055B5B12C25E52200BCB5C2;
 			packageReferences = (
 				A055B5E82C26015100BCB5C2 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
+				A0D1EBEB2C26C5C7008636CB /* XCRemoteSwiftPackageReference "SQLite" */,
 			);
 			productRefGroup = A055B5BB2C25E52200BCB5C2 /* Products */;
 			projectDirPath = "";
@@ -261,7 +265,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A055B5C02C25E52200BCB5C2 /* ContentView.swift in Sources */,
+				A055B5ED2C26C49C00BCB5C2 /* Database.swift in Sources */,
+				A055B5C02C25E52200BCB5C2 /* ExampleTaskCrudView.swift in Sources */,
 				A055B5BE2C25E52200BCB5C2 /* TaskManagerApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -631,13 +636,21 @@
 				minimumVersion = 1.0.1;
 			};
 		};
+		A0D1EBEB2C26C5C7008636CB /* XCRemoteSwiftPackageReference "SQLite" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stephencelis/SQLite.swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.15.3;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		A055B5EA2C26018F00BCB5C2 /* AsyncAlgorithms */ = {
+		A0D1EBEC2C26C5C7008636CB /* SQLite */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = A055B5E82C26015100BCB5C2 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
-			productName = AsyncAlgorithms;
+			package = A0D1EBEB2C26C5C7008636CB /* XCRemoteSwiftPackageReference "SQLite" */;
+			productName = SQLite;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
