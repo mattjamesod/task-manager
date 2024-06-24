@@ -68,7 +68,7 @@ struct TaskView: View {
         guard taskListManager.remove(task: self.task) else { return }
         
         Task.detached {
-            await database?.update(task: task, suchThat: \.isCompleted, is: true)
+            await database?.update(task, suchThat: \.isCompleted, is: true)
         }
     }
     
@@ -76,7 +76,7 @@ struct TaskView: View {
         guard taskListManager.remove(task: self.task) else { return }
         
         Task.detached {
-            await database?.update(task: task, suchThat: \.isDeleted, is: true)
+            await database?.update(task, suchThat: \.isDeleted, is: true)
         }
     }
     
@@ -105,7 +105,7 @@ struct NewTaskButton: View {
     var body: some View {
         Button("Add New Task") {
             Task.detached {
-                if let newTask = await database?.newTask(setting: \.body, to: "A brand new baby task!") {
+                if let newTask = await database?.insert(KillerTask.self, setting: \.body, to: "A brand new baby task!") {
                     await taskListManager.add(task: newTask)
                 }
             }

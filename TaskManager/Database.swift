@@ -11,7 +11,22 @@ enum DatabaseError: Error {
     case propertyDoesNotExist
 }
 
-extension KillerTask {
+protocol ModelSchema {
+    static var tableExpression: SQLite.Table { get }
+    static var id: SQLite.Expression<Int> { get }
+}
+
+protocol SchemaBacked {
+    associatedtype SchemaType: ModelSchema
+    static func create(from databaseRecord: SQLite.Row) -> Self
+    static func getSchemaExpression<T>(for keyPath: KeyPath<Self, T>) throws -> SQLite.Expression<T> where T: SQLite.Value
+    
+    var id: Int? { get }
+}
+
+extension KillerTask: SchemaBacked {
+    typealias SchemaType = Database.Schema.Tasks
+    
     static func create(from databaseRecord: SQLite.Row) -> KillerTask {
         KillerTask(
             id: databaseRecord[Database.Schema.Tasks.id],
@@ -19,6 +34,16 @@ extension KillerTask {
             isCompleted: databaseRecord[Database.Schema.Tasks.isCompleted],
             isDeleted: databaseRecord[Database.Schema.Tasks.isDeleted]
         )
+    }
+    
+    static func getSchemaExpression<T>(for keyPath: KeyPath<Self, T>) throws -> SQLite.Expression<T> where T: SQLite.Value {
+        switch keyPath {
+        case \.id: SchemaType.id as! SQLite.Expression<T>
+        case \.body: SchemaType.body as! SQLite.Expression<T>
+        case \.isCompleted: SchemaType.isCompleted as! SQLite.Expression<T>
+        case \.isDeleted: SchemaType.isDeleted as! SQLite.Expression<T>
+        default: throw DatabaseError.propertyDoesNotExist
+        }
     }
 }
 
@@ -68,7 +93,7 @@ actor Database {
         }
     }
     
-    func newTask<each T: SQLite.Value>(setting properties: repeat KeyPath<KillerTask, each T>, to values: repeat each T) -> KillerTask? {
+    func insert<ModelType: SchemaBacked, each T: SQLite.Value>(_ type: ModelType.Type, setting properties: repeat KeyPath<ModelType, each T>, to values: repeat each T) -> ModelType? {
         do {
             // no way to map over a parameter pack since you have to `repeat` them, so here
             // we use a slightly ugly loop to generate an array of property setters
@@ -76,18 +101,18 @@ actor Database {
             var setters: [Setter] = []
             
             for (property, value) in repeat (each properties, each values) {
-                setters.append(try Schema.Tasks.from(keyPath: property) <- value)
+                setters.append(try ModelType.getSchemaExpression(for: property) <- value)
             }
             
             let newId = try connection.run(
-                Schema.Tasks.tableExpression.insert(setters)
+                ModelType.SchemaType.tableExpression.insert(setters)
             )
             
             return try connection.prepare(
-                Schema.Tasks.tableExpression
+                ModelType.SchemaType.tableExpression
                     .filter(Schema.Tasks.id == Int(newId))
             )
-            .map(KillerTask.create(from:))
+            .map(ModelType.create(from:))
             .first
         }
         catch {
@@ -99,16 +124,16 @@ actor Database {
     
     /// Updates a specified property for a record matching the id of the given model.
     // TODO:  If the model has no matching record in the database, it is created with the updated value.
-    func update<T>(task: KillerTask, suchThat path: KeyPath<KillerTask, T>, is value: T) where T: SQLite.Value {
+    func update<ModelType: SchemaBacked, PropertyType: SQLite.Value>(_ model: ModelType, suchThat path: KeyPath<ModelType, PropertyType>, is value: PropertyType) {
         do {
-            guard let id = task.id else {
+            guard let id = model.id else {
                 return
             }
             
             try connection.run(
-                Schema.Tasks.tableExpression
-                    .filter(Schema.Tasks.id == id)
-                    .update(Schema.Tasks.from(keyPath: path) <- value)
+                ModelType.SchemaType.tableExpression
+                    .filter(ModelType.SchemaType.id == id)
+                    .update(ModelType.getSchemaExpression(for: path) <- value)
             )
         }
         catch DatabaseError.propertyDoesNotExist {
@@ -185,23 +210,13 @@ extension Database {
 
 extension Database {
     enum Schema {
-        enum Tasks {
+        enum Tasks: ModelSchema {
             static let tableExpression: SQLite.Table = Table("tasks")
             
             static let id = SQLite.Expression<Int>("id")
             static let body = SQLite.Expression<String>("body")
             static let isCompleted = SQLite.Expression<Bool>("isCompleted")
             static let isDeleted = SQLite.Expression<Bool>("isDeleted")
-            
-            static func from<T>(keyPath: KeyPath<KillerTask, T>) throws -> SQLite.Expression<T> where T: SQLite.Value {
-                switch keyPath {
-                case \.id: id as! SQLite.Expression<T>
-                case \.body: body as! SQLite.Expression<T>
-                case \.isCompleted: isCompleted as! SQLite.Expression<T>
-                case \.isDeleted: isDeleted as! SQLite.Expression<T>
-                default: throw DatabaseError.propertyDoesNotExist
-                }
-            }
             
             static var create: String {
                 self.tableExpression.create(ifNotExists: true) {
