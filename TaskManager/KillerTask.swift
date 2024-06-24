@@ -1,7 +1,7 @@
 
 
 struct KillerTask: Identifiable, Equatable {
-    let id: Int
+    let id: Int?
     let body: String
     var isCompleted: Bool = false
     var isDeleted: Bool = false

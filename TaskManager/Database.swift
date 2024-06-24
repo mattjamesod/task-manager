@@ -8,6 +8,7 @@ enum DatabaseConnectionError: Error {
 
 enum DatabaseError: Error {
     case couldNotConnect
+    case propertyDoesNotExist
 }
 
 extension KillerTask {
@@ -43,7 +44,7 @@ actor Database {
             
             throw DatabaseError.couldNotConnect
         }
-        catch DatabaseConnectionError.couldNotCreateConnection(let rootError) {
+        catch DatabaseConnectionError.couldNotCreateConnection(_) {
             // log the *root* error to some analytics software
             
             throw DatabaseError.couldNotConnect
@@ -67,20 +68,27 @@ actor Database {
         }
     }
     
-    func newTask() -> KillerTask? {
+    func newTask<each T: SQLite.Value>(setting properties: repeat KeyPath<KillerTask, each T>, to values: repeat each T) -> KillerTask? {
         do {
-            let newTask = KillerTask(id: newId(), body: "I am a brand new baby task")
+            // no way to map over a parameter pack since you have to `repeat` them, so here
+            // we use a slightly ugly loop to generate an array of property setters
             
-            try connection.run(
-                Schema.Tasks.tableExpression.insert(
-                    Schema.Tasks.id <- newTask.id,
-                    Schema.Tasks.body <- newTask.body,
-                    Schema.Tasks.isCompleted <- newTask.isCompleted,
-                    Schema.Tasks.isDeleted <- newTask.isDeleted
-                )
+            var setters: [Setter] = []
+            
+            for (property, value) in repeat (each properties, each values) {
+                setters.append(try Schema.Tasks.from(keyPath: property) <- value)
+            }
+            
+            let newId = try connection.run(
+                Schema.Tasks.tableExpression.insert(setters)
             )
             
-            return newTask
+            return try connection.prepare(
+                Schema.Tasks.tableExpression
+                    .filter(Schema.Tasks.id == Int(newId))
+            )
+            .map(KillerTask.create(from:))
+            .first
         }
         catch {
             // do something to broad cast the error to both you and the user
@@ -89,31 +97,26 @@ actor Database {
         }
     }
     
+    /// Updates a specified property for a record matching the id of the given model.
+    // TODO:  If the model has no matching record in the database, it is created with the updated value.
     func update<T>(task: KillerTask, suchThat path: KeyPath<KillerTask, T>, is value: T) where T: SQLite.Value {
         do {
+            guard let id = task.id else {
+                return
+            }
+            
             try connection.run(
                 Schema.Tasks.tableExpression
-                    .filter(Schema.Tasks.id == task.id)
+                    .filter(Schema.Tasks.id == id)
                     .update(Schema.Tasks.from(keyPath: path) <- value)
             )
         }
-        catch {
-            // do something to broad cast the error to both you and the user
-            print(error.localizedDescription)
-        }
-    }
-    
-    private func newId() -> Int {
-        do {
-            let max: Int? = try connectionManager.activeConnection!.scalar(
-                Schema.Tasks.tableExpression.select(Schema.Tasks.id.max)
-            )
-            return max?.advanced(by: 1) ?? 1
+        catch DatabaseError.propertyDoesNotExist {
+            
         }
         catch {
             // do something to broad cast the error to both you and the user
-            print(error.localizedDescription)
-            return 1
+            print(error)
         }
     }
 }
@@ -196,7 +199,7 @@ extension Database {
                 case \.body: body as! SQLite.Expression<T>
                 case \.isCompleted: isCompleted as! SQLite.Expression<T>
                 case \.isDeleted: isDeleted as! SQLite.Expression<T>
-                default: fatalError()
+                default: throw DatabaseError.propertyDoesNotExist
                 }
             }
             
@@ -204,8 +207,8 @@ extension Database {
                 self.tableExpression.create(ifNotExists: true) {
                     $0.column(Schema.Tasks.id, primaryKey: .autoincrement)
                     $0.column(Schema.Tasks.body)
-                    $0.column(Schema.Tasks.isCompleted)
-                    $0.column(Schema.Tasks.isDeleted)
+                    $0.column(Schema.Tasks.isCompleted, defaultValue: false)
+                    $0.column(Schema.Tasks.isDeleted, defaultValue: false)
                 }
             }
             

@@ -39,7 +39,7 @@ struct ExampleTaskCrudView: View {
                 try await database.connect()
             }
             catch {
-                
+                // bail and gracefully quit
             }
             taskListManager.tasks = await database.fetchTasks()
         }
@@ -105,7 +105,7 @@ struct NewTaskButton: View {
     var body: some View {
         Button("Add New Task") {
             Task.detached {
-                if let newTask = await database?.newTask() {
+                if let newTask = await database?.newTask(setting: \.body, to: "A brand new baby task!") {
                     await taskListManager.add(task: newTask)
                 }
             }
