@@ -47,6 +47,18 @@ extension KillerTask: SchemaBacked {
     }
 }
 
+extension Database {
+    enum Query {
+        case allActiveItems
+        
+        var tableExpression: SQLite.Table{
+            switch self {
+            case .allActiveItems: Schema.Tasks.tableExpression.filter(!Schema.Tasks.isCompleted && !Schema.Tasks.isDeleted)
+            }
+        }
+    }
+}
+
 /// Actor to perform methods on a given SQLite Database, from a list of pre-defined database structures
 /// Methods catch lower-level errors and log to analytiocs, then throw higher-level errors
 actor Database {
@@ -74,17 +86,17 @@ actor Database {
             
             throw DatabaseError.couldNotConnect
         }
+        catch {
+            // oh god, what??
+            
+            throw DatabaseError.couldNotConnect
+        }
     }
     
-    func fetchTasks() -> [KillerTask] {
+    func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, query: Database.Query) -> [ModelType] {
         do {
-            let records = try connection.prepare(
-                Schema.Tasks.tableExpression
-                    .filter(!Schema.Tasks.isCompleted)
-                    .filter(!Schema.Tasks.isDeleted)
-            )
-            
-            return records.map(KillerTask.create(from:))
+            let records = try connection.prepare(query.tableExpression)
+            return records.map(ModelType.create(from:))
         }
         catch {
             // do something to broad cast the error to both you and the user
@@ -93,7 +105,11 @@ actor Database {
         }
     }
     
-    func insert<ModelType: SchemaBacked, each T: SQLite.Value>(_ type: ModelType.Type, setting properties: repeat KeyPath<ModelType, each T>, to values: repeat each T) -> ModelType? {
+    func insert<ModelType: SchemaBacked, each T: SQLite.Value>(
+        _ type: ModelType.Type, 
+        setting properties: repeat KeyPath<ModelType, each T>,
+        to values: repeat each T
+    ) -> ModelType? {
         do {
             // no way to map over a parameter pack since you have to `repeat` them, so here
             // we use a slightly ugly loop to generate an array of property setters
@@ -124,7 +140,11 @@ actor Database {
     
     /// Updates a specified property for a record matching the id of the given model.
     // TODO:  If the model has no matching record in the database, it is created with the updated value.
-    func update<ModelType: SchemaBacked, PropertyType: SQLite.Value>(_ model: ModelType, suchThat path: KeyPath<ModelType, PropertyType>, is value: PropertyType) {
+    func update<ModelType: SchemaBacked, PropertyType: SQLite.Value>(
+        _ model: ModelType,
+        suchThat path: KeyPath<ModelType, PropertyType>,
+        is value: PropertyType)
+    {
         do {
             guard let id = model.id else {
                 return

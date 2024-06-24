@@ -41,7 +41,7 @@ struct ExampleTaskCrudView: View {
             catch {
                 // bail and gracefully quit
             }
-            taskListManager.tasks = await database.fetchTasks()
+            taskListManager.tasks = await database.fetch(KillerTask.self, query: .allActiveItems)
         }
     }
 }
