@@ -11,9 +11,10 @@
 		A055B5C02C25E52200BCB5C2 /* ExampleTaskCrudView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5BF2C25E52200BCB5C2 /* ExampleTaskCrudView.swift */; };
 		A055B5C22C25E52300BCB5C2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A055B5C12C25E52300BCB5C2 /* Assets.xcassets */; };
 		A055B5C62C25E52300BCB5C2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A055B5C52C25E52300BCB5C2 /* Preview Assets.xcassets */; };
-		A055B5D02C25E52300BCB5C2 /* TaskManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5CF2C25E52300BCB5C2 /* TaskManagerTests.swift */; };
+		A055B5D02C25E52300BCB5C2 /* DatabaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5CF2C25E52300BCB5C2 /* DatabaseTests.swift */; };
 		A055B5ED2C26C49C00BCB5C2 /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5EC2C26C49600BCB5C2 /* Database.swift */; };
 		A0D1EBED2C26C5C7008636CB /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = A0D1EBEC2C26C5C7008636CB /* SQLite */; };
+		A0D1EBEF2C273EC2008636CB /* KillerTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0D1EBEE2C273EBF008636CB /* KillerTask.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -41,9 +42,10 @@
 		A055B5C32C25E52300BCB5C2 /* TaskManager.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TaskManager.entitlements; sourceTree = "<group>"; };
 		A055B5C52C25E52300BCB5C2 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		A055B5CB2C25E52300BCB5C2 /* TaskManagerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TaskManagerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		A055B5CF2C25E52300BCB5C2 /* TaskManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManagerTests.swift; sourceTree = "<group>"; };
+		A055B5CF2C25E52300BCB5C2 /* DatabaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseTests.swift; sourceTree = "<group>"; };
 		A055B5D52C25E52300BCB5C2 /* TaskManagerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TaskManagerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A055B5EC2C26C49600BCB5C2 /* Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Database.swift; sourceTree = "<group>"; };
+		A0D1EBEE2C273EBF008636CB /* KillerTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KillerTask.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,6 +97,7 @@
 		A055B5BC2C25E52200BCB5C2 /* TaskManager */ = {
 			isa = PBXGroup;
 			children = (
+				A0D1EBEE2C273EBF008636CB /* KillerTask.swift */,
 				A055B5EC2C26C49600BCB5C2 /* Database.swift */,
 				A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */,
 				A055B5BF2C25E52200BCB5C2 /* ExampleTaskCrudView.swift */,
@@ -116,7 +119,7 @@
 		A055B5CE2C25E52300BCB5C2 /* TaskManagerTests */ = {
 			isa = PBXGroup;
 			children = (
-				A055B5CF2C25E52300BCB5C2 /* TaskManagerTests.swift */,
+				A055B5CF2C25E52300BCB5C2 /* DatabaseTests.swift */,
 			);
 			path = TaskManagerTests;
 			sourceTree = "<group>";
@@ -266,6 +269,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A055B5ED2C26C49C00BCB5C2 /* Database.swift in Sources */,
+				A0D1EBEF2C273EC2008636CB /* KillerTask.swift in Sources */,
 				A055B5C02C25E52200BCB5C2 /* ExampleTaskCrudView.swift in Sources */,
 				A055B5BE2C25E52200BCB5C2 /* TaskManagerApp.swift in Sources */,
 			);
@@ -275,7 +279,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A055B5D02C25E52300BCB5C2 /* TaskManagerTests.swift in Sources */,
+				A055B5D02C25E52300BCB5C2 /* DatabaseTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

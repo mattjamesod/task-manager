@@ -1,25 +1,52 @@
 import SwiftUI
 import SQLite
 
-actor DesiredDB {
+enum DatabaseConnectionError: Error {
+    case couldNotAccessDocumentsDirectory
+    case couldNotCreateConnection(because: Error)
 }
 
+enum DatabaseError: Error {
+    case couldNotConnect
+}
+
+extension KillerTask {
+    static func create(from databaseRecord: SQLite.Row) -> KillerTask {
+        KillerTask(
+            id: databaseRecord[Database.Schema.Tasks.id],
+            body: databaseRecord[Database.Schema.Tasks.body],
+            isCompleted: databaseRecord[Database.Schema.Tasks.isCompleted],
+            isDeleted: databaseRecord[Database.Schema.Tasks.isDeleted]
+        )
+    }
+}
+
+/// Actor to perform methods on a given SQLite Database, from a list of pre-defined database structures
+/// Methods catch lower-level errors and log to analytiocs, then throw higher-level errors
 actor Database {
+    private let schema: SchemaDescription
     private let connectionManager: ConnectionManager
     private var connection: Connection { connectionManager.activeConnection! }
     
-    init(name: String) {
-        self.connectionManager = ConnectionManager(databaseName: name)
-        
+    init(schema: Database.SchemaDescription) {
+        self.schema = schema
+        self.connectionManager = ConnectionManager(databaseName: schema.fileName)
+    }
+    
+    func connect() throws {
         do {
             try self.connectionManager.createConnection()
-            try SchemaManager(connectionManager: self.connectionManager).create()
+            try schema.create(connection: connectionManager.activeConnection!)
         }
-        catch {
-            fatalError("""
-                Unrecoverable Database Error! Could not connect to the database. \
-                Details: \(error).
-            """)
+        catch DatabaseConnectionError.couldNotAccessDocumentsDirectory {
+            // log the error to some analytics software
+            
+            throw DatabaseError.couldNotConnect
+        }
+        catch DatabaseConnectionError.couldNotCreateConnection(let rootError) {
+            // log the *root* error to some analytics software
+            
+            throw DatabaseError.couldNotConnect
         }
     }
     
@@ -31,14 +58,12 @@ actor Database {
                     .filter(!Schema.Tasks.isDeleted)
             )
             
-            return makeTasks(from: records)
+            return records.map(KillerTask.create(from:))
         }
         catch {
+            // do something to broad cast the error to both you and the user
             print(error.localizedDescription)
-            fatalError("""
-                Unrecoverable Database Error! Could not fetch from database. \
-                Details: \(error).
-            """)
+            return []
         }
     }
     
@@ -58,11 +83,9 @@ actor Database {
             return newTask
         }
         catch {
+            // do something to broad cast the error to both you and the user
             print(error.localizedDescription)
-            fatalError("""
-                Unrecoverable Database Error! Could not write to database. \
-                Details: \(error).
-            """)
+            return nil
         }
     }
     
@@ -75,11 +98,8 @@ actor Database {
             )
         }
         catch {
+            // do something to broad cast the error to both you and the user
             print(error.localizedDescription)
-            fatalError("""
-                Unrecoverable Database Error! Could not write to database. \
-                Details: \(error).
-            """)
         }
     }
     
@@ -91,22 +111,9 @@ actor Database {
             return max?.advanced(by: 1) ?? 1
         }
         catch {
+            // do something to broad cast the error to both you and the user
             print(error.localizedDescription)
-            fatalError("""
-                Unrecoverable Database Error! Could not read from database. \
-                Details: \(error).
-            """)
-        }
-    }
-    
-    private func makeTasks(from rows: AnySequence<SQLite.Row>) -> [KillerTask] {
-        rows.map {
-            KillerTask(
-                id: $0[Schema.Tasks.id],
-                body: $0[Schema.Tasks.body],
-                isCompleted: $0[Schema.Tasks.isCompleted],
-                isDeleted: $0[Schema.Tasks.isDeleted]
-            )
+            return 1
         }
     }
 }
@@ -117,10 +124,6 @@ extension EnvironmentValues {
 
 extension Database {
     class ConnectionManager {
-        enum DatabaseConnectionError: Error {
-            case couldNotAccessDocumentsDirectory
-        }
-        
         private let databaseName: String
         var activeConnection : SQLite.Connection? = nil
         
@@ -128,7 +131,7 @@ extension Database {
             self.databaseName = databaseName
         }
         
-        func createConnection() throws {
+        func createConnection() throws(DatabaseConnectionError) {
             guard activeConnection == nil else {
                 return
             }
@@ -137,11 +140,42 @@ extension Database {
                 throw DatabaseConnectionError.couldNotAccessDocumentsDirectory
             }
             
-            self.activeConnection = try Connection("\(userDocumentsDir)/\(databaseName).sqlite3")
+            do {
+                self.activeConnection = try Connection("\(userDocumentsDir)/\(databaseName).sqlite3")
+            }
+            catch {
+                throw DatabaseConnectionError.couldNotCreateConnection(because: error)
+            }
         }
         
         private var userDocumentsDir: String? {
             NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first
+        }
+    }
+}
+
+extension Database {
+    enum SchemaDescription {
+        case userData
+        
+        var fileName: String {
+            switch self {
+            case .userData: "user_data"
+            }
+        }
+        
+        func create(connection: SQLite.Connection) throws {
+            switch self {
+            case .userData:
+                try connection.run(Schema.Tasks.create)
+            }
+        }
+        
+        func destroy(connection: SQLite.Connection) throws {
+            switch self {
+            case .userData:
+                try connection.run(Schema.Tasks.drop)
+            }
         }
     }
 }
@@ -165,31 +199,19 @@ extension Database {
                 default: fatalError()
                 }
             }
-        }
-    }
-    
-    class SchemaManager {
-        private let connectionManager: ConnectionManager
-        
-        init(connectionManager: ConnectionManager) {
-            self.connectionManager = connectionManager
-        }
-        
-        func create() throws {
-            try connectionManager.activeConnection!.run(
-                Schema.Tasks.tableExpression.create(ifNotExists: true) {
+            
+            static var create: String {
+                self.tableExpression.create(ifNotExists: true) {
                     $0.column(Schema.Tasks.id, primaryKey: .autoincrement)
                     $0.column(Schema.Tasks.body)
                     $0.column(Schema.Tasks.isCompleted)
                     $0.column(Schema.Tasks.isDeleted)
                 }
-            )
-        }
-        
-        func destroy() throws {
-            try connectionManager.activeConnection!.run(
-                Schema.Tasks.tableExpression.drop()
-            )
+            }
+            
+            static var drop: String {
+                self.tableExpression.drop()
+            }
         }
     }
 }

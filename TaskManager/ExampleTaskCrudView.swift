@@ -16,7 +16,7 @@ class TaskListManager {
 }
 
 struct ExampleTaskCrudView: View {
-    let database = Database(name: "user_data")
+    let database = Database(schema: .userData)
     @State var taskListManager: TaskListManager = .init()
     
     var body: some View {
@@ -35,6 +35,12 @@ struct ExampleTaskCrudView: View {
         .environment(taskListManager)
         .environment(\.database, database)
         .task {
+            do {
+                try await database.connect()
+            }
+            catch {
+                
+            }
             taskListManager.tasks = await database.fetchTasks()
         }
     }
@@ -104,18 +110,5 @@ struct NewTaskButton: View {
                 }
             }
         }
-    }
-}
-
-struct KillerTask: Identifiable, Equatable {
-    let id: Int
-    let body: String
-    var isCompleted: Bool = false
-    var isDeleted: Bool = false
-    
-    func cloned<T>(suchThat path: WritableKeyPath<Self, T>, is value: T) -> Self {
-        var clone = self
-        clone[keyPath: path] = value
-        return clone
     }
 }
