@@ -2,9 +2,44 @@ import SwiftUI
 
 @main
 struct TaskManagerApp: App {
+    let database: Database?
+    
+    init() {
+        do {
+//            self.database = try DatabaseSetupHelper(schema: .userData).setup()
+            throw DatabaseError.couldNotEstablishConnection
+        }
+        catch {
+            // TODO: log database setup error
+            self.database = nil
+        }
+    }
+    
     var body: some Scene {
         WindowGroup {
-            ExampleTaskCrudView()
+            if let database {
+                ExampleTaskCrudView()
+                    .environment(\.database, database)
+            }
+            else {
+                CatastrophicErrorView()
+            }
+        }
+    }
+}
+
+struct CatastrophicErrorView: View {
+    var body: some View {
+        VStack(spacing: 36) {
+            Image(systemName: "exclamationmark.triangle")
+                .resizable()
+                .aspectRatio(1, contentMode: .fit)
+                .foregroundStyle(.red)
+                .frame(maxWidth: 72)
+            
+            Text("An unexpected problem has occurred")
+                .font(.title3)
+                .foregroundStyle(.gray)
         }
     }
 }

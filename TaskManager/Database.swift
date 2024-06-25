@@ -7,7 +7,8 @@ enum DatabaseConnectionError: Error {
 }
 
 enum DatabaseError: Error {
-    case couldNotConnect
+    case couldNotEstablishConnection
+    case couldNotCreateSchema
     case propertyDoesNotExist
 }
 
@@ -59,37 +60,45 @@ extension Database {
     }
 }
 
+class DatabaseSetupHelper {
+    private let schema: Database.SchemaDescription
+    
+    init(schema: Database.SchemaDescription) {
+        self.schema = schema
+    }
+    
+    func setup() throws(DatabaseError) -> Database {
+        let schema = Database.SchemaDescription.userData
+        let connectionManager = DatabaseConnectionManager(databaseName: schema.fileName)
+        let connection: SQLite.Connection
+        
+        do {
+            connection = try connectionManager.createConnection()
+        }
+        catch {
+            // TODO: log connection error
+            throw DatabaseError.couldNotEstablishConnection
+        }
+        
+        return try Database(schema: schema, connection: connection)
+    }
+}
+
 /// Actor to perform methods on a given SQLite Database, from a list of pre-defined database structures
 /// Methods catch lower-level errors and log to analytiocs, then throw higher-level errors
 actor Database {
     private let schema: SchemaDescription
-    private let connectionManager: ConnectionManager
-    private var connection: Connection { connectionManager.activeConnection! }
+    private let connection: Connection
     
-    init(schema: Database.SchemaDescription) {
+    internal init(schema: Database.SchemaDescription, connection: SQLite.Connection) throws(DatabaseError) {
         self.schema = schema
-        self.connectionManager = ConnectionManager(databaseName: schema.fileName)
-    }
-    
-    func connect() throws {
+        self.connection = connection
+        
         do {
-            try self.connectionManager.createConnection()
-            try schema.create(connection: connectionManager.activeConnection!)
-        }
-        catch DatabaseConnectionError.couldNotAccessDocumentsDirectory {
-            // log the error to some analytics software
-            
-            throw DatabaseError.couldNotConnect
-        }
-        catch DatabaseConnectionError.couldNotCreateConnection(_) {
-            // log the *root* error to some analytics software
-            
-            throw DatabaseError.couldNotConnect
+            try schema.create(connection: connection)
         }
         catch {
-            // oh god, what??
-            
-            throw DatabaseError.couldNotConnect
+            throw DatabaseError.couldNotCreateSchema
         }
     }
     
@@ -170,35 +179,28 @@ extension EnvironmentValues {
     @Entry var database: Database? = nil
 }
 
-extension Database {
-    class ConnectionManager {
-        private let databaseName: String
-        var activeConnection : SQLite.Connection? = nil
-        
-        init(databaseName: String) {
-            self.databaseName = databaseName
+class DatabaseConnectionManager {
+    private let databaseName: String
+    
+    init(databaseName: String) {
+        self.databaseName = databaseName
+    }
+    
+    func createConnection() throws(DatabaseConnectionError) -> Connection {
+        guard let userDocumentsDir else {
+            throw DatabaseConnectionError.couldNotAccessDocumentsDirectory
         }
         
-        func createConnection() throws(DatabaseConnectionError) {
-            guard activeConnection == nil else {
-                return
-            }
-            
-            guard let userDocumentsDir else {
-                throw DatabaseConnectionError.couldNotAccessDocumentsDirectory
-            }
-            
-            do {
-                self.activeConnection = try Connection("\(userDocumentsDir)/\(databaseName).sqlite3")
-            }
-            catch {
-                throw DatabaseConnectionError.couldNotCreateConnection(because: error)
-            }
+        do {
+            return try Connection("\(userDocumentsDir)/\(databaseName).sqlite3")
         }
-        
-        private var userDocumentsDir: String? {
-            NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first
+        catch {
+            throw DatabaseConnectionError.couldNotCreateConnection(because: error)
         }
+    }
+    
+    private var userDocumentsDir: String? {
+        NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first
     }
 }
 

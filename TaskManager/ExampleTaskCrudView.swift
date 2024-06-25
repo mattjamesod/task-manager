@@ -16,7 +16,7 @@ class TaskListManager {
 }
 
 struct ExampleTaskCrudView: View {
-    let database = Database(schema: .userData)
+    @Environment(\.database) var database
     @State var taskListManager: TaskListManager = .init()
     
     var body: some View {
@@ -33,15 +33,8 @@ struct ExampleTaskCrudView: View {
                 .padding(.bottom, 16)
         }
         .environment(taskListManager)
-        .environment(\.database, database)
         .task {
-            do {
-                try await database.connect()
-            }
-            catch {
-                // bail and gracefully quit
-            }
-            taskListManager.tasks = await database.fetch(KillerTask.self, query: .allActiveItems)
+            taskListManager.tasks = await database?.fetch(KillerTask.self, query: .allActiveItems) ?? []
         }
     }
 }
