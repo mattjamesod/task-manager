@@ -19,7 +19,7 @@ protocol ModelSchema {
 
 protocol SchemaBacked {
     associatedtype SchemaType: ModelSchema
-    static func create(from databaseRecord: SQLite.Row) -> Self
+    static func create(from databaseRecord: SQLite.Row) throws -> Self
     static func getSchemaExpression<T>(for keyPath: KeyPath<Self, T>) throws -> SQLite.Expression<T> where T: SQLite.Value
     
     var id: Int? { get }
@@ -28,13 +28,19 @@ protocol SchemaBacked {
 extension KillerTask: SchemaBacked {
     typealias SchemaType = Database.Schema.Tasks
     
-    static func create(from databaseRecord: SQLite.Row) -> KillerTask {
-        KillerTask(
-            id: databaseRecord[Database.Schema.Tasks.id],
-            body: databaseRecord[Database.Schema.Tasks.body],
-            isCompleted: databaseRecord[Database.Schema.Tasks.isCompleted],
-            isDeleted: databaseRecord[Database.Schema.Tasks.isDeleted]
-        )
+    static func create(from databaseRecord: SQLite.Row) throws -> KillerTask {
+        do {
+            return KillerTask(
+                id: try databaseRecord.get(Database.Schema.Tasks.id),
+                body: try databaseRecord.get(Database.Schema.Tasks.body),
+                isCompleted: try databaseRecord.get(Database.Schema.Tasks.isCompleted),
+                isDeleted: try databaseRecord.get(Database.Schema.Tasks.isDeleted)
+            )
+        }
+        catch {
+            // TODO: log property error
+            throw DatabaseError.propertyDoesNotExist
+        }
     }
     
     static func getSchemaExpression<T>(for keyPath: KeyPath<Self, T>) throws -> SQLite.Expression<T> where T: SQLite.Value {
@@ -105,7 +111,7 @@ actor Database {
     func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, query: Database.Query) -> [ModelType] {
         do {
             let records = try connection.prepare(query.tableExpression)
-            return records.map(ModelType.create(from:))
+            return try records.map(ModelType.create(from:))
         }
         catch {
             // do something to broad cast the error to both you and the user
@@ -114,6 +120,7 @@ actor Database {
         }
     }
     
+    @discardableResult
     func insert<ModelType: SchemaBacked, each T: SQLite.Value>(
         _ type: ModelType.Type, 
         setting properties: repeat KeyPath<ModelType, each T>,
@@ -180,9 +187,10 @@ extension EnvironmentValues {
 }
 
 class DatabaseConnectionManager {
-    private let databaseName: String
+    // nil implies an in-memory db for testing
+    private let databaseName: String?
     
-    init(databaseName: String) {
+    init(databaseName: String?) {
         self.databaseName = databaseName
     }
     
@@ -192,7 +200,12 @@ class DatabaseConnectionManager {
         }
         
         do {
-            return try Connection("\(userDocumentsDir)/\(databaseName).sqlite3")
+            if let databaseName {
+                return try Connection("\(userDocumentsDir)/\(databaseName).sqlite3")
+            }
+            else {
+                return try Connection()
+            }
         }
         catch {
             throw DatabaseConnectionError.couldNotCreateConnection(because: error)
@@ -207,10 +220,12 @@ class DatabaseConnectionManager {
 extension Database {
     enum SchemaDescription {
         case userData
+        case testing
         
-        var fileName: String {
+        var fileName: String? {
             switch self {
             case .userData: "user_data"
+            case .testing: nil
             }
         }
         
@@ -218,12 +233,16 @@ extension Database {
             switch self {
             case .userData:
                 try connection.run(Schema.Tasks.create)
+            case .testing:
+                try connection.run(Schema.Tasks.create)
             }
         }
         
         func destroy(connection: SQLite.Connection) throws {
             switch self {
             case .userData:
+                try connection.run(Schema.Tasks.drop)
+            case .testing:
                 try connection.run(Schema.Tasks.drop)
             }
         }

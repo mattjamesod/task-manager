@@ -6,8 +6,7 @@ struct TaskManagerApp: App {
     
     init() {
         do {
-//            self.database = try DatabaseSetupHelper(schema: .userData).setup()
-            throw DatabaseError.couldNotEstablishConnection
+            self.database = try DatabaseSetupHelper(schema: .userData).setup()
         }
         catch {
             // TODO: log database setup error
@@ -40,6 +39,8 @@ struct CatastrophicErrorView: View {
             Text("An unexpected problem has occurred")
                 .font(.title3)
                 .foregroundStyle(.gray)
+            
+            // TODO: add helpful links/info here
         }
     }
 }
