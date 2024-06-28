@@ -1,4 +1,6 @@
 import SwiftUI
+import KillerModels
+import KillerData
 
 @Observable @MainActor 
 class TaskListManager {

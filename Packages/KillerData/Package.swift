@@ -1,0 +1,35 @@
+// swift-tools-version: 6.0
+// The swift-tools-version declares the minimum version of Swift required to build this package.
+
+import PackageDescription
+
+let package = Package(
+    name: "KillerData",
+    platforms: [.macOS(.v15), .iOS(.v18)],
+    products: [
+        .library(
+            name: "KillerData",
+            targets: ["KillerData"]
+        ),
+    ],
+    dependencies: [
+        .package(
+            name: "SQLite",
+            url: "https://github.com/stephencelis/SQLite.swift.git",
+            from: "0.15.3"
+        ),
+        .package(
+            path: "../KillerModels"
+        )
+    ],
+    targets: [
+        .target(
+            name: "KillerData",
+            dependencies: ["SQLite", "KillerModels"]
+        ),
+        .testTarget(
+            name: "KillerDataTests",
+            dependencies: ["KillerData"]
+        ),
+    ]
+)

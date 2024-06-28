@@ -1,4 +1,5 @@
 import SwiftUI
+import KillerData
 
 @main
 struct TaskManagerApp: App {
