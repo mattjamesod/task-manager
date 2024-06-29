@@ -39,6 +39,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A0456FE52C2FEAE900DC2879 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A055B5BA2C25E52200BCB5C2 /* TaskManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TaskManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManagerApp.swift; sourceTree = "<group>"; };
 		A055B5BF2C25E52200BCB5C2 /* ExampleTaskCrudView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleTaskCrudView.swift; sourceTree = "<group>"; };
@@ -105,6 +106,7 @@
 		A055B5BC2C25E52200BCB5C2 /* TaskManager */ = {
 			isa = PBXGroup;
 			children = (
+				A0456FE52C2FEAE900DC2879 /* Info.plist */,
 				A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */,
 				A055B5BF2C25E52200BCB5C2 /* ExampleTaskCrudView.swift */,
 				A055B5C12C25E52300BCB5C2 /* Assets.xcassets */,
@@ -446,6 +448,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TaskManager/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -485,6 +488,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TaskManager/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

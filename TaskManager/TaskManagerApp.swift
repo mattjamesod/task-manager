@@ -1,4 +1,5 @@
 import SwiftUI
+import KillerModels
 import KillerData
 
 @main
@@ -25,6 +26,9 @@ struct TaskManagerApp: App {
                 CatastrophicErrorView()
             }
         }
+//        .backgroundTask(.appRefresh("RECENTLY_DELETED_PURGE")) {
+//
+//        }
     }
 }
 

@@ -80,19 +80,45 @@ public actor Database {
     // TODO:  If the model has no matching record in the database, it is created with the updated value.
     public func update<ModelType: SchemaBacked, PropertyType: SQLite.Value>(
         _ model: ModelType,
+        suchThat path: KeyPath<ModelType, PropertyType?>,
+        is value: PropertyType?)
+    {
+        do {
+            try update(model, setter: ModelType.getSchemaExpression(optional: path) <- value)
+        }
+        catch {
+            // do something to broad cast the error to both you and the user
+            print(error)
+        }
+    }
+    
+    public func update<ModelType: SchemaBacked, PropertyType: SQLite.Value>(
+        _ model: ModelType,
         suchThat path: KeyPath<ModelType, PropertyType>,
         is value: PropertyType)
     {
         do {
-            guard let id = model.id else {
-                return
-            }
+            try update(model, setter: ModelType.getSchemaExpression(for: path) <- value)
+        }
+        catch {
+            // do something to broad cast the error to both you and the user
+            print(error)
+        }
+    }
+    
+    private func update<ModelType: SchemaBacked>(_ model: ModelType, setter: Setter) throws {
+        guard let id = model.id else { return }
+        
+        try connection.run(
+            ModelType.SchemaType.tableExpression
+                .filter(ModelType.SchemaType.id == id)
+                .update(setter, Schema.Tasks.updatedAt <- Date.now)
+        )
+    }
+        
+    public func purgeRecentlyDeleted<ModelType: SchemaBacked>(_ model: ModelType) {
+        do {
             
-            try connection.run(
-                ModelType.SchemaType.tableExpression
-                    .filter(ModelType.SchemaType.id == id)
-                    .update(ModelType.getSchemaExpression(for: path) <- value)
-            )
         }
         catch {
             // do something to broad cast the error to both you and the user
@@ -107,7 +133,9 @@ extension Database {
         
         var tableExpression: SQLite.Table{
             switch self {
-            case .allActiveItems: Schema.Tasks.tableExpression.filter(!Schema.Tasks.isCompleted && !Schema.Tasks.isDeleted)
+            case .allActiveItems: Schema.Tasks.tableExpression.filter(
+                Schema.Tasks.completedAt == nil && Schema.Tasks.deletedAt == nil
+            )
             }
         }
     }

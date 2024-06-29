@@ -1,16 +1,21 @@
+import Foundation
 
 public struct KillerTask: Identifiable, Equatable, Clonable {
-    public init(id: Int? = nil, body: String, isCompleted: Bool, isDeleted: Bool) {
+    public init(id: Int? = nil, body: String, createdAt: Date, updatedAt: Date, completedAt: Date? = nil, deletedAt: Date? = nil) {
         self.id = id
         self.body = body
-        self.isCompleted = isCompleted
-        self.isDeleted = isDeleted
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.completedAt = completedAt
+        self.deletedAt = deletedAt
     }
     
     public let id: Int?
-    public let body: String
-    public var isCompleted: Bool
-    public var isDeleted: Bool
+    public var body: String
+    public var createdAt: Date
+    public var updatedAt: Date
+    public var completedAt: Date?
+    public var deletedAt: Date?
 }
 
 protocol Clonable {

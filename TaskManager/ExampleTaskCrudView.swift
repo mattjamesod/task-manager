@@ -15,6 +15,12 @@ class TaskListManager {
         tasks.remove(at: index)
         return true
     }
+    
+    func update<T>(task: KillerTask, suchThat path: WritableKeyPath<KillerTask, T>, is value: T) -> Bool {
+        guard let index = tasks.firstIndex(of: task) else { return false }
+        tasks[index][keyPath: path] = value
+        return true
+    }
 }
 
 struct ExampleTaskCrudView: View {
@@ -63,7 +69,7 @@ struct TaskView: View {
         guard taskListManager.remove(task: self.task) else { return }
         
         Task.detached {
-            await database?.update(task, suchThat: \.isCompleted, is: true)
+            await database?.update(task, suchThat: \.completedAt, is: Date.now)
         }
     }
     
@@ -71,7 +77,17 @@ struct TaskView: View {
         guard taskListManager.remove(task: self.task) else { return }
         
         Task.detached {
-            await database?.update(task, suchThat: \.isDeleted, is: true)
+            await database?.update(task, suchThat: \.deletedAt, is: Date.now)
+        }
+    }
+    
+    private func updateBodyAction() {
+        let newBody = "I've been updated 🎉"
+        
+        guard taskListManager.update(task: self.task, suchThat: \.body, is: newBody) else { return }
+        
+        Task.detached {
+            await database?.update(task, suchThat: \.body, is: newBody)
         }
     }
     
@@ -88,6 +104,9 @@ struct TaskView: View {
         .contextMenu(menuItems: {
             Button(action: deleteButtonAction) {
                 Label("Delete", systemImage: "trash")
+            }
+            Button(action: updateBodyAction) {
+                Label("Update", systemImage: "square.and.pencil")
             }
         })
     }
