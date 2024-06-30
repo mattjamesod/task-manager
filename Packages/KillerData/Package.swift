@@ -24,7 +24,10 @@ let package = Package(
     targets: [
         .target(
             name: "KillerData",
-            dependencies: ["SQLite", "KillerModels"]
+            dependencies: [
+                .product(name: "SQLite", package: "SQLite.swift"),
+                "KillerModels"
+            ]
         ),
         .testTarget(
             name: "KillerDataTests",

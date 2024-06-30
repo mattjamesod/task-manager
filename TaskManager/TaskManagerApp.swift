@@ -1,5 +1,4 @@
 import SwiftUI
-import KillerModels
 import KillerData
 
 @main
