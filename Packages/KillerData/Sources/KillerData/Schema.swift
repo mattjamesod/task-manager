@@ -5,6 +5,9 @@ import KillerModels
 public protocol ModelSchema {
     static var tableExpression: SQLite.Table { get }
     static var id: SQLite.Expression<Int> { get }
+    static var createdAt: SQLite.Expression<Date> { get }
+    static var updatedAt: SQLite.Expression<Date> { get }
+    static var deletedAt: SQLite.Expression<Date?> { get }
 }
 
 public protocol SchemaBacked {
@@ -21,11 +24,12 @@ extension Database {
         public enum Tasks: ModelSchema {
             public static let tableExpression: SQLite.Table = Table("tasks")
             public static let id = SQLite.Expression<Int>("id")
+            public static let createdAt = SQLite.Expression<Date>("createdAt")
+            public static let updatedAt = SQLite.Expression<Date>("updatedAt")
+            public static let deletedAt = SQLite.Expression<Date?>("deletedAt")
+            
             static let body = SQLite.Expression<String>("body")
-            static let createdAt = SQLite.Expression<Date>("createdAt")
-            static let updatedAt = SQLite.Expression<Date>("updatedAt")
             static let completedAt = SQLite.Expression<Date?>("completedAt")
-            static let deletedAt = SQLite.Expression<Date?>("deletedAt")
             
             static var create: String {
                 self.tableExpression.create(ifNotExists: true) {

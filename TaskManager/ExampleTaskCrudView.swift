@@ -119,7 +119,7 @@ struct NewTaskButton: View {
     var body: some View {
         Button("Add New Task") {
             Task.detached {
-                if let newTask = await database?.insert(KillerTask.self, setting: \.body, to: "A brand new baby task!") {
+                if let newTask = await database?.insert(KillerTask.self, setting: Database.PropertyArgument(\.body, to: "A brand new baby task")) {
                     await taskListManager.add(task: newTask)
                 }
             }

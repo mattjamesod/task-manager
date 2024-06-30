@@ -42,11 +42,48 @@ public actor Database {
         }
     }
     
+    public struct PropertyArgument<ModelType: SchemaBacked, T: SQLite.Value> {
+        let keyPath: KeyPath<ModelType, T>?
+        let optionalKeyPath: KeyPath<ModelType, T?>?
+        let value: T?
+        
+        public init(_ keyPath: KeyPath<ModelType, T>, to value: T) {
+            self.keyPath = keyPath
+            self.value = value
+            
+            self.optionalKeyPath = nil
+        }
+        
+        public init(_ keyPath: KeyPath<ModelType, T?>, to value: T?) {
+            self.optionalKeyPath = keyPath
+            self.value = value
+            
+            self.keyPath = nil
+        }
+        
+        func getSetter() throws -> Setter {
+            if let keyPath {
+                try ModelType.getSchemaExpression(for: keyPath) <- value!
+            }
+            else if let optionalKeyPath {
+                try ModelType.getSchemaExpression(optional: optionalKeyPath) <- value
+            }
+            else {
+                // one of the above properties must exist, so this code is impossible to reach
+                fatalError()
+            }
+        }
+    }
+    
+//    database?.insert(KillerTask.self, values: [
+//        \.body <- "Brand new baby task",
+//        \.completedAt <- Date.now
+//    ])
+    
     @discardableResult
     public func insert<ModelType: SchemaBacked, each T: SQLite.Value>(
         _ type: ModelType.Type,
-        setting properties: repeat KeyPath<ModelType, each T>,
-        to values: repeat each T
+        setting properties: repeat PropertyArgument<ModelType, each T>
     ) -> ModelType? {
         do {
             // no way to map over a parameter pack since you have to `repeat` them, so here
@@ -54,8 +91,8 @@ public actor Database {
             
             var setters: [Setter] = []
             
-            for (property, value) in repeat (each properties, each values) {
-                setters.append(try ModelType.getSchemaExpression(for: property) <- value)
+            for property in repeat each properties {
+                setters.append(try property.getSetter())
             }
             
             let newId = try connection.run(
@@ -118,7 +155,11 @@ public actor Database {
         
     public func purgeRecentlyDeleted<ModelType: SchemaBacked>(_ model: ModelType) {
         do {
-            
+            try connection.run(
+                ModelType.SchemaType.tableExpression
+                    .filter(ModelType.SchemaType.deletedAt < Calendar.current.date(byAdding: DateComponents(day: -30), to: Date.now)!)
+                    .delete()
+            )
         }
         catch {
             // do something to broad cast the error to both you and the user
