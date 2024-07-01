@@ -36,13 +36,16 @@ struct ExampleTaskCrudView: View {
             }
             .animation(.bouncy, value: taskListManager.tasks)
             
-            NewTaskButton()
-                .frame(maxHeight: .infinity, alignment: .bottom)
-                .padding(.bottom, 16)
+            VStack(spacing: 16) {
+                NewTaskButton()
+                PurgeDeletedButton()
+            }
+            .frame(maxHeight: .infinity, alignment: .bottom)
+            .padding(.bottom, 16)
         }
         .environment(taskListManager)
         .task {
-            taskListManager.tasks = await database?.fetch(KillerTask.self, query: .allActiveItems) ?? []
+            taskListManager.tasks = await database?.fetch(KillerTask.self, query: .allActiveTasks) ?? []
         }
     }
 }
@@ -69,7 +72,15 @@ struct TaskView: View {
         guard taskListManager.remove(task: self.task) else { return }
         
         Task.detached {
-            await database?.update(task, suchThat: \.completedAt, is: Date.now)
+            await database?.update(task, \.completedAt <- Date.now)
+        }
+    }
+    
+    private func superDeleteButtonAction() {
+        guard taskListManager.remove(task: self.task) else { return }
+        
+        Task.detached {
+            await database?.update(task, \.deletedAt <- 45.days.ago)
         }
     }
     
@@ -77,7 +88,7 @@ struct TaskView: View {
         guard taskListManager.remove(task: self.task) else { return }
         
         Task.detached {
-            await database?.update(task, suchThat: \.deletedAt, is: Date.now)
+            await database?.update(task, \.deletedAt <- Date.now)
         }
     }
     
@@ -87,7 +98,7 @@ struct TaskView: View {
         guard taskListManager.update(task: self.task, suchThat: \.body, is: newBody) else { return }
         
         Task.detached {
-            await database?.update(task, suchThat: \.body, is: newBody)
+            await database?.update(task, \.body <- newBody)
         }
     }
     
@@ -104,6 +115,9 @@ struct TaskView: View {
         .contextMenu(menuItems: {
             Button(action: deleteButtonAction) {
                 Label("Delete", systemImage: "trash")
+            }
+            Button(action: superDeleteButtonAction) {
+                Label("Super Delete", systemImage: "trash")
             }
             Button(action: updateBodyAction) {
                 Label("Update", systemImage: "square.and.pencil")
@@ -127,6 +141,27 @@ struct NewTaskButton: View {
                     await taskListManager.add(task: newTask)
                 }
             }
+        }
+    }
+}
+
+struct PurgeDeletedButton: View {
+    @Environment(TaskListManager.self) var taskListManager
+    @Environment(\.database) var database
+    @State var recenetlyDeletedCount: Int = 0
+    
+    var body: some View {
+        VStack {
+            Button("Purge Deleted Tasks") {
+                Task.detached {
+                    await database?.purgeRecentlyDeleted(KillerTask.self)
+                }
+            }
+            Text("There are \(recenetlyDeletedCount) deleted tasks.")
+                .font(.caption)
+        }
+        .task {
+            recenetlyDeletedCount = await database?.count(KillerTask.self, query: .deletedTasks) ?? 0
         }
     }
 }

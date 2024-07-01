@@ -19,6 +19,9 @@ let package = Package(
         ),
         .package(
             path: "../KillerModels"
+        ),
+        .package(
+            path: "../../../packages/AndHashUtilities"
         )
     ],
     targets: [
@@ -26,7 +29,8 @@ let package = Package(
             name: "KillerData",
             dependencies: [
                 .product(name: "SQLite", package: "SQLite.swift"),
-                "KillerModels"
+                "KillerModels",
+                .product(name: "UtilExtensions", package: "AndHashUtilities"),
             ]
         ),
         .testTarget(

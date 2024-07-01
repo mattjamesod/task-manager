@@ -10,6 +10,9 @@
 		A0456FDE2C2E0FD200DC2879 /* KillerData in Frameworks */ = {isa = PBXBuildFile; productRef = A0456FDD2C2E0FD200DC2879 /* KillerData */; };
 		A0456FE12C2EA10200DC2879 /* KillerModels in Frameworks */ = {isa = PBXBuildFile; productRef = A0456FE02C2EA10200DC2879 /* KillerModels */; };
 		A0456FE42C2EA11500DC2879 /* KillerData in Frameworks */ = {isa = PBXBuildFile; productRef = A0456FE32C2EA11500DC2879 /* KillerData */; };
+		A04EDD382C31E79B00B299C4 /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = A04EDD372C31E79B00B299C4 /* Logging */; };
+		A04EDD3A2C31E79B00B299C4 /* UtilExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = A04EDD392C31E79B00B299C4 /* UtilExtensions */; };
+		A04EDD3C2C31E79B00B299C4 /* UtilViews in Frameworks */ = {isa = PBXBuildFile; productRef = A04EDD3B2C31E79B00B299C4 /* UtilViews */; };
 		A05115712C2DC08900923202 /* KillerModels in Frameworks */ = {isa = PBXBuildFile; productRef = A05115702C2DC08900923202 /* KillerModels */; };
 		A055B5BE2C25E52200BCB5C2 /* TaskManagerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */; };
 		A055B5C02C25E52200BCB5C2 /* ExampleTaskCrudView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5BF2C25E52200BCB5C2 /* ExampleTaskCrudView.swift */; };
@@ -58,10 +61,13 @@
 			files = (
 				A0D1EBED2C26C5C7008636CB /* SQLite in Frameworks */,
 				A0456FE12C2EA10200DC2879 /* KillerModels in Frameworks */,
+				A04EDD3A2C31E79B00B299C4 /* UtilExtensions in Frameworks */,
 				A0DB377C2C2DD02A00D17C00 /* KillerModels in Frameworks */,
 				A05115712C2DC08900923202 /* KillerModels in Frameworks */,
 				A0DB37812C2E0ED200D17C00 /* KillerModels in Frameworks */,
 				A0456FDE2C2E0FD200DC2879 /* KillerData in Frameworks */,
+				A04EDD3C2C31E79B00B299C4 /* UtilViews in Frameworks */,
+				A04EDD382C31E79B00B299C4 /* Logging in Frameworks */,
 				A0456FE42C2EA11500DC2879 /* KillerData in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -163,6 +169,9 @@
 				A0456FDD2C2E0FD200DC2879 /* KillerData */,
 				A0456FE02C2EA10200DC2879 /* KillerModels */,
 				A0456FE32C2EA11500DC2879 /* KillerData */,
+				A04EDD372C31E79B00B299C4 /* Logging */,
+				A04EDD392C31E79B00B299C4 /* UtilExtensions */,
+				A04EDD3B2C31E79B00B299C4 /* UtilViews */,
 			);
 			productName = TaskManager;
 			productReference = A055B5BA2C25E52200BCB5C2 /* TaskManager.app */;
@@ -240,6 +249,7 @@
 				A0D1EBEB2C26C5C7008636CB /* XCRemoteSwiftPackageReference "SQLite" */,
 				A0456FDF2C2EA10200DC2879 /* XCLocalSwiftPackageReference "Packages/KillerModels" */,
 				A0456FE22C2EA11500DC2879 /* XCLocalSwiftPackageReference "Packages/KillerData" */,
+				A04EDD362C31E79B00B299C4 /* XCLocalSwiftPackageReference "../packages/AndHashUtilities" */,
 			);
 			productRefGroup = A055B5BB2C25E52200BCB5C2 /* Products */;
 			projectDirPath = "";
@@ -655,6 +665,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/KillerData;
 		};
+		A04EDD362C31E79B00B299C4 /* XCLocalSwiftPackageReference "../packages/AndHashUtilities" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../packages/AndHashUtilities;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -680,6 +694,18 @@
 		A0456FE32C2EA11500DC2879 /* KillerData */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = KillerData;
+		};
+		A04EDD372C31E79B00B299C4 /* Logging */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Logging;
+		};
+		A04EDD392C31E79B00B299C4 /* UtilExtensions */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = UtilExtensions;
+		};
+		A04EDD3B2C31E79B00B299C4 /* UtilViews */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = UtilViews;
 		};
 		A05115702C2DC08900923202 /* KillerModels */ = {
 			isa = XCSwiftPackageProductDependency;

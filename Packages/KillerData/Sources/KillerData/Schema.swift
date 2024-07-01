@@ -1,5 +1,5 @@
 import Foundation
-import SQLite
+@preconcurrency import SQLite
 import KillerModels
 
 public protocol ModelSchema {

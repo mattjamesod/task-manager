@@ -3,11 +3,11 @@ import SQLite
 infix operator <-
 
 public func <-<ModelType: SchemaBacked, T: SQLite.Value>(keyPath: KeyPath<ModelType, T>, value: T) -> PropertyArgument<ModelType, T> {
-    PropertyArgument(keyPath, to: value)
+    PropertyArgument(keyPath, value)
 }
 
 public func <-<ModelType: SchemaBacked, T: SQLite.Value>(keyPath: KeyPath<ModelType, T?>, value: T) -> PropertyArgument<ModelType, T> {
-    PropertyArgument(keyPath, to: value)
+    PropertyArgument(keyPath, value)
 }
 
 public struct PropertyArgument<ModelType: SchemaBacked, T: SQLite.Value> {
@@ -15,14 +15,14 @@ public struct PropertyArgument<ModelType: SchemaBacked, T: SQLite.Value> {
     let optionalKeyPath: KeyPath<ModelType, T?>?
     let value: T?
     
-    init(_ keyPath: KeyPath<ModelType, T>, to value: T) {
+    fileprivate init(_ keyPath: KeyPath<ModelType, T>, _ value: T) {
         self.keyPath = keyPath
         self.value = value
         
         self.optionalKeyPath = nil
     }
     
-    init(_ keyPath: KeyPath<ModelType, T?>, to value: T?) {
+    fileprivate init(_ keyPath: KeyPath<ModelType, T?>, _ value: T?) {
         self.optionalKeyPath = keyPath
         self.value = value
         
