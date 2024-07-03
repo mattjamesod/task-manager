@@ -1,6 +1,6 @@
 import Foundation
 
-public struct KillerTask: Identifiable, Equatable, Clonable {
+public struct KillerTask: Sendable, Identifiable, Equatable, Clonable {
     public init(id: Int? = nil, body: String, createdAt: Date, updatedAt: Date, completedAt: Date? = nil, deletedAt: Date? = nil) {
         self.id = id
         self.body = body

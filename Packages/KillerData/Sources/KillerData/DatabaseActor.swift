@@ -1,6 +1,7 @@
 import SQLite
 import SwiftUI
 import UtilExtensions
+import KillerModels
 
 enum DatabaseConnectionError: Error {
     case couldNotAccessDocumentsDirectory
@@ -31,6 +32,10 @@ public actor Database {
         }
     }
     
+    internal static func inMemory() -> Database {
+        try! Database(schema: .testing, connection: Connection())
+    }
+    
     public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, query: Database.Query) -> [ModelType] {
         do {
             let records = try connection.prepare(query.tableExpression)
@@ -55,24 +60,33 @@ public actor Database {
     }
     
     @discardableResult
-    public func insert<ModelType: SchemaBacked, each T: SQLite.Value>(
+    public func insert<ModelType: SchemaBacked, PropertyType1: SQLite.Value>(
         _ type: ModelType.Type,
-        _ properties: repeat PropertyArgument<ModelType, each T>
+        _ property1: PropertyArgument<ModelType, PropertyType1>
     ) -> ModelType? {
+        self.insert(type, {[
+            try property1.getSetter()
+        ]})
+    }
+    
+    @discardableResult
+    public func insert<ModelType: SchemaBacked, PropertyType1: SQLite.Value, PropertyType2: SQLite.Value>(
+        _ type: ModelType.Type,
+        _ property1: PropertyArgument<ModelType, PropertyType1>,
+        _ property2: PropertyArgument<ModelType, PropertyType2>
+    ) -> ModelType? {
+        self.insert(type, {[
+            try property1.getSetter(),
+            try property2.getSetter()
+        ]})
+    }
+    
+    private func insert<ModelType: SchemaBacked>(_ typ: ModelType.Type, _ setters: () throws -> [Setter]) -> ModelType? {
         do {
-            // no way to map over a parameter pack since you have to `repeat` them, so here
-            // we use a slightly ugly loop to generate an array of property setters
-            
-            var setters: [Setter] = []
-            
-            for property in repeat each properties {
-                setters.append(try property.getSetter())
-            }
-            
             let newId = try connection.run(
-                ModelType.SchemaType.tableExpression.insert(setters)
+                ModelType.SchemaType.tableExpression.insert(setters())
             )
-            
+                        
             return try connection.prepare(
                 ModelType.SchemaType.tableExpression
                     .filter(Schema.Tasks.id == Int(newId))
@@ -81,36 +95,46 @@ public actor Database {
             .first
         }
         catch {
+            // sqlite specific errors, print problem query?
             // do something to broad cast the error to both you and the user
-            print(error.localizedDescription)
+            print(error)
             return nil
         }
     }
     
-    /// Updates a specified property for a record matching the id of the given model.
-    // TODO:  If the model has no matching record in the database, it is created with the updated value.
-    public func update<ModelType: SchemaBacked, each PropertyType: SQLite.Value>(
+    // parameter packs and concurrency do NOT play nicely, therefor just add helpers
+    // for however many args needed...
+    public func update<ModelType: SchemaBacked, PropertyType1: SQLite.Value>(
         _ model: ModelType,
-        _ properties: repeat PropertyArgument<ModelType, each PropertyType>)
-    {
+        _ property1: PropertyArgument<ModelType, PropertyType1>
+    ) {
+        self.update(model, {[
+            try property1.getSetter(),
+            ModelType.SchemaType.updatedAt <- Date.now
+        ]})
+    }
+    
+    public func update<ModelType: SchemaBacked, PropertyType1: SQLite.Value, PropertyType2: SQLite.Value>(
+        _ model: ModelType,
+        _ property1: PropertyArgument<ModelType, PropertyType1>,
+        _ property2: PropertyArgument<ModelType, PropertyType2>
+    ) {
+        self.update(model, {[
+            try property1.getSetter(),
+            try property2.getSetter(),
+            ModelType.SchemaType.updatedAt <- Date.now
+        ]})
+    }
+    
+    // TODO:  If the model has no matching record in the database, it is created with the updated value.
+    private func update<ModelType: SchemaBacked>(_ model: ModelType, _ setters: () throws -> [Setter]) {
         do {
             guard let id = model.id else { return }
-            
-            // no way to map over a parameter pack since you have to `repeat` them, so here
-            // we use a slightly ugly loop to generate an array of property setters
-            
-            var setters: [Setter] = []
-                
-            for property in repeat each properties {
-                setters.append(try property.getSetter())
-            }
-            
-            setters.append(ModelType.SchemaType.updatedAt <- Date.now)
             
             try connection.run(
                 ModelType.SchemaType.tableExpression
                     .filter(ModelType.SchemaType.id == id)
-                    .update(setters)
+                    .update(setters())
             )
         }
         catch {
@@ -142,7 +166,7 @@ extension Database {
         var tableExpression: SQLite.Table{
             switch self {
             case .allActiveTasks: Schema.Tasks.tableExpression.filter(
-                Schema.Tasks.completedAt == nil && Schema.Tasks.deletedAt == nil
+                Schema.Tasks.completedAt == nil
             )
             case .deletedTasks: Schema.Tasks.tableExpression.filter(
                 Schema.Tasks.deletedAt != nil

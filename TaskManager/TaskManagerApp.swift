@@ -25,9 +25,9 @@ struct TaskManagerApp: App {
                 CatastrophicErrorView()
             }
         }
-        .backgroundTask(.appRefresh("RECENTLY_DELETED_PURGE")) {
-
-        }
+//        .backgroundTask(.appRefresh("RECENTLY_DELETED_PURGE")) {
+//
+//        }
     }
 }
 

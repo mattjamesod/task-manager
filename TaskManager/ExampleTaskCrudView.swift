@@ -67,7 +67,7 @@ struct TaskView: View {
     @Environment(TaskListManager.self) var taskListManager
     @Environment(\.database) var database
     let task: KillerTask
-    
+     
     private func completeButtonAction() {
         guard taskListManager.remove(task: self.task) else { return }
         
@@ -135,8 +135,7 @@ struct NewTaskButton: View {
             Task.detached {
                 if let newTask = await database?.insert(
                     KillerTask.self,
-                    \.body <- "A brand new baby task",
-                    \.completedAt <- Date.now
+                    \.body <- "A brand new baby task"
                 ) {
                     await taskListManager.add(task: newTask)
                 }

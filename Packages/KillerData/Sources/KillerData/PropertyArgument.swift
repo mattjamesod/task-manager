@@ -11,23 +11,23 @@ public func <-<ModelType: SchemaBacked, T: SQLite.Value>(keyPath: KeyPath<ModelT
 }
 
 public struct PropertyArgument<ModelType: SchemaBacked, T: SQLite.Value> {
-    let keyPath: KeyPath<ModelType, T>?
-    let optionalKeyPath: KeyPath<ModelType, T?>?
-    let value: T?
-    
-    fileprivate init(_ keyPath: KeyPath<ModelType, T>, _ value: T) {
+    public init(_ keyPath: KeyPath<ModelType, T>, _ value: T) {
         self.keyPath = keyPath
         self.value = value
         
         self.optionalKeyPath = nil
     }
     
-    fileprivate init(_ keyPath: KeyPath<ModelType, T?>, _ value: T?) {
+    public init(_ keyPath: KeyPath<ModelType, T?>, _ value: T?) {
         self.optionalKeyPath = keyPath
         self.value = value
         
         self.keyPath = nil
     }
+    
+    let keyPath: KeyPath<ModelType, T>?
+    let optionalKeyPath: KeyPath<ModelType, T?>?
+    let value: T?
     
     func getSetter() throws -> Setter {
         if let keyPath {
@@ -42,3 +42,5 @@ public struct PropertyArgument<ModelType: SchemaBacked, T: SQLite.Value> {
         }
     }
 }
+
+
