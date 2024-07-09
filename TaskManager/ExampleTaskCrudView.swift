@@ -1,13 +1,44 @@
 import SwiftUI
 import KillerModels
 import KillerData
+import AsyncAlgorithms
 
-@Observable @MainActor 
+actor TaskListener {
+    func listen(to database: Database, for taskListManager: TaskListManager) async {
+        let incomingMessages = await KillerTask.messageHandler.subscribe()
+        
+        for await event in incomingMessages {
+            switch event {
+            case .insert(let id):
+                guard let task = await taskListManager.fetch(id: id, on: database) else {
+                    await taskListManager.remove(with: id)
+                    break
+                }
+                await taskListManager.add(task: task)
+            case .update(let id):
+                guard let task = await taskListManager.fetch(id: id, on: database) else {
+                    await taskListManager.remove(with: id)
+                    break
+                }
+                await taskListManager.update(task: task)
+            }
+        }
+    }
+}
+
+@Observable @MainActor
 class TaskListManager {
+    let taskContext: Database.QueryContext = .allActiveTasks
+    
     var tasks: [KillerTask] = []
     
     func add(task: KillerTask) {
         tasks.append(task)
+    }
+    
+    func update(task: KillerTask) {
+        guard let index = tasks.firstIndex(where: { $0.id == task.id }) else { return }
+        tasks[index] = task
     }
     
     func remove(task: KillerTask) -> Bool {
@@ -16,16 +47,27 @@ class TaskListManager {
         return true
     }
     
-    func update<T>(task: KillerTask, suchThat path: WritableKeyPath<KillerTask, T>, is value: T) -> Bool {
-        guard let index = tasks.firstIndex(of: task) else { return false }
-        tasks[index][keyPath: path] = value
-        return true
+    func remove(with id: Int) {
+        guard let index = tasks.firstIndex(where: { $0.id == id }) else { return }
+        tasks.remove(at: index)
+    }
+    
+    nonisolated func fetch(id: Int, on database: Database) async -> KillerTask? {
+        await database.fetch(KillerTask.self, id: id, context: self.taskContext)
+    }
+    
+    nonisolated func fetch(on database: Database) async {
+        let tasks = await database.fetch(KillerTask.self, query: self.taskContext)
+        Task { @MainActor in
+            self.tasks = tasks
+        }
     }
 }
 
 struct ExampleTaskCrudView: View {
     @Environment(\.database) var database
     @State var taskListManager: TaskListManager = .init()
+    var taskListener: TaskListener = .init()
     
     var body: some View {
         ZStack {
@@ -38,14 +80,16 @@ struct ExampleTaskCrudView: View {
             
             VStack(spacing: 16) {
                 NewTaskButton()
-                PurgeDeletedButton()
             }
             .frame(maxHeight: .infinity, alignment: .bottom)
             .padding(.bottom, 16)
         }
         .environment(taskListManager)
         .task {
-            taskListManager.tasks = await database?.fetch(KillerTask.self, query: .allActiveTasks) ?? []
+            guard let database else { return }
+            
+            await taskListManager.fetch(on: database)
+            await taskListener.listen(to: database, for: taskListManager)
         }
     }
 }
@@ -69,36 +113,26 @@ struct TaskView: View {
     let task: KillerTask
      
     private func completeButtonAction() {
-        guard taskListManager.remove(task: self.task) else { return }
-        
         Task.detached {
             await database?.update(task, \.completedAt <- Date.now)
         }
     }
     
     private func superDeleteButtonAction() {
-        guard taskListManager.remove(task: self.task) else { return }
-        
         Task.detached {
             await database?.update(task, \.deletedAt <- 45.days.ago)
         }
     }
     
     private func deleteButtonAction() {
-        guard taskListManager.remove(task: self.task) else { return }
-        
         Task.detached {
             await database?.update(task, \.deletedAt <- Date.now)
         }
     }
     
     private func updateBodyAction() {
-        let newBody = "I've been updated 🎉"
-        
-        guard taskListManager.update(task: self.task, suchThat: \.body, is: newBody) else { return }
-        
         Task.detached {
-            await database?.update(task, \.body <- newBody)
+            await database?.update(task, \.body <- "I've been updated 🎉")
         }
     }
     
@@ -116,9 +150,6 @@ struct TaskView: View {
             Button(action: deleteButtonAction) {
                 Label("Delete", systemImage: "trash")
             }
-            Button(action: superDeleteButtonAction) {
-                Label("Super Delete", systemImage: "trash")
-            }
             Button(action: updateBodyAction) {
                 Label("Update", systemImage: "square.and.pencil")
             }
@@ -133,34 +164,8 @@ struct NewTaskButton: View {
     var body: some View {
         Button("Add New Task") {
             Task.detached {
-                if let newTask = await database?.insert(
-                    KillerTask.self,
-                    \.body <- "A brand new baby task"
-                ) {
-                    await taskListManager.add(task: newTask)
-                }
+                await database?.insert(KillerTask.self, \.body <- "A brand new baby task")
             }
-        }
-    }
-}
-
-struct PurgeDeletedButton: View {
-    @Environment(TaskListManager.self) var taskListManager
-    @Environment(\.database) var database
-    @State var recenetlyDeletedCount: Int = 0
-    
-    var body: some View {
-        VStack {
-            Button("Purge Deleted Tasks") {
-                Task.detached {
-                    await database?.purgeRecentlyDeleted(KillerTask.self)
-                }
-            }
-            Text("There are \(recenetlyDeletedCount) deleted tasks.")
-                .font(.caption)
-        }
-        .task {
-            recenetlyDeletedCount = await database?.count(KillerTask.self, query: .deletedTasks) ?? 0
         }
     }
 }

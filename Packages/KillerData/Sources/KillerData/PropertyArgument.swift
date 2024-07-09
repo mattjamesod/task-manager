@@ -2,45 +2,57 @@ import SQLite
 
 infix operator <-
 
-public func <-<ModelType: SchemaBacked, T: SQLite.Value>(keyPath: KeyPath<ModelType, T>, value: T) -> PropertyArgument<ModelType, T> {
+public func <-<ModelType: SchemaBacked, T: SQLite.Value>(keyPath: WritableKeyPath<ModelType, T>, value: T) -> PropertyArgument<ModelType, T> {
     PropertyArgument(keyPath, value)
 }
 
-public func <-<ModelType: SchemaBacked, T: SQLite.Value>(keyPath: KeyPath<ModelType, T?>, value: T) -> PropertyArgument<ModelType, T> {
+public func <-<ModelType: SchemaBacked, T: SQLite.Value>(keyPath: WritableKeyPath<ModelType, T?>, value: T) -> PropertyArgument<ModelType, T> {
     PropertyArgument(keyPath, value)
 }
 
-public struct PropertyArgument<ModelType: SchemaBacked, T: SQLite.Value> {
-    public init(_ keyPath: KeyPath<ModelType, T>, _ value: T) {
-        self.keyPath = keyPath
-        self.value = value
-        
-        self.optionalKeyPath = nil
+// Sendable conformance must be unchecked because we wnat to use this type in parameter packs, and as of writing,
+// parameter packs themselves complain about concurrency even if their underlying types are sendable, UNLESS it is
+// @unchecked...
+public struct PropertyArgument<ModelType: SchemaBacked, T: SQLite.Value>: @unchecked Sendable {
+    public init(_ keyPath: WritableKeyPath<ModelType, T>, _ value: T) {
+        self._keyPath = keyPath
+        self._value = value
+        self._optionalKeyPath = nil
     }
     
-    public init(_ keyPath: KeyPath<ModelType, T?>, _ value: T?) {
-        self.optionalKeyPath = keyPath
-        self.value = value
-        
-        self.keyPath = nil
+    public init(_ keyPath: WritableKeyPath<ModelType, T?>, _ value: T?) {
+        self._optionalKeyPath = keyPath
+        self._value = value
+        self._keyPath = nil
     }
     
-    let keyPath: KeyPath<ModelType, T>?
-    let optionalKeyPath: KeyPath<ModelType, T?>?
-    let value: T?
+    private let _keyPath: WritableKeyPath<ModelType, T>?
+    private let _optionalKeyPath: WritableKeyPath<ModelType, T?>?
+    private let _value: T?
     
     func getSetter() throws -> Setter {
-        if let keyPath {
-            try ModelType.getSchemaExpression(for: keyPath) <- value!
+        if let _keyPath {
+            try ModelType.getSchemaExpression(for: _keyPath) <- _value!
         }
-        else if let optionalKeyPath {
-            try ModelType.getSchemaExpression(optional: optionalKeyPath) <- value
+        else if let _optionalKeyPath {
+            try ModelType.getSchemaExpression(optional: _optionalKeyPath) <- _value
         }
         else {
             // one of the above properties must exist, so this code is impossible to reach
             fatalError()
         }
     }
+    
+//    func writeValue(to model: inout ModelType) {
+//        if let _keyPath {
+//            model[keyPath: _keyPath] = _value!
+//        }
+//        else if let _optionalKeyPath {
+//            model[keyPath: _optionalKeyPath] = _value
+//        }
+//        else {
+//            // one of the above properties must exist, so this code is impossible to reach
+//            fatalError()
+//        }
+//    }
 }
-
-

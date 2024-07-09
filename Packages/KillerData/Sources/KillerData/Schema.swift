@@ -1,4 +1,5 @@
 import Foundation
+import AsyncAlgorithms
 @preconcurrency import SQLite
 import KillerModels
 
@@ -10,13 +11,16 @@ public protocol ModelSchema {
     static var deletedAt: SQLite.Expression<Date?> { get }
 }
 
-public protocol SchemaBacked {
+public protocol SchemaBacked: Sendable {
     associatedtype SchemaType: ModelSchema
+    associatedtype MessageHandlerType: DatabaseMessageHandler
+    
     static func create(from databaseRecord: SQLite.Row) throws -> Self
     static func getSchemaExpression<T>(for keyPath: KeyPath<Self, T>) throws -> SQLite.Expression<T> where T: SQLite.Value
     static func getSchemaExpression<T>(optional keyPath: KeyPath<Self, T?>) throws -> SQLite.Expression<T?> where T: SQLite.Value
     
     var id: Int? { get }
+    static var messageHandler: MessageHandlerType { get }
 }
 
 extension Database {
@@ -51,6 +55,8 @@ extension Database {
 
 extension KillerTask: SchemaBacked {
     public typealias SchemaType = Database.Schema.Tasks
+    
+    public static var messageHandler: KillerTaskMessageHandler { .instance }
     
     public static func create(from databaseRecord: SQLite.Row) throws -> KillerTask {
         do {

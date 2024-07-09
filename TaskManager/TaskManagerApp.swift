@@ -18,8 +18,14 @@ struct TaskManagerApp: App {
     var body: some Scene {
         WindowGroup {
             if let database {
-                ExampleTaskCrudView()
-                    .environment(\.database, database)
+                VStack {
+                    ExampleTaskCrudView()
+                        .environment(\.database, database)
+                        .border(.red)
+                    ExampleTaskCrudView()
+                        .environment(\.database, database)
+                        .border(.blue)
+                }
             }
             else {
                 CatastrophicErrorView()

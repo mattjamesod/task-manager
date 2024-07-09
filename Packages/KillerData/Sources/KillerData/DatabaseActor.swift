@@ -1,7 +1,7 @@
 import SQLite
+import AsyncAlgorithms
 import SwiftUI
 import UtilExtensions
-import KillerModels
 
 enum DatabaseConnectionError: Error {
     case couldNotAccessDocumentsDirectory
@@ -36,7 +36,23 @@ public actor Database {
         try! Database(schema: .testing, connection: Connection())
     }
     
-    public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, query: Database.Query) -> [ModelType] {
+    public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, id: Int, context: Database.QueryContext? = nil) -> ModelType? {
+        do {
+            let query = context?.tableExpression ?? ModelType.SchemaType.tableExpression
+            let record = try connection.pluck(query.filter(Schema.Tasks.id == id))
+            
+            guard let record else { return nil }
+            
+            return try ModelType.create(from: record)
+        }
+        catch {
+            // do something to broad cast the error to both you and the user
+            print(error.localizedDescription)
+            return nil
+        }
+    }
+    
+    public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, query: Database.QueryContext) -> [ModelType] {
         do {
             let records = try connection.prepare(query.tableExpression)
             return try records.map(ModelType.create(from:))
@@ -48,7 +64,7 @@ public actor Database {
         }
     }
     
-    public func count<ModelType: SchemaBacked>(_ type: ModelType.Type, query: Database.Query) -> Int {
+    public func count<ModelType: SchemaBacked>(_ type: ModelType.Type, query: Database.QueryContext) -> Int {
         do {
             return try connection.scalar(query.tableExpression.count)
         }
@@ -87,12 +103,18 @@ public actor Database {
                 ModelType.SchemaType.tableExpression.insert(setters())
             )
                         
-            return try connection.prepare(
+            let result = try connection.prepare(
                 ModelType.SchemaType.tableExpression
                     .filter(Schema.Tasks.id == Int(newId))
             )
             .map(ModelType.create(from:))
             .first
+            
+            Task.detached {
+                await ModelType.messageHandler.send(.insert(id: Int(newId)))
+            }
+            
+            return result
         }
         catch {
             // sqlite specific errors, print problem query?
@@ -136,6 +158,10 @@ public actor Database {
                     .filter(ModelType.SchemaType.id == id)
                     .update(setters())
             )
+            
+            Task.detached {
+                await ModelType.messageHandler.send(.update(id: id))
+            }
         }
         catch {
             // do something to broad cast the error to both you and the user
@@ -159,14 +185,14 @@ public actor Database {
 }
 
 extension Database {
-    public enum Query {
+    public enum QueryContext: Sendable {
         case allActiveTasks
         case deletedTasks
         
         var tableExpression: SQLite.Table{
             switch self {
             case .allActiveTasks: Schema.Tasks.tableExpression.filter(
-                Schema.Tasks.completedAt == nil
+                Schema.Tasks.completedAt == nil && Schema.Tasks.deletedAt == nil
             )
             case .deletedTasks: Schema.Tasks.tableExpression.filter(
                 Schema.Tasks.deletedAt != nil

@@ -13,22 +13,17 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(
-            url: "https://github.com/stephencelis/SQLite.swift.git",
-            from: "0.15.3"
-        ),
-        .package(
-            path: "../KillerModels"
-        ),
-        .package(
-            path: "../../../packages/AndHashUtilities"
-        )
+        .package(url: "https://github.com/stephencelis/SQLite.swift.git", from: "0.15.3"),
+        .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.0"),
+        .package(path: "../KillerModels"),
+        .package(path: "../../../packages/AndHashUtilities"),
     ],
     targets: [
         .target(
             name: "KillerData",
             dependencies: [
                 .product(name: "SQLite", package: "SQLite.swift"),
+                .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                 "KillerModels",
                 .product(name: "UtilExtensions", package: "AndHashUtilities"),
             ]
