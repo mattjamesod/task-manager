@@ -4,25 +4,32 @@ import KillerData
 import AsyncAlgorithms
 
 actor TaskListener {
-    func listen(to database: Database, for taskListManager: TaskListManager) async {
+    unowned let taskListManager: TaskListManager
+    
+    init(taskListManager: TaskListManager) {
+        self.taskListManager = taskListManager
+    }
+    
+    func listen(to database: Database) async {
         let incomingMessages = await KillerTask.messageHandler.subscribe()
         
         for await event in incomingMessages {
             switch event {
             case .insert(let id):
-                guard let task = await taskListManager.fetch(id: id, on: database) else {
-                    await taskListManager.remove(with: id)
-                    break
-                }
-                await taskListManager.add(task: task)
+                await proccess(database: database, id: id, uiUpdate: taskListManager.add(task:))
             case .update(let id):
-                guard let task = await taskListManager.fetch(id: id, on: database) else {
-                    await taskListManager.remove(with: id)
-                    break
-                }
-                await taskListManager.update(task: task)
+                await proccess(database: database, id: id, uiUpdate: taskListManager.update(task:))
             }
         }
+    }
+    
+    private func proccess(database: Database, id: Int, uiUpdate: (KillerTask) async -> Void) async {
+        guard let task = await taskListManager.fetch(id: id, on: database) else {
+            await taskListManager.remove(with: id)
+            return
+        }
+        
+        await uiUpdate(task)
     }
 }
 
@@ -41,12 +48,6 @@ class TaskListManager {
         tasks[index] = task
     }
     
-    func remove(task: KillerTask) -> Bool {
-        guard let index = tasks.firstIndex(of: task) else { return false }
-        tasks.remove(at: index)
-        return true
-    }
-    
     func remove(with id: Int) {
         guard let index = tasks.firstIndex(where: { $0.id == id }) else { return }
         tasks.remove(at: index)
@@ -62,12 +63,15 @@ class TaskListManager {
             self.tasks = tasks
         }
     }
+    
+    nonisolated func listen(on database: Database) async {
+        await TaskListener(taskListManager: self).listen(to: database)
+    }
 }
 
 struct ExampleTaskCrudView: View {
     @Environment(\.database) var database
     @State var taskListManager: TaskListManager = .init()
-    var taskListener: TaskListener = .init()
     
     var body: some View {
         ZStack {
@@ -89,7 +93,7 @@ struct ExampleTaskCrudView: View {
             guard let database else { return }
             
             await taskListManager.fetch(on: database)
-            await taskListener.listen(to: database, for: taskListManager)
+            await taskListManager.listen(on: database)
         }
     }
 }
