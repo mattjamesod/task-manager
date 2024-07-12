@@ -18,7 +18,7 @@ public actor QueryMonitor<ModelType: SchemaBacked> {
         case remove(_ id: Int)
     }
     
-    public func listenForTasks(on database: Database) async {
+    public func beginMonitoring(_ database: Database) async {
         let events = await ModelType.messageHandler.subscribe()
         
         for await event in events {

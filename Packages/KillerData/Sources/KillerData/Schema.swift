@@ -39,8 +39,8 @@ extension Database {
                 self.tableExpression.create(ifNotExists: true) {
                     $0.column(Schema.Tasks.id, primaryKey: .autoincrement)
                     $0.column(Schema.Tasks.body)
-                    $0.column(Schema.Tasks.createdAt, defaultValue: Date.now)
-                    $0.column(Schema.Tasks.updatedAt, defaultValue: Date.now)
+                    $0.column(Schema.Tasks.createdAt)
+                    $0.column(Schema.Tasks.updatedAt)
                     $0.column(Schema.Tasks.completedAt, defaultValue: nil)
                     $0.column(Schema.Tasks.deletedAt, defaultValue: nil)
                 }

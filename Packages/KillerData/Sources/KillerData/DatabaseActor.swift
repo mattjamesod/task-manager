@@ -75,52 +75,44 @@ public actor Database {
         }
     }
     
-    @discardableResult
     public func insert<ModelType: SchemaBacked, PropertyType1: SQLite.Value>(
         _ type: ModelType.Type,
         _ property1: PropertyArgument<ModelType, PropertyType1>
-    ) -> ModelType? {
+    ) {
         self.insert(type, {[
-            try property1.getSetter()
+            try property1.getSetter(),
+            ModelType.SchemaType.createdAt <- Date.now,
+            ModelType.SchemaType.updatedAt <- Date.now
         ]})
     }
     
-    @discardableResult
     public func insert<ModelType: SchemaBacked, PropertyType1: SQLite.Value, PropertyType2: SQLite.Value>(
         _ type: ModelType.Type,
         _ property1: PropertyArgument<ModelType, PropertyType1>,
         _ property2: PropertyArgument<ModelType, PropertyType2>
-    ) -> ModelType? {
+    ) {
         self.insert(type, {[
             try property1.getSetter(),
-            try property2.getSetter()
+            try property2.getSetter(),
+            ModelType.SchemaType.createdAt <- Date.now,
+            ModelType.SchemaType.updatedAt <- Date.now
         ]})
     }
     
-    private func insert<ModelType: SchemaBacked>(_ typ: ModelType.Type, _ setters: () throws -> [Setter]) -> ModelType? {
+    private func insert<ModelType: SchemaBacked>(_ typ: ModelType.Type, _ setters: () throws -> [Setter]) {
         do {
             let newId = try connection.run(
                 ModelType.SchemaType.tableExpression.insert(setters())
             )
-                        
-            let result = try connection.prepare(
-                ModelType.SchemaType.tableExpression
-                    .filter(Schema.Tasks.id == Int(newId))
-            )
-            .map(ModelType.create(from:))
-            .first
             
             Task.detached {
                 await ModelType.messageHandler.send(.recordChange(id: Int(newId)))
             }
-            
-            return result
         }
         catch {
             // sqlite specific errors, print problem query?
             // do something to broad cast the error to both you and the user
             print(error)
-            return nil
         }
     }
     

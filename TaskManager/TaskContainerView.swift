@@ -1,10 +1,30 @@
 import SwiftUI
 import KillerModels
 import KillerData
-import AsyncAlgorithms
+
+extension RandomAccessCollection {
+    /// Finds such index N that predicate is true for all elements up to
+    /// but not including the index N, and is false for all elements
+    /// starting with index N.
+    /// Behavior is undefined if there is no such N.
+    func binarySearch(predicate: (Element) -> Bool) -> Index {
+        var low = startIndex
+        var high = endIndex
+        while low != high {
+            let mid = index(low, offsetBy: distance(from: low, to: high)/2)
+            if predicate(self[mid]) {
+                low = index(after: mid)
+            } else {
+                high = mid
+            }
+        }
+        return low
+    }
+}
 
 @Observable @MainActor
 class TaskContainerViewModel {
+    
     var tasks: [KillerTask] = []
     
     func addOrUpdate(task: KillerTask) {
@@ -12,13 +32,17 @@ class TaskContainerViewModel {
             tasks[index] = task
         }
         else {
-            tasks.append(task)
+            tasks.insert(task, at: position(of: task))
         }
     }
     
     func remove(with id: Int) {
         guard let index = tasks.firstIndex(where: { $0.id == id }) else { return }
         tasks.remove(at: index)
+    }
+    
+    private func position(of task: KillerTask) -> Int {
+        tasks.binarySearch { $0.createdAt < task.createdAt }
     }
 }
 
@@ -49,19 +73,25 @@ struct TaskContainerView: View {
         }
         .environment(viewModel)
         .task {
-            guard let database else { return }
-            
-            viewModel.tasks = await queryMonitor.fetch(from: database)
-            await queryMonitor.listenForTasks(on: database)
+            await setupData()
         }
         .task {
-            for await event in await queryMonitor.syncEvents {
-                switch event {
-                case .addOrUpdate(let task):
-                    viewModel.addOrUpdate(task: task)
-                case .remove(let id):
-                    viewModel.remove(with: id)
-                }
+            await listenForSyncEvents()
+        }
+    }
+    
+    private func setupData() async {
+        guard let database else { return }
+        
+        viewModel.tasks = await queryMonitor.fetch(from: database)
+        await queryMonitor.beginMonitoring(database)
+    }
+    
+    private func listenForSyncEvents() async {
+        for await event in await queryMonitor.syncEvents {
+            switch event {
+            case .addOrUpdate(let task): viewModel.addOrUpdate(task: task)
+            case .remove(let id): viewModel.remove(with: id)
             }
         }
     }
@@ -86,13 +116,20 @@ struct TaskView: View {
     
     let task: KillerTask
     
+    private var dateFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .long
+        return formatter
+    }
+    
     var body: some View {
         HStack {
             Button.async(action: { await database?.update(task, \.completedAt <- Date.now) }) {
                 Label("Complete", systemImage: "checkmark")
                     .labelStyle(.iconOnly)
             }
-            Text(task.body)
+            Text(dateFormatter.string(from: task.createdAt))
             Spacer()
         }
         .transition(.scale(scale: 0.95).combined(with: .opacity))
