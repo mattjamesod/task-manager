@@ -3,8 +3,7 @@ import AsyncAlgorithms
 import SQLite
 
 public enum DatabaseMessage: Sendable {
-    case insert(id: Int)
-    case update(id: Int)
+    case recordChange(id: Int)
 }
 
 public protocol DatabaseMessageHandler: Actor {

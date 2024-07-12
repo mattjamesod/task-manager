@@ -1,5 +1,4 @@
 import SQLite
-import AsyncAlgorithms
 import SwiftUI
 import UtilExtensions
 
@@ -25,6 +24,7 @@ public actor Database {
         self.connection = connection
         
         do {
+//            try schema.destroy(connection: connection)
             try schema.create(connection: connection)
         }
         catch {
@@ -36,7 +36,7 @@ public actor Database {
         try! Database(schema: .testing, connection: Connection())
     }
     
-    public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, id: Int, context: Database.QueryContext? = nil) -> ModelType? {
+    public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, id: Int, context: Database.Query? = nil) -> ModelType? {
         do {
             let query = context?.tableExpression ?? ModelType.SchemaType.tableExpression
             let record = try connection.pluck(query.filter(Schema.Tasks.id == id))
@@ -52,7 +52,7 @@ public actor Database {
         }
     }
     
-    public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, query: Database.QueryContext) -> [ModelType] {
+    public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, query: Database.Query) -> [ModelType] {
         do {
             let records = try connection.prepare(query.tableExpression)
             return try records.map(ModelType.create(from:))
@@ -64,7 +64,7 @@ public actor Database {
         }
     }
     
-    public func count<ModelType: SchemaBacked>(_ type: ModelType.Type, query: Database.QueryContext) -> Int {
+    public func count<ModelType: SchemaBacked>(_ type: ModelType.Type, query: Database.Query) -> Int {
         do {
             return try connection.scalar(query.tableExpression.count)
         }
@@ -111,7 +111,7 @@ public actor Database {
             .first
             
             Task.detached {
-                await ModelType.messageHandler.send(.insert(id: Int(newId)))
+                await ModelType.messageHandler.send(.recordChange(id: Int(newId)))
             }
             
             return result
@@ -160,7 +160,7 @@ public actor Database {
             )
             
             Task.detached {
-                await ModelType.messageHandler.send(.update(id: id))
+                await ModelType.messageHandler.send(.recordChange(id: id))
             }
         }
         catch {
@@ -180,24 +180,6 @@ public actor Database {
         catch {
             // do something to broad cast the error to both you and the user
             print(error)
-        }
-    }
-}
-
-extension Database {
-    public enum QueryContext: Sendable {
-        case allActiveTasks
-        case deletedTasks
-        
-        var tableExpression: SQLite.Table{
-            switch self {
-            case .allActiveTasks: Schema.Tasks.tableExpression.filter(
-                Schema.Tasks.completedAt == nil && Schema.Tasks.deletedAt == nil
-            )
-            case .deletedTasks: Schema.Tasks.tableExpression.filter(
-                Schema.Tasks.deletedAt != nil
-            )
-            }
         }
     }
 }

@@ -19,10 +19,10 @@ struct TaskManagerApp: App {
         WindowGroup {
             if let database {
                 VStack {
-                    ExampleTaskCrudView()
+                    TaskContainerView(query: .allActiveTasks)
                         .environment(\.database, database)
                         .border(.red)
-                    ExampleTaskCrudView()
+                    TaskContainerView(query: .deletedTasks)
                         .environment(\.database, database)
                         .border(.blue)
                 }
