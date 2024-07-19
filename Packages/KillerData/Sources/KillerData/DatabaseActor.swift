@@ -37,9 +37,9 @@ public actor Database {
         try! Database(schema: .testing, connection: Connection())
     }
     
-    public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, id: Int, context: Database.Query? = nil) -> ModelType? {
+    public func pluck<ModelType: SchemaBacked>(_ type: ModelType.Type, id: Int, context: Database.Query? = nil) -> ModelType? {
         do {
-            let query = context?.tableExpression ?? ModelType.SchemaType.tableExpression
+            let query = context?.apply(ModelType.SchemaType.tableExpression) ?? ModelType.SchemaType.tableExpression
             let record = try connection.pluck(query.filter(Schema.Tasks.id == id))
             
             guard let record else { return nil }
@@ -49,39 +49,29 @@ public actor Database {
         catch {
             // do something to broad cast the error to both you and the user
             print(error.localizedDescription)
+            print("\(#file):\(#function):\(#line)")
             return nil
         }
     }
     
     public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, query: Database.Query) -> [ModelType] {
         do {
-            let records = try connection.prepare(query.tableExpression)
+            let records = try connection.prepare(query.apply(ModelType.SchemaType.tableExpression))
             return try records.map(ModelType.create(from:))
         }
         catch {
             // do something to broad cast the error to both you and the user
             print(error.localizedDescription)
+            print("\(#file):\(#function):\(#line)")
             return []
         }
     }
     
-    public func recursiveFetch<ModelType: SchemaBacked & RecursiveData>(_ type: ModelType.Type, id: Int, context: Database.Query? = nil) -> [ModelType] {
+    public func fetch<ModelType: SchemaBacked & RecursiveData>(_ type: ModelType.Type, rootID: Int, context: Database.Query? = nil) -> [ModelType] {
         do {
-//            let query = context?.tableExpression ?? ModelType.SchemaType.tableExpression
-            let cte = Table("cte")
+            let table = context?.apply(ModelType.SchemaType.tableExpression) ?? ModelType.SchemaType.tableExpression
             
-            let tasks = Schema.Tasks.tableExpression
-            
-            let compoundQuery = Schema.Tasks.tableExpression
-                .where(Schema.Tasks.id == id)
-                .union(
-                    cte.join(tasks, on: cte[SQLite.Expression<Int>("id")] == tasks[SQLite.Expression<Int>("parentID")])
-                       .select(tasks[*])
-                )
-            
-            let recursiveExpression = cte.with(cte, recursive: true, as: compoundQuery)
-            
-            print(recursiveExpression.expression)
+            let recursiveExpression = buildRecursiveExpression(ModelType.self, rootID: rootID, base: table)
             
             let records = try connection.prepare(recursiveExpression)
             
@@ -90,17 +80,19 @@ public actor Database {
         catch {
             // do something to broad cast the error to both you and the user
             print(error.localizedDescription)
+            print("\(#file):\(#function):\(#line)")
             return []
         }
     }
     
     public func count<ModelType: SchemaBacked>(_ type: ModelType.Type, query: Database.Query) -> Int {
         do {
-            return try connection.scalar(query.tableExpression.count)
+            return try connection.scalar(query.apply(ModelType.SchemaType.tableExpression).count)
         }
         catch {
             // do something to broad cast the error to both you and the user
             print(error.localizedDescription)
+            print("\(#file):\(#function):\(#line)")
             return 0
         }
     }
@@ -129,7 +121,7 @@ public actor Database {
         ]})
     }
     
-    private func insert<ModelType: SchemaBacked>(_ typ: ModelType.Type, _ setters: () throws -> [Setter]) {
+    private func insert<ModelType: SchemaBacked>(_ type: ModelType.Type, _ setters: () throws -> [Setter]) {
         do {
             let newId = try connection.run(
                 ModelType.SchemaType.tableExpression.insert(setters())
@@ -143,6 +135,7 @@ public actor Database {
             // sqlite specific errors, print problem query?
             // do something to broad cast the error to both you and the user
             print(error)
+            print("\(#file):\(#function):\(#line)")
         }
     }
     
@@ -170,8 +163,31 @@ public actor Database {
         ]})
     }
     
+    public func update<ModelType: SchemaBacked & RecursiveData, PropertyType1: SQLite.Value>(
+        _ model: ModelType,
+        _ property1: PropertyArgument<ModelType, PropertyType1>
+    ) {
+        self.update(model, {[
+            try property1.getSetter(),
+            ModelType.SchemaType.updatedAt <- Date.now
+        ]})
+    }
+    
+    public func update<ModelType: SchemaBacked & RecursiveData, PropertyType1: SQLite.Value, PropertyType2: SQLite.Value>(
+        _ model: ModelType,
+        _ property1: PropertyArgument<ModelType, PropertyType1>,
+        _ property2: PropertyArgument<ModelType, PropertyType2>
+    ) {
+        self.update(model, {[
+            try property1.getSetter(),
+            try property2.getSetter(),
+            ModelType.SchemaType.updatedAt <- Date.now
+        ]})
+    }
+    
     // TODO:  If the model has no matching record in the database, it is created with the updated value.
     private func update<ModelType: SchemaBacked>(_ model: ModelType, _ setters: () throws -> [Setter]) {
+        print("the non-recursive one")
         do {
             guard let id = model.id else { return }
             
@@ -188,6 +204,35 @@ public actor Database {
         catch {
             // do something to broad cast the error to both you and the user
             print(error)
+            print("\(#file):\(#function):\(#line)")
+        }
+    }
+    
+    private func update<ModelType: SchemaBacked & RecursiveData>(_ model: ModelType, _ setters: () throws -> [Setter]) {
+        print("the recursive one")
+        do {
+            guard let id = model.id else { return }
+            
+            let recursiveExpression = buildRecursiveExpression(ModelType.self, rootID: id, base: ModelType.SchemaType.tableExpression)
+            
+            let records = try connection.prepare(recursiveExpression)
+            
+            let ids: [Int] = records.map { $0[ModelType.SchemaType.id] }
+            
+            try connection.run(
+                ModelType.SchemaType.tableExpression
+                    .where(ids.contains(ModelType.SchemaType.id))
+                    .update(setters())
+            )
+            
+            Task.detached {
+                await ModelType.messageHandler.send(.recordChange(id: id))
+            }
+        }
+        catch {
+            // do something to broad cast the error to both you and the user
+            print(error)
+            print("\(#file):\(#function):\(#line)")
         }
     }
         
@@ -202,7 +247,21 @@ public actor Database {
         catch {
             // do something to broad cast the error to both you and the user
             print(error)
+            print("\(#file):\(#function):\(#line)")
         }
+    }
+    
+    private func buildRecursiveExpression<ModelType: SchemaBacked & RecursiveData>(_ type: ModelType.Type, rootID: Int, base: SQLite.Table) -> SQLite.Table {
+        let cte = Table("cte")
+                    
+        let compoundQuery = base
+            .where(SQLite.Expression<Int>("id") == rootID)
+            .union(
+                cte.join(base, on: cte[SQLite.Expression<Int>("id")] == base[SQLite.Expression<Int>("parentID")])
+                   .select(base[*])
+            )
+        
+        return cte.with(cte, recursive: true, as: compoundQuery)
     }
 }
 

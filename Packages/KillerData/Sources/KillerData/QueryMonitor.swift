@@ -75,7 +75,7 @@ public actor QueryMonitor<StateContainer: StateContainerizable> {
     }
     
     private func fetch(id: Int, from database: Database) async -> StateContainer.ModelType? {
-        await database.fetch(StateContainer.ModelType.self, id: id, context: self.query)
+        await database.pluck(StateContainer.ModelType.self, id: id, context: self.query)
     }
 }
 
@@ -134,23 +134,26 @@ public actor QueryMonitor<StateContainer: StateContainerizable> {
 
 extension Database {
     public struct Query: Sendable {
+        let baseExpression = Schema.Tasks.tableExpression
         
-        internal init(tableExpression: () -> (SQLite.Table)) {
-            self.tableExpression = tableExpression()
+        internal init(tableExpression: @escaping (SQLite.Table) -> (SQLite.Table)) {
+            self.apply = tableExpression
         }
         
-        public static let allActiveTasks: Query = .init {
-            Schema.Tasks.tableExpression
-                .filter(Schema.Tasks.completedAt == nil && Schema.Tasks.deletedAt == nil)
-                .order(Schema.Tasks.createdAt.asc)
+        public static let allActiveTasks: Query = .init { base in
+            let table = Schema.Tasks.tableExpression
+            
+            return base
+                .filter(table[Schema.Tasks.completedAt] == nil && table[Schema.Tasks.deletedAt] == nil)
+                .order(table[Schema.Tasks.createdAt].asc)
         }
         
-        public static let deletedTasks: Query = .init {
-            Schema.Tasks.tableExpression
+        public static let deletedTasks: Query = .init { base in
+            base
                 .filter(Schema.Tasks.deletedAt != nil)
                 .order(Schema.Tasks.deletedAt.asc)
         }
         
-        let tableExpression: SQLite.Table
+        let apply: (SQLite.Table) -> SQLite.Table
     }
 }

@@ -90,11 +90,7 @@ struct TaskContainerView: View {
     private func setupData() async {
         guard let database else { return }
         
-        let models = await database.recursiveFetch(KillerTask.self, id: 32)
-    
-        print(models.count)
-        
-//        initialTasks = buildTree(from: models)
+//        initialTasks = buildTree(from: await database.fetch(KillerTask.self, rootID: 4, context: .allActiveTasks))
         initialTasks = buildTree(from: await queryMonitor.fetch(from: database))
                 
         await queryMonitor.beginMonitoring(database)
@@ -122,7 +118,6 @@ struct TaskListView: View {
         TaskList {
             ForEach(viewModel.tasks) { task in
                 TaskView(task: task)
-                
                 TaskListView(taskNodes: children(of: task), parentID: task.id, monitor: monitor)
                     .padding(.leading, 24)
             }
@@ -179,7 +174,7 @@ struct NewTaskButton: View {
     var body: some View {
         Button("Add New Task") {
             Task.detached {
-                await database?.insert(KillerTask.self, \.body <- "A brand new baby task", \.parentID <- 46)
+                await database?.insert(KillerTask.self, \.body <- "A brand new baby task")//, \.parentID <- 32)
             }
         }
     }
