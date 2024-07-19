@@ -22,7 +22,7 @@ public func buildTree<Element>(from values: [Element]) -> NodeCollection<Element
     return groups[nil] ?? []
 }
 
-public class Node<ObjectType: RecursiveData> {
+public final class Node<ObjectType: RecursiveData>: Sendable {
     public let object: ObjectType
     public let id: ObjectType.ID
     public let parentID: ObjectType.ID

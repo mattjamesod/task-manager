@@ -238,7 +238,7 @@ public actor Database {
             )
             
             Task.detached {
-                await ModelType.messageHandler.send(.recordChange(id: id))
+                await ModelType.messageHandler.send(.recordsChanged(ids: Set(affectedIDs)))
             }
         }
         catch {

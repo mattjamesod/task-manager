@@ -52,9 +52,21 @@ class TaskListViewModel: StateContainerizable {
         }
     }
     
+    func addOrUpdate(models: [KillerTask]) {
+        for model in models {
+            addOrUpdate(model: model)
+        }
+    }
+    
     func remove(with id: Int) {
         guard let index = tasks.firstIndex(where: { $0.id == id }) else { return }
         tasks.remove(at: index)
+    }
+    
+    func remove(with ids: Set<Int>) {
+        for id in ids {
+            remove(with: id)
+        }
     }
 }
 

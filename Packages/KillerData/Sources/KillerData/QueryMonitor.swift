@@ -7,23 +7,27 @@ import KillerModels
 public protocol StateContainerizable {
     associatedtype ModelType: SchemaBacked
     func addOrUpdate(model: ModelType)
+    func addOrUpdate(models: [ModelType])
     func remove(with id: Int)
+    func remove(with ids: Set<Int>)
 }
 
-@MainActor
-public protocol RecursiveStateContainerizable: StateContainerizable {
-    associatedtype ModelType: SchemaBacked & RecursiveData
-    func addOrUpdate(modelTree: Node<ModelType>)
-}
+//@MainActor
+//public protocol RecursiveStateContainerizable: StateContainerizable {
+//    associatedtype ModelType: SchemaBacked & RecursiveData
+//    func addOrUpdate(modelTree: Node<ModelType>)
+//}
 
-public enum RecursiveSyncResult<StateContainer: RecursiveStateContainerizable>: Sendable {
-    case addOrUpdate(Node<StateContainer.ModelType>)
-    case remove(_ id: Int)
-}
+//public enum RecursiveSyncResult<StateContainer: RecursiveStateContainerizable>: Sendable {
+//    case addOrUpdate(Node<StateContainer.ModelType>)
+//    case remove(_ id: Int)
+//}
 
 public enum SyncResult<StateContainer: StateContainerizable>: Sendable {
     case addOrUpdate(StateContainer.ModelType)
+    case addOrUpdateMany([StateContainer.ModelType])
     case remove(_ id: Int)
+    case removeMany(_ ids: Set<Int>)
 }
 
 public actor QueryMonitor<StateContainer: StateContainerizable> {
@@ -48,20 +52,11 @@ public actor QueryMonitor<StateContainer: StateContainerizable> {
         for await event in events {
             switch event {
             case .recordChange(let id):
-                await syncRecordChange(id: id, with: database)
-            }
-        }
-    }
-    
-    private func syncRecordChange(id: Int, with database: Database) async {
-        let syncResult = await sync(id: id, with: database)
-        
-        for container in registeredStateContainers {
-            switch syncResult {
-                case .addOrUpdate(let model):
-                    await container.addOrUpdate(model: model)
-                case .remove(let id):
-                    await container.remove(with: id)
+                await push(syncResult: await sync(id: id, with: database))
+            case .recordsChanged(let ids):
+                for result in await sync(ids: ids, with: database) {
+                    await push(syncResult: result)
+                }
             }
         }
     }
@@ -74,8 +69,50 @@ public actor QueryMonitor<StateContainer: StateContainerizable> {
         return .addOrUpdate(model)
     }
     
+    private func sync(ids: Set<Int>, with database: Database) async -> [SyncResult<StateContainer>] {
+        var results: [SyncResult<StateContainer>] = []
+        
+        let models = await fetch(ids: ids, from: database)
+        
+        switch models.count {
+            case 0: break
+            case 1: results.append(.addOrUpdate(models.first!))
+            default: results.append(.addOrUpdateMany(models))
+        }
+        
+        let missingIDs = ids.subtracting(models.compactMap(\.id))
+        
+        switch missingIDs.count {
+            case 0: break
+            case 1: results.append(.remove(missingIDs.first!))
+            default: results.append(.removeMany(missingIDs))
+        }
+        
+        return results
+    }
+    
+    private func push(syncResult: SyncResult<StateContainer>) async {
+        for container in registeredStateContainers {
+            switch syncResult {
+                case .addOrUpdate(let model):
+                    await container.addOrUpdate(model: model)
+                case .addOrUpdateMany(let models):
+                    await container.addOrUpdate(models: models)
+                case .remove(let id):
+                    await container.remove(with: id)
+                case .removeMany(let ids):
+                    await container.remove(with: ids)
+            }
+        }
+    }
+    
     private func fetch(id: Int, from database: Database) async -> StateContainer.ModelType? {
         await database.pluck(StateContainer.ModelType.self, id: id, context: self.query)
+    }
+    
+    private func fetch(ids: Set<Int>, from database: Database) async -> [StateContainer.ModelType] {
+        []
+//        await database.pluck(StateContainer.ModelType.self, id: id, context: self.query)
     }
 }
 
@@ -120,15 +157,16 @@ public actor QueryMonitor<StateContainer: StateContainerizable> {
 //    }
 //    
 //    private func sync(id: Int, with database: Database) async -> RecursiveSyncResult<StateContainer> {
-//        guard let model = await fetch(id: id, from: database) else {
+//        guard let node = await fetch(id: id, from: database) else {
 //            return .remove(id)
 //        }
 //        
-//        return .addOrUpdate(model)
+//        return .addOrUpdate(node)
 //    }
 //    
-//    private func fetch(id: Int, from database: Database) async -> StateContainer.ModelType? {
-//        await database.fetch(StateContainer.ModelType.self, id: id, context: self.query)
+//    private func fetch(id: Int, from database: Database) async -> Node<StateContainer.ModelType>? {
+//        let models = await database.fetch(StateContainer.ModelType.self, rootID: id, context: self.query)
+//        return buildTree(from: models).first
 //    }
 //}
 
