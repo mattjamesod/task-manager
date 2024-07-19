@@ -1,47 +1,69 @@
 import AsyncAlgorithms
 import SQLite
+import SwiftUI
 
-public actor QueryMonitor<ModelType: SchemaBacked> {
+@MainActor
+public protocol DatabaseDrivenState {
+    associatedtype ModelType: SchemaBacked
+    func addOrUpdate(task: ModelType)
+    func remove(with id: Int)
+}
+
+extension DatabaseDrivenState {
+    func receive(syncEvent: QueryMonitor<Self>.SyncResult) {
+        switch syncEvent {
+        case .addOrUpdate(let model): self.addOrUpdate(task: model)
+        case .remove(let id): self.remove(with: id)
+        }
+    }
+}
+
+public actor QueryMonitor<StateContainer: DatabaseDrivenState> {
     private let query: Database.Query
-    public var syncEvents: AsyncChannel<SyncResult> = .init()
+    private var registeredStateContainers: [StateContainer] = []
     
     public init(of query: Database.Query) {
         self.query = query
     }
     
-    public func fetch(from database: Database) async  -> [ModelType] {
-        await database.fetch(ModelType.self, query: self.query)
+    public func fetch(from database: Database) async  -> [StateContainer.ModelType] {
+        await database.fetch(StateContainer.ModelType.self, query: self.query)
+    }
+    
+    public func keepSynchronised(state: StateContainer) {
+        registeredStateContainers.append(state)
     }
     
     public enum SyncResult: Sendable {
-        case addOrUpdate(ModelType)
+        case addOrUpdate(StateContainer.ModelType)
         case remove(_ id: Int)
     }
     
     public func beginMonitoring(_ database: Database) async {
-        let events = await ModelType.messageHandler.subscribe()
+        let events = await StateContainer.ModelType.messageHandler.subscribe()
         
         for await event in events {
             switch event {
             case .recordChange(let id):
-                await syncEvents.send(sync(id: id, with: database))
+                for container in registeredStateContainers {
+                    await container.receive(syncEvent: sync(id: id, with: database))
+                }
             }
         }
     }
     
     private func sync(id: Int, with database: Database) async -> SyncResult {
-        guard let task = await fetch(id: id, from: database) else {
+        guard let model = await fetch(id: id, from: database) else {
             return .remove(id)
         }
         
-        return .addOrUpdate(task)
+        return .addOrUpdate(model)
     }
     
-    private func fetch(id: Int, from database: Database) async -> ModelType? {
-        await database.fetch(ModelType.self, id: id, context: self.query)
+    private func fetch(id: Int, from database: Database) async -> StateContainer.ModelType? {
+        await database.fetch(StateContainer.ModelType.self, id: id, context: self.query)
     }
 }
-
 
 extension Database {
     public enum Query: Sendable {

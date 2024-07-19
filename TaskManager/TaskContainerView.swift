@@ -2,6 +2,9 @@ import SwiftUI
 import KillerModels
 import KillerData
 
+// TODO: Mutating observable property \TaskListViewModel.tasks after view is torn down has no effect.
+// Memory leak?
+
 extension RandomAccessCollection {
     /// Finds such index N that predicate is true for all elements up to
     /// but not including the index N, and is false for all elements
@@ -23,16 +26,29 @@ extension RandomAccessCollection {
 }
 
 @Observable @MainActor
-class TaskContainerViewModel {
+class TaskListViewModel: DatabaseDrivenState {
     
-    var tasks: [KillerTask] = []
+    var tasks: [KillerTask]
+    let parentID: Int?
     
+    init(_ tasks: [KillerTask], parentID: Int?) {
+        self.tasks = tasks
+        self.parentID = parentID
+    }
+    
+    init(tree: NodeCollection<KillerTask>, parentID: Int?) {
+        self.tasks = tree.map(\.object)
+        self.parentID = parentID
+    }
+        
     func addOrUpdate(task: KillerTask) {
+        guard task.parentID == self.parentID else { return }
+        
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
             tasks[index] = task
         }
         else {
-            tasks.insert(task, at: position(of: task))
+            tasks.append(task)
         }
     }
     
@@ -40,30 +56,25 @@ class TaskContainerViewModel {
         guard let index = tasks.firstIndex(where: { $0.id == id }) else { return }
         tasks.remove(at: index)
     }
-    
-    private func position(of task: KillerTask) -> Int {
-        tasks.binarySearch { $0.createdAt < task.createdAt }
-    }
 }
 
 struct TaskContainerView: View {
     @Environment(\.database) var database
-    @State var viewModel: TaskContainerViewModel = .init()
     
-    let queryMonitor: QueryMonitor<KillerTask>
+    @State var initialTasks: NodeCollection<KillerTask>?
+    
+    let queryMonitor: QueryMonitor<TaskListViewModel>
     
     init(query: Database.Query) {
         self.queryMonitor = .init(of: query)
+        self.initialTasks = nil
     }
     
     var body: some View {
         ZStack {
-            TaskList {
-                ForEach(viewModel.tasks) { task in
-                    TaskView(task: task)
-                }
+            if let initialTasks {
+                TaskListView(taskNodes: initialTasks, parentID: nil, monitor: queryMonitor)
             }
-            .animation(.bouncy, value: viewModel.tasks)
             
             VStack(spacing: 16) {
                 NewTaskButton()
@@ -71,28 +82,49 @@ struct TaskContainerView: View {
             .frame(maxHeight: .infinity, alignment: .bottom)
             .padding(.bottom, 16)
         }
-        .environment(viewModel)
         .task {
             await setupData()
-        }
-        .task {
-            await listenForSyncEvents()
         }
     }
     
     private func setupData() async {
         guard let database else { return }
         
-        viewModel.tasks = await queryMonitor.fetch(from: database)
+        initialTasks = buildTree(from: await queryMonitor.fetch(from: database))
+                
         await queryMonitor.beginMonitoring(database)
     }
+}
+
+struct TaskListView: View {
     
-    private func listenForSyncEvents() async {
-        for await event in await queryMonitor.syncEvents {
-            switch event {
-            case .addOrUpdate(let task): viewModel.addOrUpdate(task: task)
-            case .remove(let id): viewModel.remove(with: id)
+    @State var viewModel: TaskListViewModel
+    var nodes: NodeCollection<KillerTask>
+    
+    let monitor: QueryMonitor<TaskListViewModel>
+    
+    init(taskNodes: NodeCollection<KillerTask>, parentID: Int?, monitor: QueryMonitor<TaskListViewModel>) {
+        self.nodes = taskNodes
+        self.viewModel = TaskListViewModel(tree: taskNodes, parentID: parentID)
+        self.monitor = monitor
+    }
+    
+    private func children(of task: KillerTask) -> NodeCollection<KillerTask> {
+        self.nodes.first(where: { $0.id == task.id })?.children ?? []
+    }
+    
+    var body: some View {
+        TaskList {
+            ForEach(viewModel.tasks) { task in
+                TaskView(task: task)
+                
+                TaskListView(taskNodes: children(of: task), parentID: task.id, monitor: monitor)
+                    .padding(.leading, 24)
             }
+        }
+        .animation(.bouncy, value: viewModel.tasks)
+        .task {
+            await monitor.keepSynchronised(state: viewModel)
         }
     }
 }
@@ -106,22 +138,14 @@ struct TaskList<Content: View>: View {
                 subView
             }
         }
-        .padding(16)
+        .padding(.horizontal, 16)
     }
 }
 
 struct TaskView: View {
-    @Environment(TaskContainerViewModel.self) var taskContainerViewModel
     @Environment(\.database) var database
     
     let task: KillerTask
-    
-    private var dateFormatter: DateFormatter {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .long
-        return formatter
-    }
     
     var body: some View {
         HStack {
@@ -129,7 +153,7 @@ struct TaskView: View {
                 Label("Complete", systemImage: "checkmark")
                     .labelStyle(.iconOnly)
             }
-            Text(dateFormatter.string(from: task.createdAt))
+            Text("\(task.id!) - \(task.body) - \(task.children.count)")
             Spacer()
         }
         .transition(.scale(scale: 0.95).combined(with: .opacity))
@@ -145,13 +169,12 @@ struct TaskView: View {
 }
 
 struct NewTaskButton: View {
-    @Environment(TaskContainerViewModel.self) var taskContainerViewModel
     @Environment(\.database) var database
     
     var body: some View {
         Button("Add New Task") {
             Task.detached {
-                await database?.insert(KillerTask.self, \.body <- "A brand new baby task")
+                await database?.insert(KillerTask.self, \.body <- "A brand new baby task", \.parentID <- 35)
             }
         }
     }

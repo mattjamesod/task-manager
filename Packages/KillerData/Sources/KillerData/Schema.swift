@@ -34,15 +34,18 @@ extension Database {
             
             static let body = SQLite.Expression<String>("body")
             static let completedAt = SQLite.Expression<Date?>("completedAt")
+            static let parentID = SQLite.Expression<Int?>("parentID")
             
             static var create: String {
                 self.tableExpression.create(ifNotExists: true) {
-                    $0.column(Schema.Tasks.id, primaryKey: .autoincrement)
-                    $0.column(Schema.Tasks.body)
-                    $0.column(Schema.Tasks.createdAt)
-                    $0.column(Schema.Tasks.updatedAt)
-                    $0.column(Schema.Tasks.completedAt, defaultValue: nil)
-                    $0.column(Schema.Tasks.deletedAt, defaultValue: nil)
+                    $0.column(id, primaryKey: .autoincrement)
+                    $0.column(body)
+                    $0.column(createdAt)
+                    $0.column(updatedAt)
+                    $0.column(completedAt, defaultValue: nil)
+                    $0.column(deletedAt, defaultValue: nil)
+                    $0.column(parentID, defaultValue: nil)
+                    $0.foreignKey(parentID, references: tableExpression, id, delete: .cascade)
                 }
             }
             
@@ -66,7 +69,9 @@ extension KillerTask: SchemaBacked {
                 createdAt: try databaseRecord.get(Database.Schema.Tasks.createdAt),
                 updatedAt: try databaseRecord.get(Database.Schema.Tasks.updatedAt),
                 completedAt: try databaseRecord.get(Database.Schema.Tasks.completedAt),
-                deletedAt: try databaseRecord.get(Database.Schema.Tasks.deletedAt)
+                deletedAt: try databaseRecord.get(Database.Schema.Tasks.deletedAt),
+                parentID: try databaseRecord.get(Database.Schema.Tasks.parentID),
+                children: []
             )
         }
         catch {
@@ -89,6 +94,7 @@ extension KillerTask: SchemaBacked {
         switch keyPath {
         case \.completedAt: SchemaType.completedAt as! SQLite.Expression<T?>
         case \.deletedAt: SchemaType.deletedAt as! SQLite.Expression<T?>
+        case \.parentID: SchemaType.parentID as! SQLite.Expression<T?>
         default: throw DatabaseError.propertyDoesNotExist
         }
     }
