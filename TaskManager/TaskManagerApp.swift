@@ -21,10 +21,10 @@ struct TaskManagerApp: App {
                 VStack {
                     TaskContainerView(query: .allActiveTasks)
                         .environment(\.database, database)
-                        .border(.red)
-                    TaskContainerView(query: .deletedTasks)
-                        .environment(\.database, database)
-                        .border(.blue)
+//                        .border(.red)
+//                    TaskContainerView(query: .deletedTasks)
+//                        .environment(\.database, database)
+//                        .border(.blue)
                 }
             }
             else {

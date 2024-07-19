@@ -26,7 +26,7 @@ extension RandomAccessCollection {
 }
 
 @Observable @MainActor
-class TaskListViewModel: DatabaseDrivenState {
+class TaskListViewModel: StateContainerizable {
     
     var tasks: [KillerTask]
     let parentID: Int?
@@ -41,14 +41,14 @@ class TaskListViewModel: DatabaseDrivenState {
         self.parentID = parentID
     }
         
-    func addOrUpdate(task: KillerTask) {
-        guard task.parentID == self.parentID else { return }
+    func addOrUpdate(model: KillerTask) {
+        guard model.parentID == self.parentID else { return }
         
-        if let index = tasks.firstIndex(where: { $0.id == task.id }) {
-            tasks[index] = task
+        if let index = tasks.firstIndex(where: { $0.id == model.id }) {
+            tasks[index] = model
         }
         else {
-            tasks.append(task)
+            tasks.append(model)
         }
     }
     
@@ -90,6 +90,11 @@ struct TaskContainerView: View {
     private func setupData() async {
         guard let database else { return }
         
+        let models = await database.recursiveFetch(KillerTask.self, id: 32)
+    
+        print(models.count)
+        
+//        initialTasks = buildTree(from: models)
         initialTasks = buildTree(from: await queryMonitor.fetch(from: database))
                 
         await queryMonitor.beginMonitoring(database)
@@ -153,7 +158,7 @@ struct TaskView: View {
                 Label("Complete", systemImage: "checkmark")
                     .labelStyle(.iconOnly)
             }
-            Text("\(task.id!) - \(task.body) - \(task.children.count)")
+            Text("\(task.id!): \(task.body)")
             Spacer()
         }
         .transition(.scale(scale: 0.95).combined(with: .opacity))
@@ -174,7 +179,7 @@ struct NewTaskButton: View {
     var body: some View {
         Button("Add New Task") {
             Task.detached {
-                await database?.insert(KillerTask.self, \.body <- "A brand new baby task", \.parentID <- 35)
+                await database?.insert(KillerTask.self, \.body <- "A brand new baby task", \.parentID <- 46)
             }
         }
     }

@@ -70,8 +70,7 @@ extension KillerTask: SchemaBacked {
                 updatedAt: try databaseRecord.get(Database.Schema.Tasks.updatedAt),
                 completedAt: try databaseRecord.get(Database.Schema.Tasks.completedAt),
                 deletedAt: try databaseRecord.get(Database.Schema.Tasks.deletedAt),
-                parentID: try databaseRecord.get(Database.Schema.Tasks.parentID),
-                children: []
+                parentID: try databaseRecord.get(Database.Schema.Tasks.parentID)
             )
         }
         catch {

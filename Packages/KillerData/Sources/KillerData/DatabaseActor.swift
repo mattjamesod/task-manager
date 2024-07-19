@@ -1,6 +1,7 @@
 import SQLite
 import SwiftUI
 import UtilExtensions
+import KillerModels
 
 enum DatabaseConnectionError: Error {
     case couldNotAccessDocumentsDirectory
@@ -55,6 +56,35 @@ public actor Database {
     public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, query: Database.Query) -> [ModelType] {
         do {
             let records = try connection.prepare(query.tableExpression)
+            return try records.map(ModelType.create(from:))
+        }
+        catch {
+            // do something to broad cast the error to both you and the user
+            print(error.localizedDescription)
+            return []
+        }
+    }
+    
+    public func recursiveFetch<ModelType: SchemaBacked & RecursiveData>(_ type: ModelType.Type, id: Int, context: Database.Query? = nil) -> [ModelType] {
+        do {
+//            let query = context?.tableExpression ?? ModelType.SchemaType.tableExpression
+            let cte = Table("cte")
+            
+            let tasks = Schema.Tasks.tableExpression
+            
+            let compoundQuery = Schema.Tasks.tableExpression
+                .where(Schema.Tasks.id == id)
+                .union(
+                    cte.join(tasks, on: cte[SQLite.Expression<Int>("id")] == tasks[SQLite.Expression<Int>("parentID")])
+                       .select(tasks[*])
+                )
+            
+            let recursiveExpression = cte.with(cte, recursive: true, as: compoundQuery)
+            
+            print(recursiveExpression.expression)
+            
+            let records = try connection.prepare(recursiveExpression)
+            
             return try records.map(ModelType.create(from:))
         }
         catch {

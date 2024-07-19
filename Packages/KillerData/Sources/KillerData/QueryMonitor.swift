@@ -1,24 +1,32 @@
 import AsyncAlgorithms
 import SQLite
 import SwiftUI
+import KillerModels
 
 @MainActor
-public protocol DatabaseDrivenState {
+public protocol StateContainerizable {
     associatedtype ModelType: SchemaBacked
-    func addOrUpdate(task: ModelType)
+    func addOrUpdate(model: ModelType)
     func remove(with id: Int)
 }
 
-extension DatabaseDrivenState {
-    func receive(syncEvent: QueryMonitor<Self>.SyncResult) {
-        switch syncEvent {
-        case .addOrUpdate(let model): self.addOrUpdate(task: model)
-        case .remove(let id): self.remove(with: id)
-        }
-    }
+@MainActor
+public protocol RecursiveStateContainerizable: StateContainerizable {
+    associatedtype ModelType: SchemaBacked & RecursiveData
+    func addOrUpdate(modelTree: Node<ModelType>)
 }
 
-public actor QueryMonitor<StateContainer: DatabaseDrivenState> {
+public enum RecursiveSyncResult<StateContainer: RecursiveStateContainerizable>: Sendable {
+    case addOrUpdate(Node<StateContainer.ModelType>)
+    case remove(_ id: Int)
+}
+
+public enum SyncResult<StateContainer: StateContainerizable>: Sendable {
+    case addOrUpdate(StateContainer.ModelType)
+    case remove(_ id: Int)
+}
+
+public actor QueryMonitor<StateContainer: StateContainerizable> {
     private let query: Database.Query
     private var registeredStateContainers: [StateContainer] = []
     
@@ -34,25 +42,31 @@ public actor QueryMonitor<StateContainer: DatabaseDrivenState> {
         registeredStateContainers.append(state)
     }
     
-    public enum SyncResult: Sendable {
-        case addOrUpdate(StateContainer.ModelType)
-        case remove(_ id: Int)
-    }
-    
     public func beginMonitoring(_ database: Database) async {
         let events = await StateContainer.ModelType.messageHandler.subscribe()
         
         for await event in events {
             switch event {
             case .recordChange(let id):
-                for container in registeredStateContainers {
-                    await container.receive(syncEvent: sync(id: id, with: database))
-                }
+                await syncRecordChange(id: id, with: database)
             }
         }
     }
     
-    private func sync(id: Int, with database: Database) async -> SyncResult {
+    private func syncRecordChange(id: Int, with database: Database) async {
+        let syncResult = await sync(id: id, with: database)
+        
+        for container in registeredStateContainers {
+            switch syncResult {
+                case .addOrUpdate(let model):
+                    await container.addOrUpdate(model: model)
+                case .remove(let id):
+                    await container.remove(with: id)
+            }
+        }
+    }
+    
+    private func sync(id: Int, with database: Database) async -> SyncResult<StateContainer> {
         guard let model = await fetch(id: id, from: database) else {
             return .remove(id)
         }
@@ -65,20 +79,78 @@ public actor QueryMonitor<StateContainer: DatabaseDrivenState> {
     }
 }
 
+//public actor RecursiveQueryMonitor<StateContainer: RecursiveStateContainerizable> {
+//    private let query: Database.Query
+//    private var registeredStateContainers: [StateContainer] = []
+//    
+//    public init(of query: Database.Query) {
+//        self.query = query
+//    }
+//    
+//    public func fetch(from database: Database) async  -> [StateContainer.ModelType] {
+//        await database.fetch(StateContainer.ModelType.self, query: self.query)
+//    }
+//    
+//    public func keepSynchronised(state: StateContainer) {
+//        registeredStateContainers.append(state)
+//    }
+//    
+//    public func beginMonitoring(_ database: Database) async {
+//        let events = await StateContainer.ModelType.messageHandler.subscribe()
+//        
+//        for await event in events {
+//            switch event {
+//            case .recordChange(let id):
+//                await syncRecordChange(id: id, with: database)
+//            }
+//        }
+//    }
+//    
+//    private func syncRecordChange(id: Int, with database: Database) async {
+//        let syncResult = await sync(id: id, with: database)
+//        
+//        for container in registeredStateContainers {
+//            switch syncResult {
+//                case .addOrUpdate(let tree):
+//                    await container.addOrUpdate(modelTree: tree)
+//                case .remove(let id):
+//                    await container.remove(with: id)
+//            }
+//        }
+//    }
+//    
+//    private func sync(id: Int, with database: Database) async -> RecursiveSyncResult<StateContainer> {
+//        guard let model = await fetch(id: id, from: database) else {
+//            return .remove(id)
+//        }
+//        
+//        return .addOrUpdate(model)
+//    }
+//    
+//    private func fetch(id: Int, from database: Database) async -> StateContainer.ModelType? {
+//        await database.fetch(StateContainer.ModelType.self, id: id, context: self.query)
+//    }
+//}
+
 extension Database {
-    public enum Query: Sendable {
-        case allActiveTasks
-        case deletedTasks
+    public struct Query: Sendable {
         
-        var tableExpression: SQLite.Table{
-            switch self {
-            case .allActiveTasks: Schema.Tasks.tableExpression
-                    .filter(Schema.Tasks.completedAt == nil && Schema.Tasks.deletedAt == nil)
-                    .order(Schema.Tasks.createdAt.asc)
-            case .deletedTasks: Schema.Tasks.tableExpression
-                    .filter(Schema.Tasks.deletedAt != nil)
-                    .order(Schema.Tasks.deletedAt.asc)
-            }
+        internal init(tableExpression: () -> (SQLite.Table)) {
+            self.tableExpression = tableExpression()
         }
+        
+        public static let allActiveTasks: Query = .init {
+            Schema.Tasks.tableExpression
+                .filter(Schema.Tasks.completedAt == nil && Schema.Tasks.deletedAt == nil)
+                .order(Schema.Tasks.createdAt.asc)
+        }
+        
+        public static let deletedTasks: Query = .init {
+            Schema.Tasks.tableExpression
+                .filter(Schema.Tasks.deletedAt != nil)
+                .order(Schema.Tasks.deletedAt.asc)
+        }
+        
+        let tableExpression: SQLite.Table
     }
 }
