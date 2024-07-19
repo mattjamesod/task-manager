@@ -145,10 +145,12 @@ public actor Database {
         _ model: ModelType,
         _ property1: PropertyArgument<ModelType, PropertyType1>
     ) {
-        self.update(model, {[
-            try property1.getSetter(),
+        let setters = [
+            try? property1.getSetter(),
             ModelType.SchemaType.updatedAt <- Date.now
-        ]})
+        ].compact()
+        
+        self.update(model, setters)
     }
     
     public func update<ModelType: SchemaBacked, PropertyType1: SQLite.Value, PropertyType2: SQLite.Value>(
@@ -156,45 +158,58 @@ public actor Database {
         _ property1: PropertyArgument<ModelType, PropertyType1>,
         _ property2: PropertyArgument<ModelType, PropertyType2>
     ) {
-        self.update(model, {[
-            try property1.getSetter(),
-            try property2.getSetter(),
+        let setters = [
+            try? property1.getSetter(),
+            try? property2.getSetter(),
             ModelType.SchemaType.updatedAt <- Date.now
-        ]})
+        ].compact()
+        
+        self.update(model, setters)
     }
     
     public func update<ModelType: SchemaBacked & RecursiveData, PropertyType1: SQLite.Value>(
         _ model: ModelType,
+        recursive: Bool = false,
         _ property1: PropertyArgument<ModelType, PropertyType1>
     ) {
-        self.update(model, {[
-            try property1.getSetter(),
+        let updateMethod: (ModelType, [Setter]) -> () =
+            recursive ? self.updateRecursive : self.update
+        
+        let setters = [
+            try? property1.getSetter(),
             ModelType.SchemaType.updatedAt <- Date.now
-        ]})
+        ].compact()
+        
+        updateMethod(model, setters)
     }
     
     public func update<ModelType: SchemaBacked & RecursiveData, PropertyType1: SQLite.Value, PropertyType2: SQLite.Value>(
         _ model: ModelType,
+        recursive: Bool = false,
         _ property1: PropertyArgument<ModelType, PropertyType1>,
         _ property2: PropertyArgument<ModelType, PropertyType2>
     ) {
-        self.update(model, {[
-            try property1.getSetter(),
-            try property2.getSetter(),
+        let updateMethod: (ModelType, [Setter]) -> () = 
+            recursive ? self.updateRecursive : self.update
+        
+        let setters = [
+            try? property1.getSetter(),
+            try? property2.getSetter(),
             ModelType.SchemaType.updatedAt <- Date.now
-        ]})
+        ].compact()
+        
+        updateMethod(model, setters)
     }
     
     // TODO:  If the model has no matching record in the database, it is created with the updated value.
-    private func update<ModelType: SchemaBacked>(_ model: ModelType, _ setters: () throws -> [Setter]) {
-        print("the non-recursive one")
+    private func update<ModelType: SchemaBacked>(_ model: ModelType, _ setters: [Setter]) {
         do {
             guard let id = model.id else { return }
             
             try connection.run(
                 ModelType.SchemaType.tableExpression
                     .filter(ModelType.SchemaType.id == id)
-                    .update(setters())
+                    .update(setters)
             )
             
             Task.detached {
@@ -208,21 +223,18 @@ public actor Database {
         }
     }
     
-    private func update<ModelType: SchemaBacked & RecursiveData>(_ model: ModelType, _ setters: () throws -> [Setter]) {
-        print("the recursive one")
+    private func updateRecursive<ModelType: SchemaBacked & RecursiveData>(_ model: ModelType, _ setters: [Setter]) {
         do {
             guard let id = model.id else { return }
             
-            let recursiveExpression = buildRecursiveExpression(ModelType.self, rootID: id, base: ModelType.SchemaType.tableExpression)
-            
-            let records = try connection.prepare(recursiveExpression)
-            
-            let ids: [Int] = records.map { $0[ModelType.SchemaType.id] }
+            let affectedIDs = try connection
+                .prepare(buildRecursiveExpression(ModelType.self, rootID: id, base: ModelType.SchemaType.tableExpression))
+                .map { $0[ModelType.SchemaType.id] }
             
             try connection.run(
                 ModelType.SchemaType.tableExpression
-                    .where(ids.contains(ModelType.SchemaType.id))
-                    .update(setters())
+                    .where(affectedIDs.contains(ModelType.SchemaType.id))
+                    .update(setters)
             )
             
             Task.detached {
