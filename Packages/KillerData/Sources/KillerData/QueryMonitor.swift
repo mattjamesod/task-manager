@@ -1,41 +1,16 @@
-import AsyncAlgorithms
 import SQLite
-import SwiftUI
 import KillerModels
-
-@MainActor
-public protocol StateContainerizable {
-    associatedtype ModelType: SchemaBacked
-    func addOrUpdate(model: ModelType)
-    func addOrUpdate(models: [ModelType])
-    func remove(with id: Int)
-    func remove(with ids: Set<Int>)
-}
-
-public enum SyncResult<StateContainer: StateContainerizable>: Sendable {
-    case addOrUpdate(StateContainer.ModelType)
-    case addOrUpdateMany([StateContainer.ModelType])
-    case remove(_ id: Int)
-    case removeMany(_ ids: Set<Int>)
-}
 
 // TODO: sync service for all these private methods
 
-public actor QueryMonitor<StateContainer: StateContainerizable & Identifiable> {
+public actor QueryMonitor<StateContainer: SynchronisedStateContainer & Identifiable> {
     private let query: Database.Query
-    private var registeredStateContainers: [StateContainer] = []
     
     public init(of query: Database.Query) {
         self.query = query
     }
     
-    public func fetch(from database: Database) async  -> [StateContainer.ModelType] {
-        await database.fetch(StateContainer.ModelType.self, query: self.query)
-    }
-    
-    public func fetchChildren(from database: Database, id: Int?) async  -> [StateContainer.ModelType] where StateContainer.ModelType: RecursiveData {
-        await database.fetchChildren(StateContainer.ModelType.self, id: id, context: self.query)
-    }
+    private var registeredStateContainers: [StateContainer] = []
     
     public func keepSynchronised(state: StateContainer) {
         registeredStateContainers.append(state)
@@ -43,52 +18,23 @@ public actor QueryMonitor<StateContainer: StateContainerizable & Identifiable> {
     
     public func deregister(state: StateContainer) {
         guard let index = registeredStateContainers.firstIndex(where: { $0.id == state.id }) else { return }
-        
+        registeredStateContainers.remove(at: index)
     }
     
     public func beginMonitoring(_ database: Database) async {
         let events = await StateContainer.ModelType.messageHandler.subscribe()
+        let syncEngine = SyncEngine<StateContainer>(for: database, context: self.query)
         
         for await event in events {
             switch event {
             case .recordChange(let id):
-                await push(syncResult: await sync(id: id, with: database))
+                await push(syncResult: await syncEngine.sync(id))
             case .recordsChanged(let ids):
-                for result in await sync(ids: ids, with: database) {
+                for result in await syncEngine.sync(ids) {
                     await push(syncResult: result)
                 }
             }
         }
-    }
-    
-    private func sync(id: Int, with database: Database) async -> SyncResult<StateContainer> {
-        guard let model = await fetch(id: id, from: database) else {
-            return .remove(id)
-        }
-        
-        return .addOrUpdate(model)
-    }
-    
-    private func sync(ids: Set<Int>, with database: Database) async -> [SyncResult<StateContainer>] {
-        var results: [SyncResult<StateContainer>] = []
-        
-        let models = await fetch(ids: ids, from: database)
-        
-        switch models.count {
-            case 0: break
-            case 1: results.append(.addOrUpdate(models.first!))
-            default: results.append(.addOrUpdateMany(models))
-        }
-        
-        let missingIDs = ids.subtracting(models.compactMap(\.id))
-        
-        switch missingIDs.count {
-            case 0: break
-            case 1: results.append(.remove(missingIDs.first!))
-            default: results.append(.removeMany(missingIDs))
-        }
-        
-        return results
     }
     
     private func push(syncResult: SyncResult<StateContainer>) async {
@@ -106,12 +52,15 @@ public actor QueryMonitor<StateContainer: StateContainerizable & Identifiable> {
         }
     }
     
-    private func fetch(id: Int, from database: Database) async -> StateContainer.ModelType? {
-        await database.pluck(StateContainer.ModelType.self, id: id, context: self.query)
+    // MARK: - fetch methods
+    // to erase knowledge of the Query from the fetch method
+    
+    public func fetch(from database: Database) async  -> [StateContainer.ModelType] {
+        await database.fetch(StateContainer.ModelType.self, query: self.query)
     }
     
-    private func fetch(ids: Set<Int>, from database: Database) async -> [StateContainer.ModelType] {
-        await database.fetch(StateContainer.ModelType.self, ids: ids, context: self.query)
+    public func fetchChildren(from database: Database, id: Int?) async  -> [StateContainer.ModelType] where StateContainer.ModelType: RecursiveData {
+        await database.fetchChildren(StateContainer.ModelType.self, id: id, context: self.query)
     }
 }
 

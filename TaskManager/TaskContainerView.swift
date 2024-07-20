@@ -3,7 +3,7 @@ import KillerModels
 import KillerData
 
 @Observable @MainActor
-class TaskListViewModel: StateContainerizable, Identifiable {
+class TaskListViewModel: SynchronisedStateContainer, Identifiable {
     
     var tasks: [KillerTask]
     let parentID: Int?
@@ -69,7 +69,6 @@ struct TaskContainerView: View {
 }
 
 struct TaskListView: View {
-    
     @Environment(\.database) var database
     @State var viewModel: TaskListViewModel
     
