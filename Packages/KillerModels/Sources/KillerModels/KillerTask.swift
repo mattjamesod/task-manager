@@ -17,6 +17,7 @@ public struct KillerTask: Sendable, Identifiable, Equatable, Clonable {
     public var completedAt: Date?
     
     public var parentID: Int? // likewise, parent may not be shown in the view
+    public var children: [KillerTask] = [] // likewise, parent may not be shown in the view
     
     public var createdAt: Date
     public var updatedAt: Date

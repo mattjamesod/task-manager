@@ -36,7 +36,7 @@ class TaskListViewModel: StateContainerizable {
         self.parentID = parentID
     }
     
-    init(tree: NodeCollection<KillerTask>, parentID: Int?) {
+    init(tree: [Node<KillerTask>], parentID: Int?) {
         self.tasks = tree.map(\.object)
         self.parentID = parentID
     }
@@ -73,7 +73,7 @@ class TaskListViewModel: StateContainerizable {
 struct TaskContainerView: View {
     @Environment(\.database) var database
     
-    @State var initialTasks: NodeCollection<KillerTask>?
+    @State var initialTasks: [Node<KillerTask>]?
     
     let queryMonitor: QueryMonitor<TaskListViewModel>
     
@@ -84,9 +84,9 @@ struct TaskContainerView: View {
     
     var body: some View {
         ZStack {
-            if let initialTasks {
-                TaskListView(taskNodes: initialTasks, parentID: nil, monitor: queryMonitor)
-            }
+//            if let initialTasks {
+                TaskListView(parentID: nil, monitor: queryMonitor)
+//            }
             
             VStack(spacing: 16) {
                 NewTaskButton()
@@ -102,39 +102,70 @@ struct TaskContainerView: View {
     private func setupData() async {
         guard let database else { return }
         
-//        initialTasks = buildTree(from: await database.fetch(KillerTask.self, rootID: 4, context: .allActiveTasks))
-        initialTasks = buildTree(from: await queryMonitor.fetch(from: database))
-                
+//        initialTasks = KillerTask.buildTrees(list: await queryMonitor.fetch(from: database))
+        
         await queryMonitor.beginMonitoring(database)
     }
 }
 
+//struct TaskListView: View {
+//    
+//    @Environment(\.database) var database
+//    @State var viewModel: TaskListViewModel
+//    var nodes: [Node<KillerTask>]
+//    
+//    let monitor: QueryMonitor<TaskListViewModel>
+//    
+//    init(taskNodes: [Node<KillerTask>], parentID: Int?, monitor: QueryMonitor<TaskListViewModel>) {
+//        self.nodes = taskNodes
+//        self.viewModel = TaskListViewModel(tree: taskNodes, parentID: parentID)
+//        self.monitor = monitor
+//    }
+//    
+//    private func children(of task: KillerTask) -> [Node<KillerTask>] {
+//        self.nodes.first(where: { $0.id == task.id })?.children ?? []
+//    }
+//    
+//    var body: some View {
+//        TaskList {
+//            ForEach(viewModel.tasks) { task in
+//                TaskView(task: task)
+//                TaskListView(taskNodes: children(of: task), parentID: task.id, monitor: monitor)
+//                    .padding(.leading, 24)
+//            }
+//        }
+//        .animation(.bouncy, value: viewModel.tasks)
+//        .task {
+//            await monitor.keepSynchronised(state: viewModel)
+//        }
+//    }
+//}
+
 struct TaskListView: View {
     
+    @Environment(\.database) var database
     @State var viewModel: TaskListViewModel
-    var nodes: NodeCollection<KillerTask>
     
     let monitor: QueryMonitor<TaskListViewModel>
     
-    init(taskNodes: NodeCollection<KillerTask>, parentID: Int?, monitor: QueryMonitor<TaskListViewModel>) {
-        self.nodes = taskNodes
-        self.viewModel = TaskListViewModel(tree: taskNodes, parentID: parentID)
+    init(parentID: Int?, monitor: QueryMonitor<TaskListViewModel>) {
+        self.viewModel = TaskListViewModel([], parentID: parentID)
         self.monitor = monitor
-    }
-    
-    private func children(of task: KillerTask) -> NodeCollection<KillerTask> {
-        self.nodes.first(where: { $0.id == task.id })?.children ?? []
     }
     
     var body: some View {
         TaskList {
             ForEach(viewModel.tasks) { task in
                 TaskView(task: task)
-                TaskListView(taskNodes: children(of: task), parentID: task.id, monitor: monitor)
+                TaskListView(parentID: task.id, monitor: monitor)
                     .padding(.leading, 24)
             }
         }
         .animation(.bouncy, value: viewModel.tasks)
+        .task {
+            guard let database else { return }
+            viewModel.tasks = await monitor.fetchChildren(from: database, id: viewModel.parentID)
+        }
         .task {
             await monitor.keepSynchronised(state: viewModel)
         }
@@ -186,7 +217,7 @@ struct NewTaskButton: View {
     var body: some View {
         Button("Add New Task") {
             Task.detached {
-                await database?.insert(KillerTask.self, \.body <- "A brand new baby task", \.parentID <- 4)
+                await database?.insert(KillerTask.self, \.body <- "A brand new baby task", \.parentID <- 17)
             }
         }
     }

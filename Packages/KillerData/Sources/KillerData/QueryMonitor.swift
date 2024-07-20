@@ -23,6 +23,8 @@ public protocol StateContainerizable {
 //    case remove(_ id: Int)
 //}
 
+// TODO: sync service for all these private methods
+
 public enum SyncResult<StateContainer: StateContainerizable>: Sendable {
     case addOrUpdate(StateContainer.ModelType)
     case addOrUpdateMany([StateContainer.ModelType])
@@ -40,6 +42,10 @@ public actor QueryMonitor<StateContainer: StateContainerizable> {
     
     public func fetch(from database: Database) async  -> [StateContainer.ModelType] {
         await database.fetch(StateContainer.ModelType.self, query: self.query)
+    }
+    
+    public func fetchChildren(from database: Database, id: Int?) async  -> [StateContainer.ModelType] where StateContainer.ModelType.SchemaType: RecursiveSchema {
+        await database.fetchChildren(StateContainer.ModelType.self, id: id, context: self.query)
     }
     
     public func keepSynchronised(state: StateContainer) {
@@ -111,8 +117,7 @@ public actor QueryMonitor<StateContainer: StateContainerizable> {
     }
     
     private func fetch(ids: Set<Int>, from database: Database) async -> [StateContainer.ModelType] {
-        []
-//        await database.pluck(StateContainer.ModelType.self, id: id, context: self.query)
+        await database.fetch(StateContainer.ModelType.self, ids: ids, context: self.query)
     }
 }
 

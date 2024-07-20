@@ -11,6 +11,10 @@ public protocol ModelSchema {
     static var deletedAt: SQLite.Expression<Date?> { get }
 }
 
+public protocol RecursiveSchema {
+    static var parentID: SQLite.Expression<Int?> { get }
+}
+
 public protocol SchemaBacked: Sendable {
     associatedtype SchemaType: ModelSchema
     associatedtype MessageHandlerType: DatabaseMessageHandler
@@ -25,16 +29,17 @@ public protocol SchemaBacked: Sendable {
 
 extension Database {
     public enum Schema {
-        public enum Tasks: ModelSchema {
+        public enum Tasks: ModelSchema, RecursiveSchema {
             public static let tableExpression: SQLite.Table = Table("tasks")
             public static let id = SQLite.Expression<Int>("id")
             public static let createdAt = SQLite.Expression<Date>("createdAt")
             public static let updatedAt = SQLite.Expression<Date>("updatedAt")
             public static let deletedAt = SQLite.Expression<Date?>("deletedAt")
             
+            public static let parentID = SQLite.Expression<Int?>("parentID")
+            
             static let body = SQLite.Expression<String>("body")
             static let completedAt = SQLite.Expression<Date?>("completedAt")
-            static let parentID = SQLite.Expression<Int?>("parentID")
             
             static var create: String {
                 self.tableExpression.create(ifNotExists: true) {
