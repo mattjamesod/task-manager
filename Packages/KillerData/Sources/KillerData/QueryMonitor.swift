@@ -12,25 +12,14 @@ public protocol StateContainerizable {
     func remove(with ids: Set<Int>)
 }
 
-//@MainActor
-//public protocol RecursiveStateContainerizable: StateContainerizable {
-//    associatedtype ModelType: SchemaBacked & RecursiveData
-//    func addOrUpdate(modelTree: Node<ModelType>)
-//}
-
-//public enum RecursiveSyncResult<StateContainer: RecursiveStateContainerizable>: Sendable {
-//    case addOrUpdate(Node<StateContainer.ModelType>)
-//    case remove(_ id: Int)
-//}
-
-// TODO: sync service for all these private methods
-
 public enum SyncResult<StateContainer: StateContainerizable>: Sendable {
     case addOrUpdate(StateContainer.ModelType)
     case addOrUpdateMany([StateContainer.ModelType])
     case remove(_ id: Int)
     case removeMany(_ ids: Set<Int>)
 }
+
+// TODO: sync service for all these private methods
 
 public actor QueryMonitor<StateContainer: StateContainerizable> {
     private let query: Database.Query
@@ -44,7 +33,7 @@ public actor QueryMonitor<StateContainer: StateContainerizable> {
         await database.fetch(StateContainer.ModelType.self, query: self.query)
     }
     
-    public func fetchChildren(from database: Database, id: Int?) async  -> [StateContainer.ModelType] where StateContainer.ModelType.SchemaType: RecursiveSchema {
+    public func fetchChildren(from database: Database, id: Int?) async  -> [StateContainer.ModelType] where StateContainer.ModelType: RecursiveData {
         await database.fetchChildren(StateContainer.ModelType.self, id: id, context: self.query)
     }
     
@@ -120,60 +109,6 @@ public actor QueryMonitor<StateContainer: StateContainerizable> {
         await database.fetch(StateContainer.ModelType.self, ids: ids, context: self.query)
     }
 }
-
-//public actor RecursiveQueryMonitor<StateContainer: RecursiveStateContainerizable> {
-//    private let query: Database.Query
-//    private var registeredStateContainers: [StateContainer] = []
-//    
-//    public init(of query: Database.Query) {
-//        self.query = query
-//    }
-//    
-//    public func fetch(from database: Database) async  -> [StateContainer.ModelType] {
-//        await database.fetch(StateContainer.ModelType.self, query: self.query)
-//    }
-//    
-//    public func keepSynchronised(state: StateContainer) {
-//        registeredStateContainers.append(state)
-//    }
-//    
-//    public func beginMonitoring(_ database: Database) async {
-//        let events = await StateContainer.ModelType.messageHandler.subscribe()
-//        
-//        for await event in events {
-//            switch event {
-//            case .recordChange(let id):
-//                await syncRecordChange(id: id, with: database)
-//            }
-//        }
-//    }
-//    
-//    private func syncRecordChange(id: Int, with database: Database) async {
-//        let syncResult = await sync(id: id, with: database)
-//        
-//        for container in registeredStateContainers {
-//            switch syncResult {
-//                case .addOrUpdate(let tree):
-//                    await container.addOrUpdate(modelTree: tree)
-//                case .remove(let id):
-//                    await container.remove(with: id)
-//            }
-//        }
-//    }
-//    
-//    private func sync(id: Int, with database: Database) async -> RecursiveSyncResult<StateContainer> {
-//        guard let node = await fetch(id: id, from: database) else {
-//            return .remove(id)
-//        }
-//        
-//        return .addOrUpdate(node)
-//    }
-//    
-//    private func fetch(id: Int, from database: Database) async -> Node<StateContainer.ModelType>? {
-//        let models = await database.fetch(StateContainer.ModelType.self, rootID: id, context: self.query)
-//        return buildTree(from: models).first
-//    }
-//}
 
 extension Database {
     public struct Query: Sendable {

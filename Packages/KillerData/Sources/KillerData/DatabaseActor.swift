@@ -83,33 +83,15 @@ public actor Database {
         }
     }
     
-    public func fetch<ModelType: SchemaBacked & RecursiveData>(_ type: ModelType.Type, rootID: Int?, context: Database.Query? = nil) -> [ModelType] {
-        do {
-            let table = context?.apply(ModelType.SchemaType.tableExpression) ?? ModelType.SchemaType.tableExpression
-            
-            let recursiveExpression = buildRecursiveExpression(ModelType.self, rootID: rootID, base: table)
-            
-            let records = try connection.prepare(recursiveExpression)
-            
-            return try records.map(ModelType.create(from:))
-        }
-        catch {
-            // do something to broad cast the error to both you and the user
-            print(error.localizedDescription)
-            print("\(#file):\(#function):\(#line)")
-            return []
-        }
-    }
-    
     public func fetchChildren<ModelType: SchemaBacked>(
         _ type: ModelType.Type, id: Int?,
         context: Database.Query? = nil
-    ) -> [ModelType] where ModelType.SchemaType : RecursiveSchema {
+    ) -> [ModelType] where ModelType : RecursiveData {
         do {
             let table = context?.apply(ModelType.SchemaType.tableExpression) ?? ModelType.SchemaType.tableExpression
             
             let records = try connection.prepare(
-                table.filter(ModelType.SchemaType.parentID == id)
+                table.filter(SQLite.Expression<Int?>("parentID") == id)
             )
             
             return try records.map(ModelType.create(from:))

@@ -11,10 +11,6 @@ public protocol ModelSchema {
     static var deletedAt: SQLite.Expression<Date?> { get }
 }
 
-public protocol RecursiveSchema {
-    static var parentID: SQLite.Expression<Int?> { get }
-}
-
 public protocol SchemaBacked: Sendable {
     associatedtype SchemaType: ModelSchema
     associatedtype MessageHandlerType: DatabaseMessageHandler
@@ -29,7 +25,7 @@ public protocol SchemaBacked: Sendable {
 
 extension Database {
     public enum Schema {
-        public enum Tasks: ModelSchema, RecursiveSchema {
+        public enum Tasks: ModelSchema {
             public static let tableExpression: SQLite.Table = Table("tasks")
             public static let id = SQLite.Expression<Int>("id")
             public static let createdAt = SQLite.Expression<Date>("createdAt")
