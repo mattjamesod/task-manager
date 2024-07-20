@@ -21,7 +21,7 @@ public enum SyncResult<StateContainer: StateContainerizable>: Sendable {
 
 // TODO: sync service for all these private methods
 
-public actor QueryMonitor<StateContainer: StateContainerizable> {
+public actor QueryMonitor<StateContainer: StateContainerizable & Identifiable> {
     private let query: Database.Query
     private var registeredStateContainers: [StateContainer] = []
     
@@ -39,6 +39,11 @@ public actor QueryMonitor<StateContainer: StateContainerizable> {
     
     public func keepSynchronised(state: StateContainer) {
         registeredStateContainers.append(state)
+    }
+    
+    public func deregister(state: StateContainer) {
+        guard let index = registeredStateContainers.firstIndex(where: { $0.id == state.id }) else { return }
+        
     }
     
     public func beginMonitoring(_ database: Database) async {
