@@ -22,7 +22,7 @@ struct TaskManagerApp: App {
                     TaskContainerView(query: .allActiveTasks)
                         .environment(\.database, database)
                         .border(.blue)
-                    TaskContainerView(query: .deletedTasks)
+                    TaskContainerView(query: .allActiveTasks)
                         .environment(\.database, database)
                         .border(.red)
                 }

@@ -191,8 +191,7 @@ public actor Database {
         recursive: Bool = false,
         _ property1: PropertyArgument<ModelType, PropertyType1>
     ) {
-        let updateMethod: (ModelType, [Setter]) -> () =
-            recursive ? self.updateRecursive : self.update
+        let updateMethod: (ModelType, [Setter]) -> () = recursive ? self.updateRecursive : self.update
         
         let setters = [
             try? property1.getSetter(),
@@ -208,8 +207,7 @@ public actor Database {
         _ property1: PropertyArgument<ModelType, PropertyType1>,
         _ property2: PropertyArgument<ModelType, PropertyType2>
     ) {
-        let updateMethod: (ModelType, [Setter]) -> () = 
-            recursive ? self.updateRecursive : self.update
+        let updateMethod: (ModelType, [Setter]) -> () = recursive ? self.updateRecursive : self.update
         
         let setters = [
             try? property1.getSetter(),

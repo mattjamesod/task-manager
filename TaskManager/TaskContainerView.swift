@@ -3,7 +3,7 @@ import KillerModels
 import KillerData
 
 @Observable @MainActor
-class TaskListViewModel: SynchronisedStateContainer, Identifiable {
+final class TaskListViewModel: SynchronisedStateContainer, Identifiable, Sendable {
     
     var tasks: [KillerTask]
     let parentID: Int?

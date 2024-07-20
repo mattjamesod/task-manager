@@ -1,9 +1,9 @@
-import SQLite
+@preconcurrency import SQLite
 import KillerModels
 
 // TODO: sync service for all these private methods
 
-public actor QueryMonitor<StateContainer: SynchronisedStateContainer & Identifiable> {
+public actor QueryMonitor<StateContainer: SynchronisedStateContainer & Identifiable & Sendable> {
     private let query: Database.Query
     
     public init(of query: Database.Query) {
@@ -68,7 +68,7 @@ extension Database {
     public struct Query: Sendable {
         let baseExpression = Schema.Tasks.tableExpression
         
-        internal init(tableExpression: @escaping (SQLite.Table) -> (SQLite.Table)) {
+        internal init(tableExpression: @escaping @Sendable (SQLite.Table) -> (SQLite.Table)) {
             self.apply = tableExpression
         }
         
@@ -86,6 +86,6 @@ extension Database {
                 .order(Schema.Tasks.deletedAt.asc)
         }
         
-        let apply: (SQLite.Table) -> SQLite.Table
+        let apply: @Sendable (SQLite.Table) -> SQLite.Table
     }
 }
