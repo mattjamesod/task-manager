@@ -31,6 +31,8 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer & Identifia
                 for result in await syncEngine.sync(ids) {
                     await push(syncResult: result)
                 }
+            case .recordDeleted(let id):
+                await push(syncResult: .remove(id))
             }
         }
     }

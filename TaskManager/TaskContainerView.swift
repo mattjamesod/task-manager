@@ -2,6 +2,28 @@ import SwiftUI
 import KillerModels
 import KillerData
 
+extension RandomAccessCollection {
+    /// Finds such index N that predicate is true for all elements up to
+    /// but not including the index N, and is false for all elements
+    /// starting with index N.
+    /// Behavior is undefined if there is no such N.
+    func binarySearch(predicate: (Element) -> Bool) -> Index {
+        var low = startIndex
+        var high = endIndex
+        while low != high {
+            let mid = index(low, offsetBy: distance(from: low, to: high)/2)
+            if predicate(self[mid]) {
+                low = index(after: mid)
+            } else {
+                high = mid
+            }
+        }
+        return low
+    }
+}
+
+// TODO: Mutating observable property \TaskListViewModel.tasks after view is torn down has no effect
+
 @Observable @MainActor
 final class TaskListViewModel: SynchronisedStateContainer, Identifiable, Sendable {
     
@@ -20,7 +42,7 @@ final class TaskListViewModel: SynchronisedStateContainer, Identifiable, Sendabl
             tasks[index] = model
         }
         else {
-            tasks.append(model)
+            tasks.insert(model, at: insertIndex(of: model))
         }
     }
     
@@ -40,6 +62,10 @@ final class TaskListViewModel: SynchronisedStateContainer, Identifiable, Sendabl
             remove(with: id)
         }
     }
+    
+    private func insertIndex(of task: KillerTask) -> Int {
+        self.tasks.binarySearch { $0.createdAt < task.createdAt }
+    }
 }
 
 struct TaskContainerView: View {
@@ -55,8 +81,10 @@ struct TaskContainerView: View {
         ZStack {
             TaskListView(parentID: nil, monitor: queryMonitor)
             
-            VStack(spacing: 16) {
+            HStack(spacing: 16) {
                 NewTaskButton()
+                UndoButton()
+                RedoButton()
             }
             .frame(maxHeight: .infinity, alignment: .bottom)
             .padding(.bottom, 16)
@@ -118,7 +146,7 @@ struct TaskList<Content: View>: View {
 
 struct TaskView: View {
     @Environment(\.database) var database
-    
+        
     let task: KillerTask
     
     var body: some View {
@@ -148,7 +176,31 @@ struct NewTaskButton: View {
     var body: some View {
         Button("Add New Task") {
             Task.detached {
-                await database?.insert(KillerTask.self, \.body <- "A brand new baby task")//, \.parentID <- 17)
+                await database?.insert(KillerTask.self, \.body <- "A brand new baby task")//, \.parentID <- 23)
+            }
+        }
+    }
+}
+
+struct UndoButton: View {
+    @Environment(\.database) var database
+    
+    var body: some View {
+        Button("Undo") {
+            Task.detached {
+                await database?.undo()
+            }
+        }
+    }
+}
+
+struct RedoButton: View {
+    @Environment(\.database) var database
+    
+    var body: some View {
+        Button("Redo") {
+            Task.detached {
+                await database?.redo()
             }
         }
     }

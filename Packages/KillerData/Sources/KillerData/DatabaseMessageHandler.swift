@@ -5,6 +5,7 @@ import SQLite
 public enum DatabaseMessage: Sendable {
     case recordChange(id: Int)
     case recordsChanged(ids: Set<Int>)
+    case recordDeleted(id: Int)
 }
 
 public protocol DatabaseMessageHandler: Actor {

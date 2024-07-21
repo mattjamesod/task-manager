@@ -123,42 +123,43 @@ public actor Database {
     public func insert<ModelType: SchemaBacked, PropertyType1: SQLite.Value>(
         _ type: ModelType.Type,
         _ property1: PropertyArgument<ModelType, PropertyType1>
-    ) {
-        self.insert(type, {[
-            try property1.getSetter(),
+    ) async {
+        var setters = [
+            try? property1.getSetter(),
             ModelType.SchemaType.createdAt <- Date.now,
             ModelType.SchemaType.updatedAt <- Date.now
-        ]})
+        ].compact()
+        
+        guard let id = self.insert(type, setters) else { return }
+        
+        setters.append(ModelType.SchemaType.id <- id)
+        
+        await history.record(Bijection(
+            goForward: { await self.insert(type, setters) },
+            goBackward: { await self.delete(ModelType.self, id) }
+        ))
+        
     }
     
-    public func insert<ModelType: SchemaBacked, PropertyType1: SQLite.Value, PropertyType2: SQLite.Value>(
-        _ type: ModelType.Type,
-        _ property1: PropertyArgument<ModelType, PropertyType1>,
-        _ property2: PropertyArgument<ModelType, PropertyType2>
-    ) {
-        self.insert(type, {[
-            try property1.getSetter(),
-            try property2.getSetter(),
-            ModelType.SchemaType.createdAt <- Date.now,
-            ModelType.SchemaType.updatedAt <- Date.now
-        ]})
-    }
-    
-    private func insert<ModelType: SchemaBacked>(_ type: ModelType.Type, _ setters: () throws -> [Setter]) {
+    @discardableResult
+    private func insert<ModelType: SchemaBacked>(_ type: ModelType.Type, _ setters: [Setter]) -> Int? {
         do {
             let newId = try connection.run(
-                ModelType.SchemaType.tableExpression.insert(setters())
+                ModelType.SchemaType.tableExpression.insert(setters)
             )
             
             Task.detached {
                 await ModelType.messageHandler.send(.recordChange(id: Int(newId)))
             }
+            
+            return Int(newId)
         }
         catch {
             // sqlite specific errors, print problem query?
             // do something to broad cast the error to both you and the user
             print(error)
             print("\(#file):\(#function):\(#line)")
+            return nil
         }
     }
     
@@ -263,6 +264,25 @@ public actor Database {
                 Task.detached {
                     await ModelType.messageHandler.send(.recordsChanged(ids: Set(affectedIDs)))
                 }
+            }
+        }
+        catch {
+            // do something to broad cast the error to both you and the user
+            print(error)
+            print("\(#file):\(#function):\(#line)")
+        }
+    }
+    
+    private func delete<ModelType: SchemaBacked>(_ type: ModelType.Type, _ id: Int) {
+        do {
+            try connection.run(
+                ModelType.SchemaType.tableExpression
+                    .filter(ModelType.SchemaType.id == id)
+                    .delete()
+            )
+            
+            Task.detached {
+                await ModelType.messageHandler.send(.recordDeleted(id: id))
             }
         }
         catch {
