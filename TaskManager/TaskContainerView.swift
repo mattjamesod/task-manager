@@ -29,10 +29,16 @@ final class TaskListViewModel: SynchronisedStateContainer, Identifiable, Sendabl
     
     var tasks: [KillerTask]
     let parentID: Int?
+    let sortOrder: (KillerTask, KillerTask) -> Bool
     
-    init(_ tasks: [KillerTask], parentID: Int?) {
+    init(
+        _ tasks: [KillerTask],
+        parentID: Int?,
+        sortOrder: @escaping (KillerTask, KillerTask) -> Bool = { $0.createdAt < $1.createdAt }
+    ) {
         self.tasks = tasks
         self.parentID = parentID
+        self.sortOrder = sortOrder
     }
         
     func addOrUpdate(model: KillerTask) {
@@ -64,7 +70,7 @@ final class TaskListViewModel: SynchronisedStateContainer, Identifiable, Sendabl
     }
     
     private func insertIndex(of task: KillerTask) -> Int {
-        self.tasks.binarySearch { $0.createdAt < task.createdAt }
+        self.tasks.binarySearch { self.sortOrder($0, task) }
     }
 }
 
