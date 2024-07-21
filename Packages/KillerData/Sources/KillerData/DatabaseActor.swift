@@ -1,4 +1,4 @@
-import SQLite
+@preconcurrency import SQLite
 import SwiftUI
 import UtilExtensions
 import KillerModels
@@ -19,6 +19,10 @@ public enum DatabaseError: Error {
 public actor Database {
     private let schema: SchemaDescription
     private let connection: Connection
+    private let history: MutationHistory = .init()
+    
+    public func undo() async { await history.undo() }
+    public func redo() async { await history.redo() }
     
     internal init(schema: Database.SchemaDescription, connection: SQLite.Connection) throws(DatabaseError) {
         self.schema = schema
@@ -163,59 +167,55 @@ public actor Database {
     public func update<ModelType: SchemaBacked, PropertyType1: SQLite.Value>(
         _ model: ModelType,
         _ property1: PropertyArgument<ModelType, PropertyType1>
-    ) {
-        let setters = [
+    ) async {
+        let forwardSetters = [
             try? property1.getSetter(),
             ModelType.SchemaType.updatedAt <- Date.now
         ].compact()
         
-        self.update(model, setters)
-    }
-    
-    public func update<ModelType: SchemaBacked, PropertyType1: SQLite.Value, PropertyType2: SQLite.Value>(
-        _ model: ModelType,
-        _ property1: PropertyArgument<ModelType, PropertyType1>,
-        _ property2: PropertyArgument<ModelType, PropertyType2>
-    ) {
-        let setters = [
-            try? property1.getSetter(),
-            try? property2.getSetter(),
-            ModelType.SchemaType.updatedAt <- Date.now
+        let backwardSetters = [
+            try? property1.getInverseSetter(model: model),
+            ModelType.SchemaType.updatedAt <- model.updatedAt
         ].compact()
         
-        self.update(model, setters)
+        await history.record(Bijection(
+            goForward: { await self.update(model, forwardSetters) },
+            goBackward: { await self.update(model, backwardSetters) }
+        ))
+        
+        self.update(model, forwardSetters)
     }
     
     public func update<ModelType: SchemaBacked & RecursiveData, PropertyType1: SQLite.Value>(
         _ model: ModelType,
         recursive: Bool = false,
         _ property1: PropertyArgument<ModelType, PropertyType1>
-    ) {
-        let updateMethod: (ModelType, [Setter]) -> () = recursive ? self.updateRecursive : self.update
+    ) async {
+        let updateMethod: (ModelType, [Setter]) -> Void
         
-        let setters = [
+        if recursive {
+            updateMethod = self.updateRecursive
+        }
+        else {
+            updateMethod = self.update
+        }
+        
+        let forwardSetters = [
             try? property1.getSetter(),
             ModelType.SchemaType.updatedAt <- Date.now
         ].compact()
         
-        updateMethod(model, setters)
-    }
-    
-    public func update<ModelType: SchemaBacked & RecursiveData, PropertyType1: SQLite.Value, PropertyType2: SQLite.Value>(
-        _ model: ModelType,
-        recursive: Bool = false,
-        _ property1: PropertyArgument<ModelType, PropertyType1>,
-        _ property2: PropertyArgument<ModelType, PropertyType2>
-    ) {
-        let updateMethod: (ModelType, [Setter]) -> () = recursive ? self.updateRecursive : self.update
-        
-        let setters = [
-            try? property1.getSetter(),
-            try? property2.getSetter(),
-            ModelType.SchemaType.updatedAt <- Date.now
+        let backwardSetters = [
+            try? property1.getInverseSetter(model: model),
+            ModelType.SchemaType.updatedAt <- model.updatedAt
         ].compact()
         
-        updateMethod(model, setters)
+        await history.record(Bijection(
+            goForward: { await updateMethod(model, forwardSetters) },
+            goBackward: { await updateMethod(model, backwardSetters) }
+        ))
+        
+        updateMethod(model, forwardSetters)
     }
     
     // TODO:  If the model has no matching record in the database, it is created with the updated value.

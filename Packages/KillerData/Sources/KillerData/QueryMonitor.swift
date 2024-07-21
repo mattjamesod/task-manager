@@ -1,8 +1,6 @@
 @preconcurrency import SQLite
 import KillerModels
 
-// TODO: sync service for all these private methods
-
 public actor QueryMonitor<StateContainer: SynchronisedStateContainer & Identifiable & Sendable> {
     private let query: Database.Query
     

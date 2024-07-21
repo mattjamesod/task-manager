@@ -43,16 +43,16 @@ public struct PropertyArgument<ModelType: SchemaBacked, T: SQLite.Value>: @unche
         }
     }
     
-//    func writeValue(to model: inout ModelType) {
-//        if let _keyPath {
-//            model[keyPath: _keyPath] = _value!
-//        }
-//        else if let _optionalKeyPath {
-//            model[keyPath: _optionalKeyPath] = _value
-//        }
-//        else {
-//            // one of the above properties must exist, so this code is impossible to reach
-//            fatalError()
-//        }
-//    }
+    func getInverseSetter(model: ModelType) throws -> Setter {
+        if let _keyPath {
+            try ModelType.getSchemaExpression(for: _keyPath) <- model[keyPath: _keyPath]
+        }
+        else if let _optionalKeyPath {
+            try ModelType.getSchemaExpression(optional: _optionalKeyPath) <- model[keyPath: _optionalKeyPath]
+        }
+        else {
+            // one of the above properties must exist, so this code is impossible to reach
+            fatalError()
+        }
+    }
 }
