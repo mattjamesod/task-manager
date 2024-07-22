@@ -1,7 +1,7 @@
 @preconcurrency import SQLite
 import KillerModels
 
-public actor QueryMonitor<StateContainer: SynchronisedStateContainer & Identifiable & Sendable> {
+public actor QueryMonitor<StateContainer: SynchronisedStateContainer> {
     private let query: Database.Query
     
     public init(of query: Database.Query) {
@@ -21,7 +21,7 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer & Identifia
     
     public func beginMonitoring(_ database: Database) async {
         let events = await StateContainer.ModelType.messageHandler.subscribe()
-        let syncEngine = SyncEngine<StateContainer>(for: database, context: self.query)
+        let syncEngine = SyncEngine<StateContainer.ModelType>(for: database, context: self.query)
         
         for await event in events {
             switch event {
@@ -37,7 +37,7 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer & Identifia
         }
     }
     
-    private func push(syncResult: SyncResult<StateContainer>) async {
+    private func push(syncResult: SyncResult<StateContainer.ModelType>) async {
         for container in registeredStateContainers {
             switch syncResult {
                 case .addOrUpdate(let model):

@@ -1,7 +1,7 @@
 
 
 @MainActor
-public protocol SynchronisedStateContainer {
+public protocol SynchronisedStateContainer: Identifiable, Sendable, AnyObject {
     associatedtype ModelType: SchemaBacked
     func addOrUpdate(model: ModelType)
     func addOrUpdate(models: [ModelType])
@@ -9,14 +9,14 @@ public protocol SynchronisedStateContainer {
     func remove(with ids: Set<Int>)
 }
 
-public enum SyncResult<StateContainer: SynchronisedStateContainer>: Sendable {
-    case addOrUpdate(StateContainer.ModelType)
-    case addOrUpdateMany([StateContainer.ModelType])
+public enum SyncResult<ModelType>: Sendable {
+    case addOrUpdate(ModelType)
+    case addOrUpdateMany([ModelType])
     case remove(_ id: Int)
     case removeMany(_ ids: Set<Int>)
 }
 
-actor SyncEngine<Container: SynchronisedStateContainer> {
+actor SyncEngine<ModelType: SchemaBacked> {
     let database: Database
     let query: Database.Query
     
@@ -25,7 +25,7 @@ actor SyncEngine<Container: SynchronisedStateContainer> {
         self.query = query
     }
     
-    func sync(_ id: Int) async -> SyncResult<Container> {
+    func sync(_ id: Int) async -> SyncResult<ModelType> {
         guard let model = await fetch(id) else {
             return .remove(id)
         }
@@ -33,8 +33,8 @@ actor SyncEngine<Container: SynchronisedStateContainer> {
         return .addOrUpdate(model)
     }
     
-    func sync(_ ids: Set<Int>) async -> [SyncResult<Container>] {
-        var results: [SyncResult<Container>] = []
+    func sync(_ ids: Set<Int>) async -> [SyncResult<ModelType>] {
+        var results: [SyncResult<ModelType>] = []
         
         let models = await fetch(ids)
         
@@ -58,11 +58,11 @@ actor SyncEngine<Container: SynchronisedStateContainer> {
     // MARK: - fetch methods
     // to erase knowledge of the Query from the fetch method
     
-    private func fetch(_ id: Int) async -> Container.ModelType? {
-        await database.pluck(Container.ModelType.self, id: id, context: query)
+    private func fetch(_ id: Int) async -> ModelType? {
+        await database.pluck(ModelType.self, id: id, context: query)
     }
     
-    private func fetch(_ ids: Set<Int>) async -> [Container.ModelType] {
-        await database.fetch(Container.ModelType.self, ids: ids, context: query)
+    private func fetch(_ ids: Set<Int>) async -> [ModelType] {
+        await database.fetch(ModelType.self, ids: ids, context: query)
     }
 }

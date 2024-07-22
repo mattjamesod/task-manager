@@ -29,7 +29,7 @@ public actor Database {
         self.connection = connection
         
         do {
-//            try schema.destroy(connection: connection)
+            try schema.destroy(connection: connection)
             try schema.create(connection: connection)
         }
         catch {
@@ -138,7 +138,28 @@ public actor Database {
             goForward: { await self.insert(type, setters) },
             goBackward: { await self.delete(ModelType.self, id) }
         ))
+    }
+    
+    public func insert<ModelType: SchemaBacked, PropertyType1: SQLite.Value, PropertyType2: SQLite.Value>(
+        _ type: ModelType.Type,
+        _ property1: PropertyArgument<ModelType, PropertyType1>,
+        _ property2: PropertyArgument<ModelType, PropertyType2>
+    ) async {
+        var setters = [
+            try? property1.getSetter(),
+            try? property2.getSetter(),
+            ModelType.SchemaType.createdAt <- Date.now,
+            ModelType.SchemaType.updatedAt <- Date.now
+        ].compact()
         
+        guard let id = self.insert(type, setters) else { return }
+        
+        setters.append(ModelType.SchemaType.id <- id)
+        
+        await history.record(Bijection(
+            goForward: { await self.insert(type, setters) },
+            goBackward: { await self.delete(ModelType.self, id) }
+        ))
     }
     
     @discardableResult

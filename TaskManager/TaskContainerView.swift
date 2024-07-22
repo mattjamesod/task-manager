@@ -1,63 +1,22 @@
 import SwiftUI
-import UtilAlgorithms
 import KillerModels
 import KillerData
 
-// TODO: Mutating observable property \TaskListViewModel.tasks after view is torn down has no effect
-
 @Observable @MainActor
-final class TaskListViewModel: SynchronisedStateContainer, Identifiable, Sendable {
+final class TaskContainerViewModel: SynchronisedStateContainer {
     
-    var tasks: [KillerTask]
-    let parentID: Int?
-    let sortOrder: (KillerTask, KillerTask) -> Bool
+    var orphanedParentIDs: [Int?] = [nil]
     
-    init(
-        _ tasks: [KillerTask],
-        parentID: Int?,
-        sortOrder: @escaping (KillerTask, KillerTask) -> Bool = { $0.createdAt < $1.createdAt }
-    ) {
-        self.tasks = tasks
-        self.parentID = parentID
-        self.sortOrder = sortOrder
-    }
-        
-    func addOrUpdate(model: KillerTask) {
-        guard model.parentID == self.parentID else { return }
-        
-        if let index = tasks.firstIndex(where: { $0.id == model.id }) {
-            tasks[index] = model
-        }
-        else {
-            tasks.insert(model, at: insertIndex(of: model))
-        }
-    }
-    
-    func addOrUpdate(models: [KillerTask]) {
-        for model in models {
-            addOrUpdate(model: model)
-        }
-    }
-    
-    func remove(with id: Int) {
-        guard let index = tasks.firstIndex(where: { $0.id == id }) else { return }
-        tasks.remove(at: index)
-    }
-    
-    func remove(with ids: Set<Int>) {
-        for id in ids {
-            remove(with: id)
-        }
-    }
-    
-    private func insertIndex(of task: KillerTask) -> Int {
-        self.tasks.binarySearch { self.sortOrder($0, task) }
-    }
+    func addOrUpdate(model: KillerTask) {}
+    func addOrUpdate(models: [KillerTask]) {}
+    func remove(with id: Int) {}
+    func remove(with ids: Set<Int>) {}
 }
 
 struct TaskContainerView: View {
     @Environment(\.database) var database
     
+    // should care abt the associated type, not the contaienr type
     let queryMonitor: QueryMonitor<TaskListViewModel>
     
     init(query: Database.Query) {
@@ -66,7 +25,8 @@ struct TaskContainerView: View {
     
     var body: some View {
         ZStack {
-            TaskListView(parentID: nil, monitor: queryMonitor)
+            TaskListView(parentID: nil)
+                .environment(\.taskListMonitor, queryMonitor)
             
             HStack(spacing: 16) {
                 NewTaskButton()
@@ -83,52 +43,8 @@ struct TaskContainerView: View {
     }
 }
 
-struct TaskListView: View {
-    @Environment(\.database) var database
-    @State var viewModel: TaskListViewModel
-    
-    let monitor: QueryMonitor<TaskListViewModel>
-    
-    init(parentID: Int?, monitor: QueryMonitor<TaskListViewModel>) {
-        self.viewModel = TaskListViewModel([], parentID: parentID)
-        self.monitor = monitor
-    }
-    
-    var body: some View {
-        TaskList {
-            ForEach(viewModel.tasks) { task in
-                TaskView(task: task)
-                TaskListView(parentID: task.id, monitor: monitor)
-                    .padding(.leading, 24)
-            }
-        }
-        .animation(.bouncy, value: viewModel.tasks)
-        .task {
-            guard let database else { return }
-            viewModel.tasks = await monitor.fetchChildren(from: database, id: viewModel.parentID)
-        }
-        .task {
-            await monitor.keepSynchronised(state: viewModel)
-        }
-        .onDisappear {
-            Task {
-                await monitor.deregister(state: viewModel)
-            }
-        }
-    }
-}
-
-struct TaskList<Content: View>: View {
-    @ViewBuilder var content: Content
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(subviewOf: content) { subView in
-                subView
-            }
-        }
-        .padding(.horizontal, 16)
-    }
+extension EnvironmentValues {
+    @Entry var taskListMonitor: QueryMonitor<TaskListViewModel>? = nil
 }
 
 struct TaskView: View {
@@ -163,7 +79,7 @@ struct NewTaskButton: View {
     var body: some View {
         Button("Add New Task") {
             Task.detached {
-                await database?.insert(KillerTask.self, \.body <- "A brand new baby task")//, \.parentID <- 23)
+                await database?.insert(KillerTask.self, \.body <- "A brand new baby task")//, \.parentID <- 55)
             }
         }
     }
