@@ -19,6 +19,7 @@
 		A055B5C22C25E52300BCB5C2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A055B5C12C25E52300BCB5C2 /* Assets.xcassets */; };
 		A055B5C62C25E52300BCB5C2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A055B5C52C25E52300BCB5C2 /* Preview Assets.xcassets */; };
 		A055B5D02C25E52300BCB5C2 /* DatabaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5CF2C25E52300BCB5C2 /* DatabaseTests.swift */; };
+		A06A95F72C4E376A004302DF /* UtilAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = A06A95F62C4E376A004302DF /* UtilAlgorithms */; };
 		A09B7A6E2C3B0DA500C01586 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = A09B7A6D2C3B0DA500C01586 /* AsyncAlgorithms */; };
 		A0D1EBED2C26C5C7008636CB /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = A0D1EBEC2C26C5C7008636CB /* SQLite */; };
 		A0DB377C2C2DD02A00D17C00 /* KillerModels in Frameworks */ = {isa = PBXBuildFile; productRef = A0DB377B2C2DD02A00D17C00 /* KillerModels */; };
@@ -66,6 +67,7 @@
 				A04EDD3A2C31E79B00B299C4 /* UtilExtensions in Frameworks */,
 				A0DB377C2C2DD02A00D17C00 /* KillerModels in Frameworks */,
 				A05115712C2DC08900923202 /* KillerModels in Frameworks */,
+				A06A95F72C4E376A004302DF /* UtilAlgorithms in Frameworks */,
 				A0DB37812C2E0ED200D17C00 /* KillerModels in Frameworks */,
 				A0456FDE2C2E0FD200DC2879 /* KillerData in Frameworks */,
 				A04EDD3C2C31E79B00B299C4 /* UtilViews in Frameworks */,
@@ -175,6 +177,7 @@
 				A04EDD392C31E79B00B299C4 /* UtilExtensions */,
 				A04EDD3B2C31E79B00B299C4 /* UtilViews */,
 				A09B7A6D2C3B0DA500C01586 /* AsyncAlgorithms */,
+				A06A95F62C4E376A004302DF /* UtilAlgorithms */,
 			);
 			productName = TaskManager;
 			productReference = A055B5BA2C25E52200BCB5C2 /* TaskManager.app */;
@@ -722,6 +725,11 @@
 		A05115702C2DC08900923202 /* KillerModels */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = KillerModels;
+		};
+		A06A95F62C4E376A004302DF /* UtilAlgorithms */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A04EDD362C31E79B00B299C4 /* XCLocalSwiftPackageReference "../packages/AndHashUtilities" */;
+			productName = UtilAlgorithms;
 		};
 		A09B7A6D2C3B0DA500C01586 /* AsyncAlgorithms */ = {
 			isa = XCSwiftPackageProductDependency;
