@@ -2,7 +2,7 @@
 import KillerModels
 
 public actor QueryMonitor<StateContainer: SynchronisedStateContainer> {
-    private let query: Database.Query
+    public let query: Database.Query
     
     public init(of query: Database.Query) {
         self.query = query
@@ -50,17 +50,6 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer> {
                     await container.remove(with: ids)
             }
         }
-    }
-    
-    // MARK: - fetch methods
-    // to erase knowledge of the Query from the fetch method
-    
-    public func fetch(from database: Database) async  -> [StateContainer.ModelType] {
-        await database.fetch(StateContainer.ModelType.self, query: self.query)
-    }
-    
-    public func fetchChildren(from database: Database, id: Int?) async  -> [StateContainer.ModelType] where StateContainer.ModelType: RecursiveData {
-        await database.fetchChildren(StateContainer.ModelType.self, id: id, context: self.query)
     }
 }
 

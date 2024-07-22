@@ -74,8 +74,8 @@ struct TaskListView: View {
         }
         .animation(.bouncy, value: viewModel.tasks)
         .task {
-            guard let database else { return }
-            viewModel.tasks = await monitor?.fetchChildren(from: database, id: viewModel.parentID) ?? []
+            guard let database, let monitor else { return }
+            viewModel.tasks = await database.fetchChildren(KillerTask.self, id: viewModel.parentID, context: monitor.query)
         }
         .task {
             await monitor?.keepSynchronised(state: viewModel)
