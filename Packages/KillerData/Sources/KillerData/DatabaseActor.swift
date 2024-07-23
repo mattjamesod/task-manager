@@ -29,7 +29,7 @@ public actor Database {
         self.connection = connection
         
         do {
-            try schema.destroy(connection: connection)
+//            try schema.destroy(connection: connection)
             try schema.create(connection: connection)
         }
         catch {
@@ -58,9 +58,9 @@ public actor Database {
         }
     }
     
-    public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, query: Database.Query) -> [ModelType] {
+    public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, context: Database.Query) -> [ModelType] {
         do {
-            let records = try connection.prepare(query.apply(ModelType.SchemaType.tableExpression))
+            let records = try connection.prepare(context.apply(ModelType.SchemaType.tableExpression))
             return try records.map(ModelType.create(from:))
         }
         catch {

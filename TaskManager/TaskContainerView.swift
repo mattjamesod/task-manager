@@ -16,17 +16,25 @@ final class TaskContainerViewModel: SynchronisedStateContainer {
 struct TaskContainerView: View {
     @Environment(\.database) var database
     
-    // should care abt the associated type, not the contaienr type
-    let queryMonitor: QueryMonitor<TaskListViewModel>
+    @State var viewModel: TaskContainerViewModel = .init()
+    
+    let taskListMonitor: QueryMonitor<TaskListViewModel> = .init()
+    let taskContainerMonitor: QueryMonitor<TaskContainerViewModel> = .init()
+    let query: Database.Query
     
     init(query: Database.Query) {
-        self.queryMonitor = .init(of: query)
+        self.query = query
     }
     
     var body: some View {
         ZStack {
-            TaskListView(parentID: nil)
-                .environment(\.taskListMonitor, queryMonitor)
+            TaskList {
+                ForEach(viewModel.orphanedParentIDs, id: \.self) { id in
+                    TaskListView(parentID: id)
+                        .environment(\.taskListMonitor, taskListMonitor)
+                        .environment(\.contextQuery, query)
+                }
+            }
             
             HStack(spacing: 16) {
                 NewTaskButton()
@@ -38,13 +46,36 @@ struct TaskContainerView: View {
         }
         .task {
             guard let database else { return }
-            await queryMonitor.beginMonitoring(database)
+            let allTasks = await database.fetch(KillerTask.self, context: query)
+            let relations = Dictionary(grouping: allTasks, by: \.parentID)
+            let ids = allTasks.map(\.id)
+            
+            let orphanedParentIDs = Set(relations.keys).subtracting(Set(ids))
+            
+            viewModel.orphanedParentIDs = Array(orphanedParentIDs)
+        }
+        .task {
+            guard let database else { return }
+            await taskListMonitor.beginMonitoring(query, on: database)
+        }
+        .task {
+            guard let database else { return }
+            await taskContainerMonitor.beginMonitoring(query, on: database)
+        }
+        .task {
+            await taskContainerMonitor.keepSynchronised(state: viewModel)
+        }
+        .onDisappear {
+            Task {
+                await taskContainerMonitor.deregister(state: viewModel)
+            }
         }
     }
 }
 
 extension EnvironmentValues {
     @Entry var taskListMonitor: QueryMonitor<TaskListViewModel>? = nil
+    @Entry var contextQuery: Database.Query? = nil
 }
 
 struct TaskView: View {
@@ -79,7 +110,7 @@ struct NewTaskButton: View {
     var body: some View {
         Button("Add New Task") {
             Task.detached {
-                await database?.insert(KillerTask.self, \.body <- "A brand new baby task")//, \.parentID <- 55)
+                await database?.insert(KillerTask.self, \.body <- "A brand new baby task")//, \.parentID <- 4)
             }
         }
     }

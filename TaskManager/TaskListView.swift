@@ -58,6 +58,8 @@ final class TaskListViewModel: SynchronisedStateContainer {
 struct TaskListView: View {
     @Environment(\.database) var database
     @Environment(\.taskListMonitor) var monitor
+    @Environment(\.contextQuery) var query
+    
     @State var viewModel: TaskListViewModel
     
     init(parentID: Int?) {
@@ -74,8 +76,8 @@ struct TaskListView: View {
         }
         .animation(.bouncy, value: viewModel.tasks)
         .task {
-            guard let database, let monitor else { return }
-            viewModel.tasks = await database.fetchChildren(KillerTask.self, id: viewModel.parentID, context: monitor.query)
+            guard let database else { return }
+            viewModel.tasks = await database.fetchChildren(KillerTask.self, id: viewModel.parentID, context: query)
         }
         .task {
             await monitor?.keepSynchronised(state: viewModel)

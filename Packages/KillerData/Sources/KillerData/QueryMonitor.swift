@@ -2,11 +2,7 @@
 import KillerModels
 
 public actor QueryMonitor<StateContainer: SynchronisedStateContainer> {
-    public let query: Database.Query
-    
-    public init(of query: Database.Query) {
-        self.query = query
-    }
+    public init() { }
     
     private var registeredStateContainers: [StateContainer] = []
     
@@ -19,9 +15,9 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer> {
         registeredStateContainers.remove(at: index)
     }
     
-    public func beginMonitoring(_ database: Database) async {
+    public func beginMonitoring(_ query: Database.Query, on database: Database) async {
         let events = await StateContainer.ModelType.messageHandler.subscribe()
-        let syncEngine = SyncEngine<StateContainer.ModelType>(for: database, context: self.query)
+        let syncEngine = SyncEngine<StateContainer.ModelType>(for: database, context: query)
         
         for await event in events {
             switch event {
