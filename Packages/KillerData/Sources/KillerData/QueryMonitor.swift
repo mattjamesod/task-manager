@@ -65,6 +65,17 @@ extension Database {
                 .order(table[Schema.Tasks.createdAt].asc)
         }
         
+        public static let orphaned: Query = .init { base in
+            let tasks = Schema.Tasks.tableExpression
+            let cte = Table("cte")
+            
+            return base
+                .with(cte, as: base.select(Schema.Tasks.parentID))
+                .join(.leftOuter, cte, on: cte[Schema.Tasks.parentID] == tasks[Schema.Tasks.id])
+                .select(Schema.Tasks.tableExpression[*])
+                .filter(cte[Schema.Tasks.parentID] == nil)
+        }
+        
         public static let deletedTasks: Query = .init { base in
             base
                 .filter(Schema.Tasks.deletedAt != nil)
@@ -72,5 +83,11 @@ extension Database {
         }
         
         let apply: @Sendable (SQLite.Table) -> SQLite.Table
+        
+        public func compose(with other: Query) -> Query {
+            Query.init { base in
+                other.apply(self.apply(base))
+            }
+        }
     }
 }

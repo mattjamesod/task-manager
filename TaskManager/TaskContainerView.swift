@@ -46,13 +46,9 @@ struct TaskContainerView: View {
         }
         .task {
             guard let database else { return }
-            let allTasks = await database.fetch(KillerTask.self, context: query)
-            let relations = Dictionary(grouping: allTasks, by: \.parentID)
-            let ids = allTasks.map(\.id)
+            let allTasks = await database.fetch(KillerTask.self, context: query.compose(with: Database.Query.orphaned))
             
-            let orphanedParentIDs = Set(relations.keys).subtracting(Set(ids))
-            
-            viewModel.orphanedParentIDs = Array(orphanedParentIDs)
+            viewModel.orphanedParentIDs = Array(Set(allTasks.map(\.parentID)))
         }
         .task {
             guard let database else { return }
