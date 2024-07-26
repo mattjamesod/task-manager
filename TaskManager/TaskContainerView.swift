@@ -46,6 +46,7 @@ extension EnvironmentValues {
 
 struct TaskView: View {
     @Environment(\.database) var database
+    @Environment(\.contextQuery) var contextQuery
         
     let task: KillerTask
     
@@ -60,7 +61,10 @@ struct TaskView: View {
         }
         .transition(.scale(scale: 0.95).combined(with: .opacity))
         .contextMenu(menuItems: {
-            Button.async(action: { await database?.update(task, recursive: true, \.deletedAt <- Date.now) }) {
+            Button.async(action: {
+                let query = await self.contextQuery
+                await database?.update(task, recursive: true, context: query, \.deletedAt <- Date.now)
+            }) {
                 Label("Delete", systemImage: "trash")
             }
             Button.async(action: { await database?.update(task, \.body <- "I've been updated 🎉") }) {
@@ -76,7 +80,7 @@ struct NewTaskButton: View {
     var body: some View {
         Button("Add New Task") {
             Task.detached {
-                await database?.insert(KillerTask.self, \.body <- "A brand new baby task", \.parentID <- 2)
+                await database?.insert(KillerTask.self, \.body <- "A brand new baby task")//, \.parentID <- 2)
             }
         }
     }

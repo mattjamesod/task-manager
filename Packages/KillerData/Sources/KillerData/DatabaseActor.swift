@@ -216,6 +216,7 @@ public actor Database {
     public func update<ModelType: SchemaBacked & RecursiveData, PropertyType1: SQLite.Value>(
         _ model: ModelType,
         recursive: Bool = false,
+        context query: Query? = nil,
         _ property1: PropertyArgument<ModelType, PropertyType1>
     ) async {
         guard let id = model.id else { return }
@@ -225,7 +226,11 @@ public actor Database {
         if recursive {
             do {
                 ids = try connection
-                    .prepare(buildRecursiveExpression(ModelType.self, rootID: id, base: ModelType.SchemaType.tableExpression))
+                    .prepare(buildRecursiveExpression(
+                        ModelType.self,
+                        rootID: id,
+                        base: query?.apply(ModelType.SchemaType.tableExpression) ?? ModelType.SchemaType.tableExpression
+                    ))
                     .map { $0[ModelType.SchemaType.id] }
             }
             catch {
@@ -270,10 +275,12 @@ public actor Database {
         }
     }
     
-    private func update<ModelType: SchemaBacked>(_ type: ModelType.Type, ids: [Int], _ setters: [Setter]) {
+    private func update<ModelType: SchemaBacked>(
+        _ type: ModelType.Type,
+        ids: [Int],
+        _ setters: [Setter]
+    ) {
         do {
-            print(ids)
-            
             try connection.run(
                 ModelType.SchemaType.tableExpression
                     .where(ids.contains(ModelType.SchemaType.id))
