@@ -76,6 +76,13 @@ extension Database {
                 .filter(cte[Expression<Int?>("id")] == nil)
         }
         
+        public static func children(of parentID: Int?) -> Query {
+            .init { base in
+                let tasks = Schema.Tasks.tableExpression
+                return base.filter(tasks[Schema.Tasks.parentID] == parentID)
+            }
+        }
+        
         public static let deletedTasks: Query = .init { base in
             base
                 .filter(Schema.Tasks.deletedAt != nil)

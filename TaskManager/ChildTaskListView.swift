@@ -55,32 +55,43 @@ final class TaskListViewModel: SynchronisedStateContainer {
     }
 }
 
-struct ChildTaskListView: View {
+struct TaskListView: View {
     @Environment(\.database) var database
-    @Environment(\.taskListMonitor) var monitor
-    @Environment(\.contextQuery) var query
+    @Environment(\.contextQuery) var contextQuery
+    @Environment(\.taskListMonitor) var taskListMonitor
     
     @State var viewModel: TaskListViewModel
     
-    let parentID: Int?
+    let monitor: QueryMonitor<TaskListViewModel>?
+    let detailQuery: Database.Query?
     
-    init(parentID: Int?) {
-        self.parentID = parentID
+    init(_ detailQuery: Database.Query? = nil, monitor: QueryMonitor<TaskListViewModel>) {
+        self.viewModel = TaskListViewModel([])
+        
+        self.monitor = monitor
+        self.detailQuery = detailQuery
+    }
+    
+    init(parentID: Int?, monitor: QueryMonitor<TaskListViewModel>?) {
         self.viewModel = TaskListViewModel([], filter: { $0.parentID == parentID })
+        
+        self.monitor = monitor
+        self.detailQuery = .children(of: parentID)
     }
     
     var body: some View {
         TaskList {
             ForEach(viewModel.tasks) { task in
                 TaskView(task: task)
-                ChildTaskListView(parentID: task.id)
+                TaskListView(parentID: task.id, monitor: taskListMonitor)
                     .padding(.leading, 24)
             }
         }
         .animation(.bouncy, value: viewModel.tasks)
         .task {
             guard let database else { return }
-            viewModel.tasks = await database.fetchChildren(KillerTask.self, id: self.parentID, context: query)
+            
+            viewModel.tasks = await database.fetch(KillerTask.self, context: contextQuery?.compose(with: self.detailQuery))
         }
         .task {
             await monitor?.keepSynchronised(state: viewModel)
@@ -93,50 +104,25 @@ struct ChildTaskListView: View {
     }
 }
 
-struct TaskListView: View {
+struct TaskListViewWrapper: View {
     @Environment(\.database) var database
     @Environment(\.contextQuery) var contextQuery
     
-    @State var viewModel: TaskListViewModel
-    
-    let monitor: QueryMonitor<TaskListViewModel>
+    let monitor: QueryMonitor<TaskListViewModel> = .init()
     let detailQuery: Database.Query?
     
     init(_ detailQuery: Database.Query? = nil) {
-        self.viewModel = TaskListViewModel([])
-        
-        self.monitor = .init()
         self.detailQuery = detailQuery
     }
     
     var body: some View {
-        TaskList {
-            ForEach(viewModel.tasks) { task in
-                TaskView(task: task)
-                ChildTaskListView(parentID: task.id)
-                    .padding(.leading, 24)
+        TaskListView(detailQuery, monitor: monitor)
+            .task {
+                guard let database else { return }
+                guard let query = contextQuery?.compose(with: self.detailQuery) else { return }
+                
+                await monitor.beginMonitoring(query, on: database)
             }
-        }
-        .animation(.bouncy, value: viewModel.tasks)
-        .task {
-            guard let database else { return }
-            
-            viewModel.tasks = await database.fetch(KillerTask.self, context: contextQuery?.compose(with: self.detailQuery))
-        }
-        .task {
-            guard let database else { return }
-            guard let query = contextQuery?.compose(with: self.detailQuery) else { return }
-            
-            await monitor.beginMonitoring(query, on: database)
-        }
-        .task {
-            await monitor.keepSynchronised(state: viewModel)
-        }
-        .onDisappear {
-            Task {
-                await monitor.deregister(state: viewModel)
-            }
-        }
     }
 }
 

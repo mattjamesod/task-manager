@@ -14,7 +14,7 @@ struct TaskContainerView: View {
     
     var body: some View {
         ZStack {
-            TaskListView(.orphaned)
+            TaskListViewWrapper(.orphaned)
                 .environment(\.contextQuery, self.query)
                 .environment(\.taskListMonitor, self.taskListMonitor)
             
