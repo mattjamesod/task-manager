@@ -1,5 +1,4 @@
 
-
 @MainActor
 public protocol SynchronisedStateContainer: Identifiable, Sendable, AnyObject {
     associatedtype ModelType: SchemaBacked
@@ -9,7 +8,7 @@ public protocol SynchronisedStateContainer: Identifiable, Sendable, AnyObject {
     func remove(with ids: Set<Int>)
 }
 
-public enum SyncResult<ModelType>: Sendable {
+public enum SyncResult<ModelType: Sendable>: Sendable {
     case addOrUpdate(ModelType)
     case addOrUpdateMany([ModelType])
     case remove(_ id: Int)

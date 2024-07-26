@@ -135,8 +135,10 @@ public actor Database {
         
         setters.append(ModelType.SchemaType.id <- id)
         
+        let finalSetters = setters
+        
         await history.record(Bijection(
-            goForward: { await self.insert(type, setters) },
+            goForward: { await self.insert(type, finalSetters) },
             goBackward: { await self.delete(ModelType.self, id) }
         ))
     }
@@ -157,8 +159,10 @@ public actor Database {
         
         setters.append(ModelType.SchemaType.id <- id)
         
+        let finalSetters = setters
+        
         await history.record(Bijection(
-            goForward: { await self.insert(type, setters) },
+            goForward: { await self.insert(type, finalSetters) },
             goBackward: { await self.delete(ModelType.self, id) }
         ))
     }
@@ -214,7 +218,7 @@ public actor Database {
         recursive: Bool = false,
         _ property1: PropertyArgument<ModelType, PropertyType1>
     ) async {
-        let updateMethod: (ModelType, [Setter]) -> Void
+        let updateMethod: @Sendable (ModelType, [Setter]) -> Void
         
         if recursive {
             updateMethod = self.updateRecursive

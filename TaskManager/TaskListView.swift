@@ -3,7 +3,7 @@ import KillerModels
 import KillerData
 import UtilAlgorithms
 
-// TODO: Mutating observable property \ChildTaskListViewModel.tasks after view is torn down has no effect
+// TODO: Mutating observable property \TaskListViewModel.tasks after view is torn down has no effect
 
 @Observable @MainActor
 final class TaskListViewModel: SynchronisedStateContainer {
@@ -67,15 +67,13 @@ struct TaskListView: View {
     
     init(_ detailQuery: Database.Query? = nil, monitor: QueryMonitor<TaskListViewModel>) {
         self.viewModel = TaskListViewModel([])
-        
         self.monitor = monitor
         self.detailQuery = detailQuery
     }
     
-    init(parentID: Int?, monitor: QueryMonitor<TaskListViewModel>?) {
+    init(parentID: Int?) {
         self.viewModel = TaskListViewModel([], filter: { $0.parentID == parentID })
-        
-        self.monitor = monitor
+        self.monitor = nil
         self.detailQuery = .children(of: parentID)
     }
     
@@ -83,7 +81,7 @@ struct TaskListView: View {
         TaskList {
             ForEach(viewModel.tasks) { task in
                 TaskView(task: task)
-                TaskListView(parentID: task.id, monitor: taskListMonitor)
+                TaskListView(parentID: task.id)
                     .padding(.leading, 24)
             }
         }
@@ -94,13 +92,19 @@ struct TaskListView: View {
             viewModel.tasks = await database.fetch(KillerTask.self, context: contextQuery?.compose(with: self.detailQuery))
         }
         .task {
-            await monitor?.keepSynchronised(state: viewModel)
+            let vm = viewModel
+            await activeMonitor?.keepSynchronised(state: vm)
         }
         .onDisappear {
             Task {
-                await monitor?.deregister(state: viewModel)
+                let vm = viewModel
+                await activeMonitor?.deregister(state: vm)
             }
         }
+    }
+    
+    private var activeMonitor: QueryMonitor<TaskListViewModel>? {
+        self.monitor ?? taskListMonitor
     }
 }
 
@@ -109,7 +113,7 @@ struct TaskList<Content: View>: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ForEach(subviewOf: content) { subView in
+            ForEach(subviews: content) { subView in
                 subView
             }
         }
