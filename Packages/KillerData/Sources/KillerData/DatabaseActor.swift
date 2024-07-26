@@ -218,13 +218,25 @@ public actor Database {
         recursive: Bool = false,
         _ property1: PropertyArgument<ModelType, PropertyType1>
     ) async {
-        let updateMethod: @Sendable (ModelType, [Setter]) -> Void
+        guard let id = model.id else { return }
+        
+        let ids: [Int]
         
         if recursive {
-            updateMethod = self.updateRecursive
+            do {
+                ids = try connection
+                    .prepare(buildRecursiveExpression(ModelType.self, rootID: id, base: ModelType.SchemaType.tableExpression))
+                    .map { $0[ModelType.SchemaType.id] }
+            }
+            catch {
+                // do something to broad cast the error to both you and the user
+                print(error)
+                print("\(#file):\(#function):\(#line)")
+                return
+            }
         }
         else {
-            updateMethod = self.update
+            ids = [id]
         }
         
         let forwardSetters = [
@@ -238,27 +250,18 @@ public actor Database {
         ].compact()
         
         await history.record(Bijection(
-            goForward: { await updateMethod(model, forwardSetters) },
-            goBackward: { await updateMethod(model, backwardSetters) }
+            goForward: { await self.update(ModelType.self, ids: ids, forwardSetters) },
+            goBackward: { await self.update(ModelType.self, ids: ids, backwardSetters) }
         ))
         
-        updateMethod(model, forwardSetters)
+        self.update(ModelType.self, ids: ids, forwardSetters)
     }
     
     // TODO:  If the model has no matching record in the database, it is created with the updated value.
     private func update<ModelType: SchemaBacked>(_ model: ModelType, _ setters: [Setter]) {
         do {
             guard let id = model.id else { return }
-            
-            try connection.run(
-                ModelType.SchemaType.tableExpression
-                    .filter(ModelType.SchemaType.id == id)
-                    .update(setters)
-            )
-            
-            Task.detached {
-                await ModelType.messageHandler.send(.recordChange(id: id))
-            }
+            update(ModelType.self, ids: [id], setters)
         }
         catch {
             // do something to broad cast the error to both you and the user
@@ -267,28 +270,24 @@ public actor Database {
         }
     }
     
-    private func updateRecursive<ModelType: SchemaBacked & RecursiveData>(_ model: ModelType, _ setters: [Setter]) {
+    private func update<ModelType: SchemaBacked>(_ type: ModelType.Type, ids: [Int], _ setters: [Setter]) {
         do {
-            guard let id = model.id else { return }
-            
-            let affectedIDs = try connection
-                .prepare(buildRecursiveExpression(ModelType.self, rootID: id, base: ModelType.SchemaType.tableExpression))
-                .map { $0[ModelType.SchemaType.id] }
+            print(ids)
             
             try connection.run(
                 ModelType.SchemaType.tableExpression
-                    .where(affectedIDs.contains(ModelType.SchemaType.id))
+                    .where(ids.contains(ModelType.SchemaType.id))
                     .update(setters)
             )
             
-            if affectedIDs.count == 1 {
+            if ids.count == 1 {
                 Task.detached {
-                    await ModelType.messageHandler.send(.recordChange(id: affectedIDs.first!))
+                    await ModelType.messageHandler.send(.recordChange(id: ids.first!))
                 }
             }
             else {
                 Task.detached {
-                    await ModelType.messageHandler.send(.recordsChanged(ids: Set(affectedIDs)))
+                    await ModelType.messageHandler.send(.recordsChanged(ids: Set(ids)))
                 }
             }
         }

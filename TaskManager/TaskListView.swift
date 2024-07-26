@@ -8,16 +8,14 @@ import UtilAlgorithms
 @Observable @MainActor
 final class TaskListViewModel: SynchronisedStateContainer {
     
-    var tasks: [KillerTask]
+    var tasks: [KillerTask] = []
     let filter: (KillerTask) -> Bool
     let sortOrder: (KillerTask, KillerTask) -> Bool
     
     init(
-        _ tasks: [KillerTask],
         filter: @escaping (KillerTask) -> Bool = { _ in true },
         sortOrder: @escaping (KillerTask, KillerTask) -> Bool = { $0.createdAt < $1.createdAt }
     ) {
-        self.tasks = tasks
         self.filter = filter
         self.sortOrder = sortOrder
     }
@@ -66,13 +64,13 @@ struct TaskListView: View {
     let detailQuery: Database.Query?
     
     init(_ detailQuery: Database.Query? = nil, monitor: QueryMonitor<TaskListViewModel>) {
-        self.viewModel = TaskListViewModel([])
+        self.viewModel = TaskListViewModel()
         self.monitor = monitor
         self.detailQuery = detailQuery
     }
     
     init(parentID: Int?) {
-        self.viewModel = TaskListViewModel([], filter: { $0.parentID == parentID })
+        self.viewModel = TaskListViewModel(filter: { $0.parentID == parentID })
         self.monitor = nil
         self.detailQuery = .children(of: parentID)
     }
