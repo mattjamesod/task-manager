@@ -70,7 +70,7 @@ struct NewTaskButton: View {
     var body: some View {
         Button("Add New Task") {
             Task.detached {
-                await database?.insert(KillerTask.self, \.body <- "A brand new baby task", \.parentID <- 12)
+                await database?.insert(KillerTask.self, \.body <- "A brand new baby task")//, \.parentID <- 12)
             }
         }
     }

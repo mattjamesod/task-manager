@@ -43,8 +43,9 @@ public actor Database {
     
     public func pluck<ModelType: SchemaBacked>(_ type: ModelType.Type, id: Int, context: Database.Query? = nil) -> ModelType? {
         do {
-            let query = context?.apply(ModelType.SchemaType.tableExpression) ?? ModelType.SchemaType.tableExpression
-            let record = try connection.pluck(query.filter(ModelType.SchemaType.tableExpression[ModelType.SchemaType.id] == id))
+            let table = ModelType.SchemaType.tableExpression
+            let query = context?.apply(table) ?? table
+            let record = try connection.pluck(query.filter(table[ModelType.SchemaType.id] == id))
             
             guard let record else { return nil }
             
@@ -60,7 +61,8 @@ public actor Database {
     
     public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, context: Database.Query?) -> [ModelType] {
         do {
-            let query = context?.apply(ModelType.SchemaType.tableExpression) ?? ModelType.SchemaType.tableExpression
+            let table = ModelType.SchemaType.tableExpression
+            let query = context?.apply(table) ?? table
             let records = try connection.prepare(query)
             return try records.map(ModelType.create(from:))
         }
@@ -74,9 +76,9 @@ public actor Database {
     
     public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, ids: Set<Int>, context: Database.Query? = nil) -> [ModelType] {
         do {
-            let table = context?.apply(ModelType.SchemaType.tableExpression) ?? ModelType.SchemaType.tableExpression
-            
-            let records = try connection.prepare(table.filter(ids.contains(ModelType.SchemaType.tableExpression[ModelType.SchemaType.id])))
+            let table = ModelType.SchemaType.tableExpression
+            let query = context?.apply(table) ?? table
+            let records = try connection.prepare(query.filter(ids.contains(table[ModelType.SchemaType.id])))
             
             return try records.map(ModelType.create(from:))
         }
@@ -93,11 +95,9 @@ public actor Database {
         context: Database.Query? = nil
     ) -> [ModelType] where ModelType : RecursiveData {
         do {
-            let table = context?.apply(ModelType.SchemaType.tableExpression) ?? ModelType.SchemaType.tableExpression
-            
-            let records = try connection.prepare(
-                table.filter(SQLite.Expression<Int?>("parentID") == id)
-            )
+            let table = ModelType.SchemaType.tableExpression
+            let query = context?.apply(table) ?? table
+            let records = try connection.prepare(query.filter(SQLite.Expression<Int?>("parentID") == id))
             
             return try records.map(ModelType.create(from:))
         }
