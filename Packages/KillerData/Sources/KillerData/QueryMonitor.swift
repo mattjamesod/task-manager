@@ -70,10 +70,10 @@ extension Database {
             let cte = Table("cte")
             
             return base
-                .with(cte, as: base.select(Schema.Tasks.parentID))
-                .join(.leftOuter, cte, on: cte[Schema.Tasks.parentID] == tasks[Schema.Tasks.id])
+                .with(cte, as: base.select(Schema.Tasks.id))
+                .join(.leftOuter, cte, on: tasks[Schema.Tasks.parentID] == cte[Schema.Tasks.id])
                 .select(Schema.Tasks.tableExpression[*])
-                .filter(cte[Schema.Tasks.parentID] == nil)
+                .filter(cte[Expression<Int?>("id")] == nil)
         }
         
         public static let deletedTasks: Query = .init { base in
@@ -84,10 +84,18 @@ extension Database {
         
         let apply: @Sendable (SQLite.Table) -> SQLite.Table
         
-        public func compose(with other: Query) -> Query {
-            Query.init { base in
-                other.apply(self.apply(base))
-            }
+        public func compose(with other: Query?) -> Query {
+            guard let other else { return self }
+            return Query { other.apply(self.apply($0)) }
         }
+    }
+}
+
+public extension Optional where Wrapped == Database.Query {
+    public func compose(with other: Database.Query?) -> Database.Query? {
+        guard let other else { return self }
+        guard let foundSelf = self else { return other }
+        
+        return foundSelf.compose(with: other)
     }
 }

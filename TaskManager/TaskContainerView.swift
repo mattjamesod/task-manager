@@ -2,24 +2,10 @@ import SwiftUI
 import KillerModels
 import KillerData
 
-@Observable @MainActor
-final class TaskContainerViewModel: SynchronisedStateContainer {
-    
-    var orphanedParentIDs: [Int?] = [nil]
-    
-    func addOrUpdate(model: KillerTask) {}
-    func addOrUpdate(models: [KillerTask]) {}
-    func remove(with id: Int) {}
-    func remove(with ids: Set<Int>) {}
-}
-
 struct TaskContainerView: View {
     @Environment(\.database) var database
-    
-    @State var viewModel: TaskContainerViewModel = .init()
-    
+        
     let taskListMonitor: QueryMonitor<TaskListViewModel> = .init()
-    let taskContainerMonitor: QueryMonitor<TaskContainerViewModel> = .init()
     let query: Database.Query
     
     init(query: Database.Query) {
@@ -28,13 +14,9 @@ struct TaskContainerView: View {
     
     var body: some View {
         ZStack {
-            TaskList {
-                ForEach(viewModel.orphanedParentIDs, id: \.self) { id in
-                    TaskListView(parentID: id)
-                        .environment(\.taskListMonitor, taskListMonitor)
-                        .environment(\.contextQuery, query)
-                }
-            }
+            TaskListView(.orphaned)
+                .environment(\.contextQuery, self.query)
+                .environment(\.taskListMonitor, self.taskListMonitor)
             
             HStack(spacing: 16) {
                 NewTaskButton()
@@ -46,25 +28,7 @@ struct TaskContainerView: View {
         }
         .task {
             guard let database else { return }
-            let allTasks = await database.fetch(KillerTask.self, context: query.compose(with: Database.Query.orphaned))
-            
-            viewModel.orphanedParentIDs = Array(Set(allTasks.map(\.parentID)))
-        }
-        .task {
-            guard let database else { return }
             await taskListMonitor.beginMonitoring(query, on: database)
-        }
-        .task {
-            guard let database else { return }
-            await taskContainerMonitor.beginMonitoring(query, on: database)
-        }
-        .task {
-            await taskContainerMonitor.keepSynchronised(state: viewModel)
-        }
-        .onDisappear {
-            Task {
-                await taskContainerMonitor.deregister(state: viewModel)
-            }
         }
     }
 }
@@ -106,7 +70,7 @@ struct NewTaskButton: View {
     var body: some View {
         Button("Add New Task") {
             Task.detached {
-                await database?.insert(KillerTask.self, \.body <- "A brand new baby task")//, \.parentID <- 4)
+                await database?.insert(KillerTask.self, \.body <- "A brand new baby task", \.parentID <- 12)
             }
         }
     }

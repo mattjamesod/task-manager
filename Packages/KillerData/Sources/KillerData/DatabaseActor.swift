@@ -44,7 +44,7 @@ public actor Database {
     public func pluck<ModelType: SchemaBacked>(_ type: ModelType.Type, id: Int, context: Database.Query? = nil) -> ModelType? {
         do {
             let query = context?.apply(ModelType.SchemaType.tableExpression) ?? ModelType.SchemaType.tableExpression
-            let record = try connection.pluck(query.filter(Schema.Tasks.id == id))
+            let record = try connection.pluck(query.filter(ModelType.SchemaType.tableExpression[ModelType.SchemaType.id] == id))
             
             guard let record else { return nil }
             
@@ -58,9 +58,10 @@ public actor Database {
         }
     }
     
-    public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, context: Database.Query) -> [ModelType] {
+    public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, context: Database.Query?) -> [ModelType] {
         do {
-            let records = try connection.prepare(context.apply(ModelType.SchemaType.tableExpression))
+            let query = context?.apply(ModelType.SchemaType.tableExpression) ?? ModelType.SchemaType.tableExpression
+            let records = try connection.prepare(query)
             return try records.map(ModelType.create(from:))
         }
         catch {
@@ -75,7 +76,7 @@ public actor Database {
         do {
             let table = context?.apply(ModelType.SchemaType.tableExpression) ?? ModelType.SchemaType.tableExpression
             
-            let records = try connection.prepare(table.filter(ids.contains(ModelType.SchemaType.id)))
+            let records = try connection.prepare(table.filter(ids.contains(ModelType.SchemaType.tableExpression[ModelType.SchemaType.id])))
             
             return try records.map(ModelType.create(from:))
         }
