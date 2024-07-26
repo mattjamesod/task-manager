@@ -6,6 +6,8 @@ struct TaskContainerView: View {
     @Environment(\.database) var database
         
     let taskListMonitor: QueryMonitor<TaskListViewModel> = .init()
+    let orphanMonitor: QueryMonitor<TaskListViewModel> = .init()
+    
     let query: Database.Query
     
     init(query: Database.Query) {
@@ -14,7 +16,7 @@ struct TaskContainerView: View {
     
     var body: some View {
         ZStack {
-            TaskListViewWrapper(.orphaned)
+            TaskListView(.orphaned, monitor: orphanMonitor)
                 .environment(\.contextQuery, self.query)
                 .environment(\.taskListMonitor, self.taskListMonitor)
             
@@ -29,6 +31,10 @@ struct TaskContainerView: View {
         .task {
             guard let database else { return }
             await taskListMonitor.beginMonitoring(query, on: database)
+        }
+        .task {
+            guard let database else { return }
+            await orphanMonitor.beginMonitoring(query.compose(with: .orphaned), on: database)
         }
     }
 }

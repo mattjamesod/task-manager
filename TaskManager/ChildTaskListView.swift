@@ -104,28 +104,6 @@ struct TaskListView: View {
     }
 }
 
-struct TaskListViewWrapper: View {
-    @Environment(\.database) var database
-    @Environment(\.contextQuery) var contextQuery
-    
-    let monitor: QueryMonitor<TaskListViewModel> = .init()
-    let detailQuery: Database.Query?
-    
-    init(_ detailQuery: Database.Query? = nil) {
-        self.detailQuery = detailQuery
-    }
-    
-    var body: some View {
-        TaskListView(detailQuery, monitor: monitor)
-            .task {
-                guard let database else { return }
-                guard let query = contextQuery?.compose(with: self.detailQuery) else { return }
-                
-                await monitor.beginMonitoring(query, on: database)
-            }
-    }
-}
-
 struct TaskList<Content: View>: View {
     @ViewBuilder var content: Content
     
