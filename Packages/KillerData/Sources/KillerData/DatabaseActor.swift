@@ -90,29 +90,6 @@ public actor Database {
         }
     }
     
-    public func fetchRecursive<ModelType: SchemaBacked & RecursiveData>(_ type: ModelType.Type, id: Int, context: Database.Query? = nil) -> [ModelType] {
-        do {
-            let table = ModelType.SchemaType.tableExpression
-            let query = context?.apply(table) ?? table
-            
-            let records = try connection
-                .prepare(buildRecursiveExpression(
-                    ModelType.self,
-                    name: "fetchCTE",
-                    rootID: id,
-                    base: query
-                ))
-            
-            return try records.map(ModelType.create(from:))
-        }
-        catch {
-            // do something to broad cast the error to both you and the user
-            print(error.localizedDescription)
-            print("\(#file):\(#function):\(#line)")
-            return []
-        }
-    }
-    
     public func fetchRecursive<ModelType: SchemaBacked & RecursiveData>(_ type: ModelType.Type, ids: Set<Int>, context: Database.Query? = nil) -> [ModelType] {
         do {
             let table = ModelType.SchemaType.tableExpression
@@ -121,7 +98,6 @@ public actor Database {
             let records = try connection
                 .prepare(buildRecursiveExpression(
                     ModelType.self,
-                    name: "fetchCTE",
                     ids: ids,
                     base: query
                 ))
@@ -399,8 +375,8 @@ public actor Database {
         return cte.with(cte, recursive: true, as: compoundQuery)
     }
     
-    private func buildRecursiveExpression<ModelType: SchemaBacked & RecursiveData>(_ type: ModelType.Type, name: String, ids: Set<Int>, base: SQLite.Table) -> SQLite.Table {
-        let cte = Table(name)
+    private func buildRecursiveExpression<ModelType: SchemaBacked & RecursiveData>(_ type: ModelType.Type, ids: Set<Int>, base: SQLite.Table) -> SQLite.Table {
+        let cte = Table("cte")
                     
         let compoundQuery = base
             .where(ids.contains(base[SQLite.Expression<Int?>("id")]))

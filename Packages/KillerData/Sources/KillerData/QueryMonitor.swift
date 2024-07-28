@@ -87,7 +87,7 @@ extension Database {
         
         public static let orphaned: Query = .init { base in
             let tasks = Schema.Tasks.tableExpression
-            let cte = Table("oprhanCTE")
+            let cte = Table("cte")
             
             return base
                 .with(cte, as: base.select(Schema.Tasks.id))

@@ -34,71 +34,46 @@ actor SyncEngine<ModelType: SchemaBacked> {
     }
     
     func sync(_ ids: Set<Int>) async -> [SyncResult<ModelType>] {
-        var results: [SyncResult<ModelType>] = []
-        
         let models = await fetch(ids)
-        
-        switch models.count {
-            case 0: break
-            case 1: results.append(.addOrUpdate(models.first!))
-            default: results.append(.addOrUpdateMany(models))
-        }
-        
         let missingIDs = ids.subtracting(models.compactMap(\.id))
         
-        switch missingIDs.count {
-            case 0: break
-            case 1: results.append(.remove(missingIDs.first!))
-            default: results.append(.removeMany(missingIDs))
-        }
-        
-        return results
+        return compileResults(addOrUpdating: models, removing: missingIDs)
     }
     
     func sync(_ id: Int) async -> [SyncResult<ModelType>] where ModelType: RecursiveData {
-        var results: [SyncResult<ModelType>] = []
-        
-        let relevantModels = await fetchRelevant(id)
-        
-        // all items which are relevant, and currently apply to the query
-        let applicableModels = (await fetchApplicable()).filter { relevantModels.compactMap(\.id).contains($0.id) }
-        
-        switch applicableModels.count {
-            case 0: break
-            case 1: results.append(.addOrUpdate(applicableModels.first!))
-            default: results.append(.addOrUpdateMany(applicableModels))
-        }
-        
-        // all IDs which are relevant, but do not apply
-        let missingIDs = Set(relevantModels.compactMap(\.id)).subtracting(applicableModels.compactMap(\.id))
-        
-        switch missingIDs.count {
-            case 0: break
-            case 1: results.append(.remove(missingIDs.first!))
-            default: results.append(.removeMany(missingIDs))
-        }
-        
-        return results
+        await self.sync(Set<Int>.init([id]))
     }
     
     func sync(_ ids: Set<Int>) async -> [SyncResult<ModelType>] where ModelType: RecursiveData {
+        // IDs of all items changed, and all of their recursive children
+        let relevantIDs = await database
+            .fetchRecursive(ModelType.self, ids: ids)
+            .compactMap(\.id)
+        
+        // all models which are relevant to this event, and which should be shown in any view displaing the context query
+        let applicableModels = await database
+            .fetch(ModelType.self, context: query)
+            .filter { $0.id != nil && relevantIDs.contains($0.id!) }
+        
+        // all IDs which are relevant to this event, but should not be shown in any reflecting views
+        let missingIDs = Set(relevantIDs).subtracting(applicableModels.compactMap(\.id))
+        
+        return compileResults(addOrUpdating: applicableModels, removing: missingIDs)
+    }
+    
+    private func compileResults(addOrUpdating: [ModelType], removing: Set<Int>) -> [SyncResult<ModelType>] {
         var results: [SyncResult<ModelType>] = []
         
-        let relevantModels = await fetchRelevant(ids)
-        let applicableModels = (await fetchApplicable()).filter { relevantModels.compactMap(\.id).contains($0.id) }
-        
-        switch applicableModels.count {
+        switch addOrUpdating.count {
             case 0: break
-            case 1: results.append(.addOrUpdate(applicableModels.first!))
-            default: results.append(.addOrUpdateMany(applicableModels))
+            case 1: results.append(.addOrUpdate(addOrUpdating.first!))
+            default: results.append(.addOrUpdateMany(addOrUpdating))
         }
         
-        let missingIDs = Set(relevantModels.compactMap(\.id)).subtracting(applicableModels.compactMap(\.id))
-        
-        switch missingIDs.count {
+        switch removing.count {
             case 0: break
-            case 1: results.append(.remove(missingIDs.first!))
-            default: results.append(.removeMany(missingIDs))
+            case 1: results.append(.remove(removing.first!))
+            default: results.append(.removeMany(removing))
         }
         
         return results
@@ -113,17 +88,5 @@ actor SyncEngine<ModelType: SchemaBacked> {
     
     private func fetch(_ ids: Set<Int>) async -> [ModelType] {
         await database.fetch(ModelType.self, ids: ids, context: query)
-    }
-    
-    private func fetchApplicable() async -> [ModelType] where ModelType: RecursiveData {
-        await database.fetch(ModelType.self, context: query)
-    }
-    
-    private func fetchRelevant(_ id: Int) async -> [ModelType] where ModelType: RecursiveData {
-        await database.fetchRecursive(ModelType.self, id: id)
-    }
-    
-    private func fetchRelevant(_ ids: Set<Int>) async -> [ModelType] where ModelType: RecursiveData {
-        await database.fetchRecursive(ModelType.self, ids: ids)
     }
 }
