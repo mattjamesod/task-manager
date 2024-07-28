@@ -36,6 +36,12 @@ struct TaskContainerView: View {
             guard let database else { return }
             await orphanMonitor.beginMonitoring(query.compose(with: .orphaned), recursive: true, on: database)
         }
+        .onDisappear {
+            Task.detached {
+                await taskListMonitor.stopMonitoring()
+                await orphanMonitor.stopMonitoring()
+            }
+        }
     }
 }
 

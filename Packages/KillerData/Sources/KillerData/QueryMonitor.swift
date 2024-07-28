@@ -3,7 +3,15 @@ import Foundation
 import KillerModels
 
 public actor QueryMonitor<StateContainer: SynchronisedStateContainer> {
-    public init() { }
+    public init() {
+        print("QM init")
+    }
+    
+    deinit {
+        print("QM deinit")
+    }
+    
+    private var dbMessageThread: DatabaseMessage.Thread? = nil
     
     private var registeredStateContainers: [StateContainer] = []
     
@@ -17,10 +25,10 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer> {
     }
     
     public func beginMonitoring(_ query: Database.Query, on database: Database) async {
-        let events = await StateContainer.ModelType.messageHandler.subscribe()
+        dbMessageThread = await StateContainer.ModelType.messageHandler.subscribe()
         let syncEngine = SyncEngine<StateContainer.ModelType>(for: database, context: query)
         
-        for await event in events {
+        for await event in dbMessageThread!.events {
             switch event {
             case .recordChange(let id):
                 await push(syncResult: await syncEngine.sync(id))
@@ -35,10 +43,10 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer> {
     }
     
     public func beginMonitoring(_ query: Database.Query, recursive: Bool, on database: Database) async where StateContainer.ModelType: RecursiveData {
-        let events = await StateContainer.ModelType.messageHandler.subscribe()
+        dbMessageThread = await StateContainer.ModelType.messageHandler.subscribe()
         let syncEngine = SyncEngine<StateContainer.ModelType>(for: database, context: query)
         
-        for await event in events {
+        for await event in dbMessageThread!.events {
             switch event {
             case .recordChange(let id):
                 for result in await syncEngine.sync(id) {
@@ -52,6 +60,12 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer> {
                 await push(syncResult: .remove(id))
             }
         }
+    }
+    
+    public func stopMonitoring() async {
+        guard let dbMessageThread else { return }
+        await StateContainer.ModelType.messageHandler.unsubscribe(dbMessageThread)
+        self.dbMessageThread = nil
     }
     
     private func push(syncResult: SyncResult<StateContainer.ModelType>) async {

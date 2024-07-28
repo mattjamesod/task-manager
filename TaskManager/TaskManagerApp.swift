@@ -1,6 +1,23 @@
 import SwiftUI
 import KillerData
 
+struct NavigationStackOption: Identifiable {
+    let id: Int
+    let title: String
+    let query: Database.Query
+}
+
+extension NavigationStackOption: Hashable {
+    static func == (lhs: NavigationStackOption, rhs: NavigationStackOption) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(title)
+    }
+}
+
 @main
 struct TaskManagerApp: App {
     let database: Database?
@@ -15,16 +32,24 @@ struct TaskManagerApp: App {
         }
     }
     
+    @State var presentedOptions: [NavigationStackOption] = []
+    
+    let options: [NavigationStackOption] = [
+        .init(id: 0, title: "Active", query: .allActiveTasks),
+        .init(id: 1, title: "Recently Deleted", query: .deletedTasks)
+    ]
+    
     var body: some Scene {
         WindowGroup {
             if let database {
-                VStack {
-                    TaskContainerView(query: .allActiveTasks)
-                        .environment(\.database, database)
-                        .border(.blue)
-                    TaskContainerView(query: .deletedTasks)
-                        .environment(\.database, database)
-                        .border(.red)
+                NavigationStack {
+                    List(options) { option in
+                        NavigationLink(option.title, value: option)
+                    }
+                    .navigationDestination(for: NavigationStackOption.self) {
+                        TaskContainerView(query: $0.query)
+                            .environment(\.database, database)
+                    }
                 }
             }
             else {
