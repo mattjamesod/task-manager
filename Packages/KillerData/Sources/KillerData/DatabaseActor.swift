@@ -145,13 +145,18 @@ public actor Database {
     
     public func insert<ModelType: SchemaBacked, PropertyType1: SQLite.Value>(
         _ type: ModelType.Type,
-        _ property1: PropertyArgument<ModelType, PropertyType1>
+        _ property1: PropertyArgument<ModelType, PropertyType1>,
+        context: Database.Query? = nil
     ) async {
         var setters = [
             try? property1.getSetter(),
             ModelType.SchemaType.createdAt <- Date.now,
             ModelType.SchemaType.updatedAt <- Date.now
         ].compact()
+        
+        for setter in context?.insertArguments ?? [] {
+            setters.append(setter)
+        }
         
         guard let id = self.insert(type, setters) else { return }
         
@@ -168,7 +173,8 @@ public actor Database {
     public func insert<ModelType: SchemaBacked, PropertyType1: SQLite.Value, PropertyType2: SQLite.Value>(
         _ type: ModelType.Type,
         _ property1: PropertyArgument<ModelType, PropertyType1>,
-        _ property2: PropertyArgument<ModelType, PropertyType2>
+        _ property2: PropertyArgument<ModelType, PropertyType2>,
+        context: Database.Query? = nil
     ) async {
         var setters = [
             try? property1.getSetter(),
@@ -176,6 +182,10 @@ public actor Database {
             ModelType.SchemaType.createdAt <- Date.now,
             ModelType.SchemaType.updatedAt <- Date.now
         ].compact()
+        
+        for setter in context?.insertArguments ?? [] {
+            setters.append(setter)
+        }
         
         guard let id = self.insert(type, setters) else { return }
         

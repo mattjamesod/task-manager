@@ -17,7 +17,6 @@ struct TaskContainerView: View {
     var body: some View {
         ZStack {
             TaskListView(.orphaned, monitor: orphanMonitor)
-                .environment(\.contextQuery, self.query)
                 .environment(\.taskListMonitor, self.taskListMonitor)
             
             HStack(spacing: 16) {
@@ -28,6 +27,7 @@ struct TaskContainerView: View {
             .frame(maxHeight: .infinity, alignment: .bottom)
             .padding(.bottom, 16)
         }
+        .environment(\.contextQuery, self.query)
         .task {
             guard let database else { return }
             await taskListMonitor.beginMonitoring(query, on: database)
@@ -76,11 +76,13 @@ struct TaskView: View {
 
 struct NewTaskButton: View {
     @Environment(\.database) var database
+    @Environment(\.contextQuery) var query
     
     var body: some View {
         Button("Add New Task") {
             Task.detached {
-                await database?.insert(KillerTask.self, \.body <- "A brand new baby task")//, \.parentID <- 4)
+                let query = await self.query
+                await database?.insert(KillerTask.self, \.body <- "A brand new baby task", context: query)//, \.parentID <- 4)
             }
         }
     }

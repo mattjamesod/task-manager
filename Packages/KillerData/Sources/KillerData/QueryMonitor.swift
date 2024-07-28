@@ -1,4 +1,5 @@
 @preconcurrency import SQLite
+import Foundation
 import KillerModels
 
 public actor QueryMonitor<StateContainer: SynchronisedStateContainer> {
@@ -71,9 +72,22 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer> {
 
 extension Database {
     public struct Query: Sendable {
+        let insertArguments: [SQLite.Setter]
         let baseExpression = Schema.Tasks.tableExpression
         
-        internal init(tableExpression: @escaping @Sendable (SQLite.Table) -> (SQLite.Table)) {
+        internal init(
+            insertArguments: [Setter] = [],
+            tableExpression: @escaping @Sendable (SQLite.Table) -> (SQLite.Table)
+        ) {
+            self.insertArguments = insertArguments
+            self.apply = tableExpression
+        }
+        
+        internal init(
+            insertArguments: Setter,
+            tableExpression: @escaping @Sendable (SQLite.Table) -> (SQLite.Table)
+        ) {
+            self.insertArguments = [insertArguments]
             self.apply = tableExpression
         }
         
@@ -93,7 +107,7 @@ extension Database {
                 .with(cte, as: base.select(Schema.Tasks.id))
                 .join(.leftOuter, cte, on: tasks[Schema.Tasks.parentID] == cte[Schema.Tasks.id])
                 .select(Schema.Tasks.tableExpression[*])
-                .filter(cte[Expression<Int?>("id")] == nil)
+                .filter(cte[SQLite.Expression<Int?>("id")] == nil)
         }
         
         public static func children(of parentID: Int?) -> Query {
@@ -103,7 +117,7 @@ extension Database {
             }
         }
         
-        public static let deletedTasks: Query = .init { base in
+        public static let deletedTasks: Query = .init(insertArguments: Schema.Tasks.deletedAt <- Date.now) { base in
             base
                 .filter(Schema.Tasks.deletedAt != nil)
                 .order(Schema.Tasks.deletedAt.asc)
@@ -113,7 +127,7 @@ extension Database {
         
         public func compose(with other: Query?) -> Query {
             guard let other else { return self }
-            return Query { other.apply(self.apply($0)) }
+            return Query(insertArguments: self.insertArguments + other.insertArguments) { other.apply(self.apply($0)) }
         }
     }
 }
