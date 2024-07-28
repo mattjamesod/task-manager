@@ -34,7 +34,7 @@ struct TaskContainerView: View {
         }
         .task {
             guard let database else { return }
-            await orphanMonitor.beginMonitoring(query.compose(with: .orphaned), on: database)
+            await orphanMonitor.beginMonitoring(query.compose(with: .orphaned), recursive: true, on: database)
         }
     }
 }
@@ -80,7 +80,7 @@ struct NewTaskButton: View {
     var body: some View {
         Button("Add New Task") {
             Task.detached {
-                await database?.insert(KillerTask.self, \.body <- "A brand new baby task")//, \.parentID <- 2)
+                await database?.insert(KillerTask.self, \.body <- "A brand new baby task", \.parentID <- 4)
             }
         }
     }

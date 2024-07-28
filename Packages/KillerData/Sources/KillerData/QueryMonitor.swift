@@ -33,6 +33,26 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer> {
         }
     }
     
+    public func beginMonitoring(_ query: Database.Query, recursive: Bool, on database: Database) async where StateContainer.ModelType: RecursiveData {
+        let events = await StateContainer.ModelType.messageHandler.subscribe()
+        let syncEngine = SyncEngine<StateContainer.ModelType>(for: database, context: query)
+        
+        for await event in events {
+            switch event {
+            case .recordChange(let id):
+                for result in await syncEngine.sync(id) {
+                    await push(syncResult: result)
+                }
+            case .recordsChanged(let ids):
+                for result in await syncEngine.sync(ids) {
+                    await push(syncResult: result)
+                }
+            case .recordDeleted(let id):
+                await push(syncResult: .remove(id))
+            }
+        }
+    }
+    
     private func push(syncResult: SyncResult<StateContainer.ModelType>) async {
         for container in registeredStateContainers {
             switch syncResult {
@@ -67,7 +87,7 @@ extension Database {
         
         public static let orphaned: Query = .init { base in
             let tasks = Schema.Tasks.tableExpression
-            let cte = Table("cte")
+            let cte = Table("oprhanCTE")
             
             return base
                 .with(cte, as: base.select(Schema.Tasks.id))
