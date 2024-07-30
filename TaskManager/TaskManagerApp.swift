@@ -36,7 +36,8 @@ struct TaskManagerApp: App {
     
     let options: [NavigationStackOption] = [
         .init(id: 0, title: "Active", query: .allActiveTasks),
-        .init(id: 1, title: "Recently Deleted", query: .deletedTasks)
+        .init(id: 1, title: "Completed", query: .completedTasks),
+        .init(id: 2, title: "Recently Deleted", query: .deletedTasks)
     ]
     
     var body: some Scene {

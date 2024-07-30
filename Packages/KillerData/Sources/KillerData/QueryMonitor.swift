@@ -107,6 +107,14 @@ extension Database {
                 .order(table[Schema.Tasks.createdAt].asc)
         }
         
+        public static let completedTasks: Query = .init { base in
+            let table = Schema.Tasks.tableExpression
+            
+            return base
+                .filter(table[Schema.Tasks.completedAt] != nil && table[Schema.Tasks.deletedAt] == nil)
+                .order(table[Schema.Tasks.createdAt].asc)
+        }
+        
         public static let orphaned: Query = .init { base in
             let tasks = Schema.Tasks.tableExpression
             let cte = Table("cte")

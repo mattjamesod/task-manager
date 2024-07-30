@@ -6,7 +6,7 @@ public func <-<ModelType: SchemaBacked, T: SQLite.Value>(keyPath: WritableKeyPat
     PropertyArgument(keyPath, value)
 }
 
-public func <-<ModelType: SchemaBacked, T: SQLite.Value>(keyPath: WritableKeyPath<ModelType, T?>, value: T) -> PropertyArgument<ModelType, T> {
+public func <-<ModelType: SchemaBacked, T: SQLite.Value>(keyPath: WritableKeyPath<ModelType, T?>, value: T?) -> PropertyArgument<ModelType, T> {
     PropertyArgument(keyPath, value)
 }
 

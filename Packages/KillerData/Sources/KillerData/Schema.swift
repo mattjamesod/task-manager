@@ -19,7 +19,7 @@ public protocol SchemaBacked: Sendable {
     static func getSchemaExpression<T>(for keyPath: KeyPath<Self, T>) throws -> SQLite.Expression<T> where T: SQLite.Value
     static func getSchemaExpression<T>(optional keyPath: KeyPath<Self, T?>) throws -> SQLite.Expression<T?> where T: SQLite.Value
     
-    var id: Int? { get }
+    var id: Int { get }
     var createdAt: Date { get }
     var updatedAt: Date { get }
     var deletedAt: Date? { get }

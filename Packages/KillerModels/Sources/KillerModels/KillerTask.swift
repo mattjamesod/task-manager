@@ -2,7 +2,7 @@ import Foundation
 
 /// Represents a task in a SwiftUI view
 public struct KillerTask: Sendable, Identifiable, Equatable, Clonable {
-    public init(id: Int? = nil, body: String, createdAt: Date, updatedAt: Date, completedAt: Date? = nil, deletedAt: Date? = nil, parentID: Int? = nil) {
+    public init(id: Int, body: String, createdAt: Date, updatedAt: Date, completedAt: Date? = nil, deletedAt: Date? = nil, parentID: Int? = nil) {
         self.id = id
         self.body = body
         self.createdAt = createdAt
@@ -12,7 +12,7 @@ public struct KillerTask: Sendable, Identifiable, Equatable, Clonable {
         self.parentID = parentID
     }
     
-    public let id: Int?
+    public let id: Int
     public var body: String
     public var completedAt: Date?
     
@@ -44,7 +44,7 @@ public extension Clonable {
     }
 }
 
-public protocol RecursiveData: Identifiable where ID == Int? {
+public protocol RecursiveData: Identifiable where ID == Int {
     var parentID: Int? { get }
 }
 

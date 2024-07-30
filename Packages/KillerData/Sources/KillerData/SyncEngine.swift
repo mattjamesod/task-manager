@@ -53,7 +53,7 @@ actor SyncEngine<ModelType: SchemaBacked> {
         // all models which are relevant to this event, and which should be shown in any view displaing the context query
         let applicableModels = await database
             .fetch(ModelType.self, context: query)
-            .filter { $0.id != nil && relevantIDs.contains($0.id!) }
+            .filter { $0.id != nil && relevantIDs.contains($0.id) }
         
         // all IDs which are relevant to this event, but should not be shown in any reflecting views
         let missingIDs = Set(relevantIDs).subtracting(applicableModels.compactMap(\.id))

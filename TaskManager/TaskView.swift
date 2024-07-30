@@ -5,6 +5,7 @@ import KillerData
 struct TaskView: View {
     @Environment(\.database) var database
     @Environment(\.contextQuery) var contextQuery
+    @Environment(Selection<KillerTask>.self) var selection
         
     let task: KillerTask
     
@@ -14,8 +15,17 @@ struct TaskView: View {
                 Label("Complete", systemImage: "checkmark")
                     .labelStyle(.iconOnly)
             }
-            Text("\(task.id!): \(task.body)")
+            Text("\(task.id): \(task.body)")
             Spacer()
+        }
+        .padding(8)
+        .background {
+            if selection.ids.contains(task.id) {
+                Rectangle().foregroundStyle(.ultraThinMaterial)
+            }
+        }
+        .onTapGesture {
+            selection.pick(task)
         }
         .transition(.scale(scale: 0.95).combined(with: .opacity))
         .contextMenu(menuItems: {

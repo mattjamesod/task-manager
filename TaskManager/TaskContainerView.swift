@@ -1,38 +1,25 @@
 import SwiftUI
+import UtilViews
 import AsyncAlgorithms
 import KillerModels
 import KillerData
 
-struct DebouncedTextField: View {
-    @State var channel: AsyncChannel<String> = .init()
+@Observable @MainActor
+final class Selection<T: Identifiable> {
+    private(set) var ids: Set<T.ID> = .init()
     
-    @State var innerText: String
-    @Binding var outerText: String
-    
-    let label: String
-    let wait: Duration
-    
-    init(_ label: String, text: Binding<String>, wait: Duration = .seconds(0.5)) {
-        self._innerText = State(initialValue: text.wrappedValue)
-        self._outerText = text
-        
-        self.label = label
-        self.wait = wait
+    var picked: T.ID? {
+        ids.count == 1 ? ids.first! : nil
     }
     
-    var body: some View {
-        TextField(label, text: $innerText)
-            .onChange(of: innerText) {
-                // onChange may execute on the main thread
-                Task.detached {
-                    await channel.send(innerText)
-                }
-            }
-            .task {
-                for await value in channel.debounce(for: self.wait) {
-                    outerText = value
-                }
-            }
+    func pick(_ obj: T) {
+        if ids.contains(obj.id) {
+            ids.remove(obj.id)
+        }
+        else {
+            ids.removeAll()
+            ids.insert(obj.id)
+        }
     }
 }
 
@@ -49,33 +36,31 @@ struct TaskContainerView: View {
     }
     
     @State var enteredText: String = ""
+    @State var taskSelection = Selection<KillerTask>()
     
     var body: some View {
         ScrollView {
             TaskListView(.orphaned, monitor: orphanMonitor)
                 .environment(\.taskListMonitor, self.taskListMonitor)
-            
         }
         .defaultScrollAnchor(.center)
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
                 HStack(spacing: 16) {
-                    NewTaskButton()
+                    NewTaskButton(enteredText: $enteredText)
                     UndoButton()
                     RedoButton()
                 }
                 
-                DebouncedTextField("New Task", text: $enteredText)
+                TextField("New Task", text: $enteredText)
                     .padding(8)
                     .background(.ultraThinMaterial)
                     .padding(.horizontal, 16)
-                    .onChange(of: enteredText) {
-                        print(enteredText)
-                    }
             }
             .padding(.bottom, 8)
         }
         .environment(\.contextQuery, self.query)
+        .environment(taskSelection)
         .task {
             guard let database else { return }
             await taskListMonitor.beginMonitoring(query, on: database)
@@ -102,12 +87,15 @@ extension EnvironmentValues {
 struct NewTaskButton: View {
     @Environment(\.database) var database
     @Environment(\.contextQuery) var query
+    @Environment(Selection<KillerTask>.self) var selection
+    
+    @Binding var enteredText: String
     
     var body: some View {
         Button("Add New Task") {
             Task.detached {
                 let query = await self.query
-                await database?.insert(KillerTask.self, \.body <- "A brand new baby task", context: query)//, \.parentID <- 4)
+                await database?.insert(KillerTask.self, \.body <- enteredText, \.parentID <- selection.picked, context: query)
             }
         }
     }

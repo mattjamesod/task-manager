@@ -251,8 +251,7 @@ public actor Database {
         context query: Query? = nil,
         _ property1: PropertyArgument<ModelType, PropertyType1>
     ) async {
-        guard let id = model.id else { return }
-        
+        let id = model.id
         let ids: [Int]
         
         if recursive {
@@ -298,8 +297,7 @@ public actor Database {
     // TODO:  If the model has no matching record in the database, it is created with the updated value.
     private func update<ModelType: SchemaBacked>(_ model: ModelType, _ setters: [Setter]) {
         do {
-            guard let id = model.id else { return }
-            update(ModelType.self, ids: [id], setters)
+            update(ModelType.self, ids: [model.id], setters)
         }
         catch {
             // do something to broad cast the error to both you and the user
