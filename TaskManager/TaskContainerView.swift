@@ -1,6 +1,40 @@
 import SwiftUI
+import AsyncAlgorithms
 import KillerModels
 import KillerData
+
+struct DebouncedTextField: View {
+    @State var channel: AsyncChannel<String> = .init()
+    
+    @State var innerText: String
+    @Binding var outerText: String
+    
+    let label: String
+    let wait: Duration
+    
+    init(_ label: String, text: Binding<String>, wait: Duration = .seconds(0.5)) {
+        self._innerText = State(initialValue: text.wrappedValue)
+        self._outerText = text
+        
+        self.label = label
+        self.wait = wait
+    }
+    
+    var body: some View {
+        TextField(label, text: $innerText)
+            .onChange(of: innerText) {
+                // onChange may execute on the main thread
+                Task.detached {
+                    await channel.send(innerText)
+                }
+            }
+            .task {
+                for await value in channel.debounce(for: self.wait) {
+                    outerText = value
+                }
+            }
+    }
+}
 
 struct TaskContainerView: View {
     @Environment(\.database) var database
@@ -14,18 +48,32 @@ struct TaskContainerView: View {
         self.query = query
     }
     
+    @State var enteredText: String = ""
+    
     var body: some View {
-        ZStack {
+        ScrollView {
             TaskListView(.orphaned, monitor: orphanMonitor)
                 .environment(\.taskListMonitor, self.taskListMonitor)
             
-            HStack(spacing: 16) {
-                NewTaskButton()
-                UndoButton()
-                RedoButton()
+        }
+        .defaultScrollAnchor(.center)
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: 8) {
+                HStack(spacing: 16) {
+                    NewTaskButton()
+                    UndoButton()
+                    RedoButton()
+                }
+                
+                DebouncedTextField("New Task", text: $enteredText)
+                    .padding(8)
+                    .background(.ultraThinMaterial)
+                    .padding(.horizontal, 16)
+                    .onChange(of: enteredText) {
+                        print(enteredText)
+                    }
             }
-            .frame(maxHeight: .infinity, alignment: .bottom)
-            .padding(.bottom, 16)
+            .padding(.bottom, 8)
         }
         .environment(\.contextQuery, self.query)
         .task {
@@ -45,39 +93,10 @@ struct TaskContainerView: View {
     }
 }
 
+
 extension EnvironmentValues {
     @Entry var taskListMonitor: QueryMonitor<TaskListViewModel>? = nil
     @Entry var contextQuery: Database.Query? = nil
-}
-
-struct TaskView: View {
-    @Environment(\.database) var database
-    @Environment(\.contextQuery) var contextQuery
-        
-    let task: KillerTask
-    
-    var body: some View {
-        HStack {
-            Button.async(action: { await database?.update(task, \.completedAt <- Date.now) }) {
-                Label("Complete", systemImage: "checkmark")
-                    .labelStyle(.iconOnly)
-            }
-            Text("\(task.id!): \(task.body)")
-            Spacer()
-        }
-        .transition(.scale(scale: 0.95).combined(with: .opacity))
-        .contextMenu(menuItems: {
-            Button.async(action: {
-                let query = await self.contextQuery
-                await database?.update(task, recursive: true, context: query, \.deletedAt <- Date.now)
-            }) {
-                Label("Delete", systemImage: "trash")
-            }
-            Button.async(action: { await database?.update(task, \.body <- "I've been updated 🎉") }) {
-                Label("Update", systemImage: "arrow.right")
-            }
-        })
-    }
 }
 
 struct NewTaskButton: View {

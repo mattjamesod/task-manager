@@ -36,7 +36,6 @@ public actor KillerTaskMessageHandler: DatabaseMessageHandler {
     public func subscribe() -> DatabaseMessage.Thread {
         let newThread = DatabaseMessage.Thread()
         self.messageThreads.append(newThread)
-        print(messageThreads.count)
         return newThread
     }
     

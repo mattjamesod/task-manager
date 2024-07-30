@@ -3,13 +3,7 @@ import Foundation
 import KillerModels
 
 public actor QueryMonitor<StateContainer: SynchronisedStateContainer> {
-    public init() {
-        print("QM init")
-    }
-    
-    deinit {
-        print("QM deinit")
-    }
+    public init() { }
     
     private var dbMessageThread: DatabaseMessage.Thread? = nil
     
