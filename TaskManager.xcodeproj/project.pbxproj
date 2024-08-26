@@ -11,16 +11,16 @@
 		A0456FDE2C2E0FD200DC2879 /* KillerData in Frameworks */ = {isa = PBXBuildFile; productRef = A0456FDD2C2E0FD200DC2879 /* KillerData */; };
 		A0456FE12C2EA10200DC2879 /* KillerModels in Frameworks */ = {isa = PBXBuildFile; productRef = A0456FE02C2EA10200DC2879 /* KillerModels */; };
 		A0456FE42C2EA11500DC2879 /* KillerData in Frameworks */ = {isa = PBXBuildFile; productRef = A0456FE32C2EA11500DC2879 /* KillerData */; };
-		A04EDD382C31E79B00B299C4 /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = A04EDD372C31E79B00B299C4 /* Logging */; };
-		A04EDD3A2C31E79B00B299C4 /* UtilExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = A04EDD392C31E79B00B299C4 /* UtilExtensions */; };
-		A04EDD3C2C31E79B00B299C4 /* UtilViews in Frameworks */ = {isa = PBXBuildFile; productRef = A04EDD3B2C31E79B00B299C4 /* UtilViews */; };
 		A05115712C2DC08900923202 /* KillerModels in Frameworks */ = {isa = PBXBuildFile; productRef = A05115702C2DC08900923202 /* KillerModels */; };
 		A055B5BE2C25E52200BCB5C2 /* TaskManagerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */; };
 		A055B5C02C25E52200BCB5C2 /* TaskContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5BF2C25E52200BCB5C2 /* TaskContainerView.swift */; };
 		A055B5C22C25E52300BCB5C2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A055B5C12C25E52300BCB5C2 /* Assets.xcassets */; };
 		A055B5C62C25E52300BCB5C2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A055B5C52C25E52300BCB5C2 /* Preview Assets.xcassets */; };
 		A055B5D02C25E52300BCB5C2 /* DatabaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5CF2C25E52300BCB5C2 /* DatabaseTests.swift */; };
-		A06A95F72C4E376A004302DF /* UtilAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = A06A95F62C4E376A004302DF /* UtilAlgorithms */; };
+		A06498722C7B4D4C005C545B /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = A06498712C7B4D4C005C545B /* Logging */; };
+		A06498742C7B4D4C005C545B /* UtilAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = A06498732C7B4D4C005C545B /* UtilAlgorithms */; };
+		A06498762C7B4D4C005C545B /* UtilExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = A06498752C7B4D4C005C545B /* UtilExtensions */; };
+		A06498782C7B4D4C005C545B /* UtilViews in Frameworks */ = {isa = PBXBuildFile; productRef = A06498772C7B4D4C005C545B /* UtilViews */; };
 		A06A95F92C4E3DB8004302DF /* TaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A06A95F82C4E3DB4004302DF /* TaskListView.swift */; };
 		A09B7A6E2C3B0DA500C01586 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = A09B7A6D2C3B0DA500C01586 /* AsyncAlgorithms */; };
 		A0D1EBED2C26C5C7008636CB /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = A0D1EBEC2C26C5C7008636CB /* SQLite */; };
@@ -65,18 +65,18 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A06498722C7B4D4C005C545B /* Logging in Frameworks */,
+				A06498782C7B4D4C005C545B /* UtilViews in Frameworks */,
 				A0D1EBED2C26C5C7008636CB /* SQLite in Frameworks */,
 				A09B7A6E2C3B0DA500C01586 /* AsyncAlgorithms in Frameworks */,
 				A0456FE12C2EA10200DC2879 /* KillerModels in Frameworks */,
-				A04EDD3A2C31E79B00B299C4 /* UtilExtensions in Frameworks */,
+				A06498742C7B4D4C005C545B /* UtilAlgorithms in Frameworks */,
 				A0DB377C2C2DD02A00D17C00 /* KillerModels in Frameworks */,
 				A05115712C2DC08900923202 /* KillerModels in Frameworks */,
-				A06A95F72C4E376A004302DF /* UtilAlgorithms in Frameworks */,
 				A0DB37812C2E0ED200D17C00 /* KillerModels in Frameworks */,
 				A0456FDE2C2E0FD200DC2879 /* KillerData in Frameworks */,
-				A04EDD3C2C31E79B00B299C4 /* UtilViews in Frameworks */,
-				A04EDD382C31E79B00B299C4 /* Logging in Frameworks */,
 				A0456FE42C2EA11500DC2879 /* KillerData in Frameworks */,
+				A06498762C7B4D4C005C545B /* UtilExtensions in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -179,11 +179,11 @@
 				A0456FDD2C2E0FD200DC2879 /* KillerData */,
 				A0456FE02C2EA10200DC2879 /* KillerModels */,
 				A0456FE32C2EA11500DC2879 /* KillerData */,
-				A04EDD372C31E79B00B299C4 /* Logging */,
-				A04EDD392C31E79B00B299C4 /* UtilExtensions */,
-				A04EDD3B2C31E79B00B299C4 /* UtilViews */,
 				A09B7A6D2C3B0DA500C01586 /* AsyncAlgorithms */,
-				A06A95F62C4E376A004302DF /* UtilAlgorithms */,
+				A06498712C7B4D4C005C545B /* Logging */,
+				A06498732C7B4D4C005C545B /* UtilAlgorithms */,
+				A06498752C7B4D4C005C545B /* UtilExtensions */,
+				A06498772C7B4D4C005C545B /* UtilViews */,
 			);
 			productName = TaskManager;
 			productReference = A055B5BA2C25E52200BCB5C2 /* TaskManager.app */;
@@ -261,8 +261,8 @@
 				A0D1EBEB2C26C5C7008636CB /* XCRemoteSwiftPackageReference "SQLite" */,
 				A0456FDF2C2EA10200DC2879 /* XCLocalSwiftPackageReference "Packages/KillerModels" */,
 				A0456FE22C2EA11500DC2879 /* XCLocalSwiftPackageReference "Packages/KillerData" */,
-				A04EDD362C31E79B00B299C4 /* XCLocalSwiftPackageReference "../packages/AndHashUtilities" */,
 				A09B7A6C2C3B0DA500C01586 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
+				A06498702C7B4D4C005C545B /* XCLocalSwiftPackageReference "../packages/AndHashUtilities" */,
 			);
 			productRefGroup = A055B5BB2C25E52200BCB5C2 /* Products */;
 			projectDirPath = "";
@@ -680,7 +680,7 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/KillerData;
 		};
-		A04EDD362C31E79B00B299C4 /* XCLocalSwiftPackageReference "../packages/AndHashUtilities" */ = {
+		A06498702C7B4D4C005C545B /* XCLocalSwiftPackageReference "../packages/AndHashUtilities" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../packages/AndHashUtilities;
 		};
@@ -692,7 +692,7 @@
 			repositoryURL = "https://github.com/apple/swift-async-algorithms.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.1;
+				minimumVersion = 0.0.1;
 			};
 		};
 		A0D1EBEB2C26C5C7008636CB /* XCRemoteSwiftPackageReference "SQLite" */ = {
@@ -718,26 +718,25 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = KillerData;
 		};
-		A04EDD372C31E79B00B299C4 /* Logging */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = Logging;
-		};
-		A04EDD392C31E79B00B299C4 /* UtilExtensions */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = UtilExtensions;
-		};
-		A04EDD3B2C31E79B00B299C4 /* UtilViews */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = UtilViews;
-		};
 		A05115702C2DC08900923202 /* KillerModels */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = KillerModels;
 		};
-		A06A95F62C4E376A004302DF /* UtilAlgorithms */ = {
+		A06498712C7B4D4C005C545B /* Logging */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = A04EDD362C31E79B00B299C4 /* XCLocalSwiftPackageReference "../packages/AndHashUtilities" */;
+			productName = Logging;
+		};
+		A06498732C7B4D4C005C545B /* UtilAlgorithms */ = {
+			isa = XCSwiftPackageProductDependency;
 			productName = UtilAlgorithms;
+		};
+		A06498752C7B4D4C005C545B /* UtilExtensions */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = UtilExtensions;
+		};
+		A06498772C7B4D4C005C545B /* UtilViews */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = UtilViews;
 		};
 		A09B7A6D2C3B0DA500C01586 /* AsyncAlgorithms */ = {
 			isa = XCSwiftPackageProductDependency;

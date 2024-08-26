@@ -6,19 +6,23 @@ import KillerData
 
 @Observable @MainActor
 final class Selection<T: Identifiable> {
-    private(set) var ids: Set<T.ID> = .init()
+    private(set) var ids: [T.ID] = []
     
     var picked: T.ID? {
         ids.count == 1 ? ids.first! : nil
     }
     
+    var last: T.ID? {
+        ids.last
+    }
+    
     func pick(_ obj: T) {
-        if ids.contains(obj.id) {
-            ids.remove(obj.id)
+        if let index = ids.firstIndex(of: obj.id) {
+            ids.remove(at: index)
         }
         else {
             ids.removeAll()
-            ids.insert(obj.id)
+            ids.append(obj.id)
         }
     }
 }

@@ -1,5 +1,5 @@
 {
-  "originHash" : "530fcd66a4d4bd01633e2ede85b79722ba2aa8cfd885a1f50f8338d6d1b27130",
+  "originHash" : "f3f7b482d37e39462d50bbecfaf31c4caae8fc98309fdf3bb2ca39234660253e",
   "pins" : [
     {
       "identity" : "sqlite.swift",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-async-algorithms",
       "state" : {
-        "revision" : "6ae9a051f76b81cc668305ceed5b0e0a7fd93d20",
-        "version" : "1.0.1"
+        "revision" : "9cfed92b026c524674ed869a4ff2dcfdeedf8a2a",
+        "version" : "0.1.0"
       }
     },
     {
