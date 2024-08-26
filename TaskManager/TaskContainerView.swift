@@ -51,15 +51,17 @@ struct TaskContainerView: View {
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
                 HStack(spacing: 16) {
-                    NewTaskButton(enteredText: $enteredText)
                     UndoButton()
                     RedoButton()
                 }
                 
-                TextField("New Task", text: $enteredText)
-                    .padding(8)
-                    .background(.ultraThinMaterial)
-                    .padding(.horizontal, 16)
+                HStack {
+                    TextField("New Task", text: $enteredText)
+                    NewTaskButton(enteredText: $enteredText)
+                }
+                .padding(8)
+                .background(.ultraThinMaterial)
+                .padding(.horizontal, 16)
             }
             .padding(.bottom, 8)
         }
@@ -96,10 +98,13 @@ struct NewTaskButton: View {
     @Binding var enteredText: String
     
     var body: some View {
-        Button("Add New Task") {
+        Button("Add") {
+            let currentText = enteredText
+            enteredText = ""
+            
             Task.detached {
                 let query = await self.query
-                await database?.insert(KillerTask.self, \.body <- enteredText, \.parentID <- selection.picked, context: query)
+                await database?.insert(KillerTask.self, \.body <- currentText, \.parentID <- selection.picked, context: query)
             }
         }
     }
