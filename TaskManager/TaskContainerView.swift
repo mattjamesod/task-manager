@@ -39,7 +39,6 @@ struct TaskContainerView: View {
         self.query = query
     }
     
-    @State var enteredText: String = ""
     @State var taskSelection = Selection<KillerTask>()
     
     var body: some View {
@@ -55,13 +54,8 @@ struct TaskContainerView: View {
                     RedoButton()
                 }
                 
-                HStack {
-                    TextField("New Task", text: $enteredText)
-                    NewTaskButton(enteredText: $enteredText)
-                }
-                .padding(8)
-                .background(.ultraThinMaterial)
-                .padding(.horizontal, 16)
+                NewTaskEntryField()
+                    .padding(.horizontal, 16)
             }
             .padding(.bottom, 8)
         }
@@ -88,6 +82,19 @@ struct TaskContainerView: View {
 extension EnvironmentValues {
     @Entry var taskListMonitor: QueryMonitor<TaskListViewModel>? = nil
     @Entry var contextQuery: Database.Query? = nil
+}
+
+struct NewTaskEntryField: View {
+    @State var enteredText: String = ""
+    
+    var body: some View {
+        HStack {
+            TextField("New Task", text: $enteredText)
+            NewTaskButton(enteredText: $enteredText)
+        }
+        .padding(8)
+        .background(.ultraThinMaterial)
+    }
 }
 
 struct NewTaskButton: View {

@@ -57,6 +57,7 @@ struct TaskListView: View {
     @Environment(\.database) var database
     @Environment(\.contextQuery) var contextQuery
     @Environment(\.taskListMonitor) var taskListMonitor
+    @Environment(Selection<KillerTask>.self) var selection
     
     @State var viewModel: TaskListViewModel
     
@@ -80,7 +81,7 @@ struct TaskListView: View {
             ForEach(viewModel.tasks) { task in
                 TaskView(task: task)
                 TaskListView(parentID: task.id)
-                    .padding(.leading, 24)
+                    .offset(x: 24)
             }
         }
         .animation(.bouncy, value: viewModel.tasks)

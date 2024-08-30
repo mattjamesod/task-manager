@@ -16,23 +16,25 @@ struct TaskView: View {
     var body: some View {
         HStack {
             CompleteButton(task: self.task)
-            if editing {
+            
+            VStack {
                 DebouncedTextField("Task", text: $editingTaskBody)
                     .onChange(of: editingTaskBody) {
                         Task.detached {
                             await database?.update(task, \.body <- editingTaskBody)
                         }
                     }
-                Button("Done") {
-                    Task.detached {
-                        await database?.update(task, \.body <- editingTaskBody)
-                    }
-                    editing = false
+                if selection.ids.contains(task.id) {
+                    Text("metadata").foregroundStyle(.gray)
                 }
             }
-            else {
-                Text("\(task.id): \(task.body)")
+            .onAppear {
+                self.editingTaskBody = task.body
             }
+            .onChange(of: task.body) {
+                self.editingTaskBody = task.body
+            }
+            
             Spacer()
         }
         .padding(8)
