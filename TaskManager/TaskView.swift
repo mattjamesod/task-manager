@@ -20,6 +20,8 @@ struct TaskView: View {
             VStack {
                 DebouncedTextField("Task", text: $editingTaskBody)
                     .onChange(of: editingTaskBody) {
+                        guard self.editingTaskBody != task.body else { return }
+                        
                         Task.detached {
                             await database?.update(task, \.body <- editingTaskBody)
                         }
