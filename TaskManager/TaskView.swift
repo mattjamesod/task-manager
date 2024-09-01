@@ -18,30 +18,12 @@ struct TaskView: View {
             CompleteButton(task: self.task)
             
             VStack {
-                DebouncedTextField("Task", text: $textFieldInput)
+                TaskBodyField(task: self.task)
                 
                 if selection.ids.contains(task.id) {
                     Text("metadata")
                         .foregroundStyle(.gray)
                 }
-            }
-            // we need to update the textField when the DB value is updated, but we
-            // don't want this change to propogate as though the user had typed something
-            //
-            // TextField state is different from DB state, so it gets messy!
-            .onChange(of: textFieldInput) {
-                guard !ignoreTextFieldInputUpdate else {
-                    ignoreTextFieldInputUpdate = false
-                    return
-                }
-                
-                Task.detached {
-                    await database?.update(task, \.body <- textFieldInput)
-                }
-            }
-            .onChange(of: task.body, initial: true) {
-                self.ignoreTextFieldInputUpdate = true
-                self.textFieldInput = task.body
             }
             
             Spacer()
@@ -70,13 +52,52 @@ struct TaskView: View {
     }
 }
 
+struct TaskBodyField: View {
+    @Environment(\.database) var database
+
+    let task: KillerTask
+    
+    @State var textFieldInput: String = ""
+    @State var ignoreTextFieldInputUpdate: Bool = false
+    
+    init(task: KillerTask) {
+        self.task = task
+    }
+    
+    // we need to update the textField when the DB value is updated, but we
+    // don't want this change to propogate as though the user had typed something
+    //
+    // TextField state is different from DB state, so it gets messy!
+    
+    var body: some View {
+        DebouncedTextField("Task", text: $textFieldInput)
+            .onChange(of: textFieldInput) {
+                if ignoreTextFieldInputUpdate {
+                    ignoreTextFieldInputUpdate = false
+                    return
+                }
+                
+                Task.detached {
+                    await database?.update(task, \.body <- textFieldInput)
+                }
+            }
+            .onChange(of: task.body, initial: true) {
+                if self.textFieldInput != task.body {
+                    self.ignoreTextFieldInputUpdate = true
+                    self.textFieldInput = task.body
+                }
+            }
+    }
+}
+
 struct CompleteButton: View {
     @Environment(\.database) var database
+    @Environment(\.contextQuery) var contextQuery
     
     let task: KillerTask
     
     var body: some View {
-        Button.async(action: { await database?.update(task, recursive: true, \.completedAt <- Date.now) }) {
+        Button.async(action: { await database?.update(task, recursive: true, context: contextQuery, \.completedAt <- Date.now) }) {
             Label("Complete", systemImage: "checkmark")
                 .labelStyle(.iconOnly)
         }
