@@ -10,31 +10,38 @@ struct TaskView: View {
         
     let task: KillerTask
     
-    @State var editing: Bool = false
-    @State var editingTaskBody: String = ""
+    @State var textFieldInput: String = ""
+    @State var ignoreTextFieldInputUpdate: Bool = false
     
     var body: some View {
         HStack {
             CompleteButton(task: self.task)
             
             VStack {
-                DebouncedTextField("Task", text: $editingTaskBody)
-                    .onChange(of: editingTaskBody) {
-                        guard self.editingTaskBody != task.body else { return }
-                        
-                        Task.detached {
-                            await database?.update(task, \.body <- editingTaskBody)
-                        }
-                    }
+                DebouncedTextField("Task", text: $textFieldInput)
+                
                 if selection.ids.contains(task.id) {
-                    Text("metadata").foregroundStyle(.gray)
+                    Text("metadata")
+                        .foregroundStyle(.gray)
                 }
             }
-            .onAppear {
-                self.editingTaskBody = task.body
+            // we need to update the textField when the DB value is updated, but we
+            // don't want this change to propogate as though the user had typed something
+            //
+            // TextField state is different from DB state, so it gets messy!
+            .onChange(of: textFieldInput) {
+                guard !ignoreTextFieldInputUpdate else {
+                    ignoreTextFieldInputUpdate = false
+                    return
+                }
+                
+                Task.detached {
+                    await database?.update(task, \.body <- textFieldInput)
+                }
             }
-            .onChange(of: task.body) {
-                self.editingTaskBody = task.body
+            .onChange(of: task.body, initial: true) {
+                self.ignoreTextFieldInputUpdate = true
+                self.textFieldInput = task.body
             }
             
             Spacer()
@@ -58,12 +65,6 @@ struct TaskView: View {
             }
             Button.async(action: { await database?.update(task, \.body <- "I've been updated 🎉") }) {
                 Label("Update", systemImage: "arrow.right")
-            }
-            Button {
-                editingTaskBody = task.body
-                self.editing.toggle()
-            } label: {
-                Label("Edit", systemImage: "arrow.down")
             }
         })
     }

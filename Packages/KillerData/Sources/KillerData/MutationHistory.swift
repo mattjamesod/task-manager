@@ -30,6 +30,7 @@ public actor MutationHistory {
     
     public func redo() async {
         guard undoLevel > 0 else { return }
+        
         let operation = operations[operations.count - undoLevel]
         
         await operation.goForward()

@@ -39,19 +39,28 @@ struct TaskManagerApp: App {
         .init(id: 1, title: "Completed", query: .completedTasks),
         .init(id: 2, title: "Recently Deleted", query: .deletedTasks)
     ]
-    
+        
     var body: some Scene {
         WindowGroup {
             if let database {
-                NavigationStack {
-                    List(options) { option in
-                        NavigationLink(option.title, value: option)
-                    }
-                    .navigationDestination(for: NavigationStackOption.self) {
-                        TaskContainerView(query: $0.query)
-                            .environment(\.database, database)
-                    }
+                VStack(spacing: 0) {
+                    TaskContainerView(query: .allActiveTasks)
+                        .environment(\.database, database)
+                        .border(.red)
+                    TaskContainerView(query: .allActiveTasks)
+                        .environment(\.database, database)
+                        .border(.blue)
                 }
+                
+//                NavigationStack {
+//                    List(options) { option in
+//                        NavigationLink(option.title, value: option)
+//                    }
+//                    .navigationDestination(for: NavigationStackOption.self) {
+//                        TaskContainerView(query: $0.query)
+//                            .environment(\.database, database)
+//                    }
+//                }
             }
             else {
                 CatastrophicErrorView()
