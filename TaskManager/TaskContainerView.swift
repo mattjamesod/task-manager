@@ -25,6 +25,12 @@ final class Selection<T: Identifiable> {
             ids.append(obj.id)
         }
     }
+    
+    func remove(_ obj: T) {
+        if let index = ids.firstIndex(of: obj.id) {
+            ids.remove(at: index)
+        }
+    }
 }
 
 struct TaskContainerView: View {
@@ -44,6 +50,7 @@ struct TaskContainerView: View {
     var body: some View {
         ScrollView {
             TaskListView(.orphaned, monitor: orphanMonitor)
+                .padding(.horizontal, 16)
                 .environment(\.taskListMonitor, self.taskListMonitor)
         }
         .defaultScrollAnchor(.center)
@@ -92,8 +99,11 @@ struct NewTaskEntryField: View {
             TextField("New Task", text: $enteredText)
             NewTaskButton(enteredText: $enteredText)
         }
-        .padding(8)
-        .background(.ultraThinMaterial)
+        .padding(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+        .background {
+            RoundedRectangle(cornerRadius: 12)
+                .foregroundStyle(.ultraThinMaterial)
+        }
     }
 }
 

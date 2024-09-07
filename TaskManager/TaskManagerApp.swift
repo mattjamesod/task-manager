@@ -46,7 +46,6 @@ struct TaskManagerApp: App {
                 VStack(spacing: 0) {
                     TaskContainerView(query: .allActiveTasks)
                         .environment(\.database, database)
-                        .border(.red)
 //                    TaskContainerView(query: .allActiveTasks)
 //                        .environment(\.database, database)
 //                        .border(.blue)

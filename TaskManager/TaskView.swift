@@ -15,12 +15,13 @@ struct TaskView: View {
         HStack {
             CompleteButton(task: self.task)
             
-            VStack {
+            VStack(alignment: .leading) {
                 TaskBodyField(task: self.task)
                     .focused($bodyFieldFocused)
                     .onChange(of: bodyFieldFocused) {
-                        guard bodyFieldFocused else { return }
-                        selection.pick(task)
+                        if bodyFieldFocused {
+                            selection.pick(task)
+                        }
                     }
                 
                 if selection.ids.contains(task.id) {
@@ -31,10 +32,11 @@ struct TaskView: View {
             
             Spacer()
         }
-        .padding(8)
+        .padding(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
         .background {
             if selection.ids.contains(task.id) {
-                Rectangle().foregroundStyle(.ultraThinMaterial)
+                RoundedRectangle(cornerRadius: 12)
+                    .foregroundStyle(.ultraThinMaterial)
             }
         }
         .transition(.scale(scale: 0.95).combined(with: .opacity))

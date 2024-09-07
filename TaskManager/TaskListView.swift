@@ -81,7 +81,7 @@ struct TaskListView: View {
             ForEach(viewModel.tasks) { task in
                 TaskView(task: task)
                 TaskListView(parentID: task.id)
-                    .offset(x: 24)
+                    .padding(.leading, 24)
             }
         }
         .animation(.bouncy, value: viewModel.tasks)
@@ -116,6 +116,5 @@ struct TaskList<Content: View>: View {
                 subView
             }
         }
-        .padding(.horizontal, 16)
     }
 }
