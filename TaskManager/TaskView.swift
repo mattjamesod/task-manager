@@ -18,10 +18,10 @@ struct TaskView: View {
             VStack {
                 TaskBodyField(task: self.task)
                     .focused($bodyFieldFocused)
-                    .highPriorityGesture(TapGesture().onEnded {
+                    .onChange(of: bodyFieldFocused) {
+                        guard bodyFieldFocused else { return }
                         selection.pick(task)
-                        bodyFieldFocused.toggle()
-                    })
+                    }
                 
                 if selection.ids.contains(task.id) {
                     Text("metadata")
