@@ -51,6 +51,7 @@ struct TaskView: View {
                 Label("Update", systemImage: "arrow.right")
             }
         })
+        .fadeOutScrollTransition()
     }
 }
 
@@ -64,6 +65,26 @@ struct CompleteButton: View {
         Button.async(action: { await database?.update(task, recursive: true, context: contextQuery, \.completedAt <- Date.now) }) {
             Label("Complete", systemImage: "checkmark")
                 .labelStyle(.iconOnly)
+        }
+    }
+}
+
+
+extension View {
+    func fadeOutScrollTransition() -> some View {
+        self.scrollTransition(axis: .vertical) { content, phase in
+            #if(os(iOS))
+            let phases: [ScrollTransitionPhase] = [.topLeading, .bottomTrailing]
+            #else
+            let phases: [ScrollTransitionPhase] = [.topLeading]
+            #endif
+            
+            let applies = phases.contains(phase)
+            
+            return content
+                .opacity(applies ? 0.5 : 1.0)
+                .blur(radius: applies ? 1 : 0)
+                .scaleEffect(applies ? 0.9 : 1, anchor: .center)
         }
     }
 }

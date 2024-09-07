@@ -56,14 +56,17 @@ struct TaskContainerView: View {
         .defaultScrollAnchor(.center)
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
-                HStack(spacing: 16) {
+                HStack {
+                    DoneButton()
+                    Spacer()
                     UndoButton()
                     RedoButton()
                 }
+                .buttonStyle(.bordered)
                 
                 NewTaskEntryField()
-                    .padding(.horizontal, 16)
             }
+            .padding(.horizontal, 16)
             .padding(.bottom, 8)
         }
         .environment(\.contextQuery, self.query)
@@ -123,6 +126,16 @@ struct NewTaskButton: View {
                 let query = await self.query
                 await database?.insert(KillerTask.self, \.body <- currentText, \.parentID <- selection.picked, context: query)
             }
+        }
+    }
+}
+
+struct DoneButton: View {
+    @Environment(\.database) var database
+    
+    var body: some View {
+        Button("Done") {
+            print("done")
         }
     }
 }
