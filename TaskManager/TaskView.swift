@@ -1,5 +1,4 @@
 import SwiftUI
-import UtilViews
 import KillerModels
 import KillerData
 
@@ -10,8 +9,7 @@ struct TaskView: View {
         
     let task: KillerTask
     
-    @State var textFieldInput: String = ""
-    @State var ignoreTextFieldInputUpdate: Bool = false
+    @FocusState var bodyFieldFocused: Bool
     
     var body: some View {
         HStack {
@@ -19,6 +17,11 @@ struct TaskView: View {
             
             VStack {
                 TaskBodyField(task: self.task)
+                    .focused($bodyFieldFocused)
+                    .highPriorityGesture(TapGesture().onEnded {
+                        selection.pick(task)
+                        bodyFieldFocused.toggle()
+                    })
                 
                 if selection.ids.contains(task.id) {
                     Text("metadata")
@@ -34,9 +37,6 @@ struct TaskView: View {
                 Rectangle().foregroundStyle(.ultraThinMaterial)
             }
         }
-        .onTapGesture {
-            selection.pick(task)
-        }
         .transition(.scale(scale: 0.95).combined(with: .opacity))
         .contextMenu(menuItems: {
             Button.async(action: {
@@ -49,44 +49,6 @@ struct TaskView: View {
                 Label("Update", systemImage: "arrow.right")
             }
         })
-    }
-}
-
-struct TaskBodyField: View {
-    @Environment(\.database) var database
-
-    let task: KillerTask
-    
-    @State var textFieldInput: String = ""
-    @State var ignoreTextFieldInputUpdate: Bool = false
-    
-    init(task: KillerTask) {
-        self.task = task
-    }
-    
-    // we need to update the textField when the DB value is updated, but we
-    // don't want this change to propogate as though the user had typed something
-    //
-    // TextField state is different from DB state, so it gets messy!
-    
-    var body: some View {
-        DebouncedTextField("Task", text: $textFieldInput)
-            .onChange(of: textFieldInput) {
-                if ignoreTextFieldInputUpdate {
-                    ignoreTextFieldInputUpdate = false
-                    return
-                }
-                
-                Task.detached {
-                    await database?.update(task, \.body <- textFieldInput)
-                }
-            }
-            .onChange(of: task.body, initial: true) {
-                if self.textFieldInput != task.body {
-                    self.ignoreTextFieldInputUpdate = true
-                    self.textFieldInput = task.body
-                }
-            }
     }
 }
 
