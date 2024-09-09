@@ -73,7 +73,7 @@ struct TaskContainerView: View {
                     UndoButton()
                     RedoButton()
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(KillerBorderedButtonStyle())
                 
                 NewTaskEntryField()
             }
@@ -182,5 +182,19 @@ extension Button {
         @ViewBuilder label: () -> Label
     ) -> Button<Label> {
         Button(action: { Task.detached { await action() }}, label: label)
+    }
+}
+
+struct KillerBorderedButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(Color.accentColor)
+            .padding(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+            .background {
+                RoundedRectangle(cornerRadius: 12)
+                    .foregroundStyle(.ultraThinMaterial)
+            }
+            .brightness(configuration.isPressed ? 0.1 : 0)
+            .animation(.easeInOut, value: configuration.isPressed)
     }
 }
