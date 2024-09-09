@@ -59,28 +59,33 @@ struct TaskListView: View {
     @Environment(\.taskListMonitor) var taskListMonitor
     @Environment(Selection<KillerTask>.self) var selection
     
+    var focusedTask: FocusState<KillerTask.ID?>.Binding
+    
     @State var viewModel: TaskListViewModel
     
     let monitor: QueryMonitor<TaskListViewModel>?
     let detailQuery: Database.Query?
     
-    init(_ detailQuery: Database.Query? = nil, monitor: QueryMonitor<TaskListViewModel>) {
+    init(_ detailQuery: Database.Query? = nil, monitor: QueryMonitor<TaskListViewModel>, focus: FocusState<KillerTask.ID?>.Binding) {
         self.viewModel = TaskListViewModel()
         self.monitor = monitor
         self.detailQuery = detailQuery
+        self.focusedTask = focus
     }
     
-    init(parentID: Int?) {
+    init(parentID: Int?, focus: FocusState<KillerTask.ID?>.Binding) {
         self.viewModel = TaskListViewModel(filter: { $0.parentID == parentID })
         self.monitor = nil
         self.detailQuery = .children(of: parentID)
+        self.focusedTask = focus
     }
     
     var body: some View {
         TaskList {
             ForEach(viewModel.tasks) { task in
                 TaskView(task: task)
-                TaskListView(parentID: task.id)
+                    .focused(focusedTask, equals: task.id)
+                TaskListView(parentID: task.id, focus: self.focusedTask)
                     .padding(.leading, 24)
             }
         }

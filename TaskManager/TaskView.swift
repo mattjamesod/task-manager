@@ -9,22 +9,14 @@ struct TaskView: View {
         
     let task: KillerTask
     
-    @FocusState var bodyFieldFocused: Bool
-    
     var body: some View {
         HStack {
             CompleteButton(task: self.task)
             
             VStack(alignment: .leading) {
                 TaskBodyField(task: self.task)
-                    .focused($bodyFieldFocused)
-                    .onChange(of: bodyFieldFocused) {
-                        if bodyFieldFocused {
-                            selection.pick(task)
-                        }
-                    }
                 
-                if selection.ids.contains(task.id) {
+                if selection.focused == task.id {
                     Text("metadata")
                         .foregroundStyle(.gray)
                 }

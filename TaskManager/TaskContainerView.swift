@@ -8,7 +8,7 @@ import KillerData
 final class Selection<T: Identifiable> {
     private(set) var ids: [T.ID] = []
     
-    var picked: T.ID? {
+    var focused: T.ID? {
         ids.count == 1 ? ids.first! : nil
     }
     
@@ -16,13 +16,20 @@ final class Selection<T: Identifiable> {
         ids.last
     }
     
-    func pick(_ obj: T) {
-        if let index = ids.firstIndex(of: obj.id) {
+    func focus(_ obj: T) {
+        focus(obj.id)
+    }
+    
+    func focus(_ id: T.ID?) {
+        if id == nil {
+            ids.removeAll()
+        }
+        else if let index = ids.firstIndex(of: id!) {
             ids.remove(at: index)
         }
         else {
             ids.removeAll()
-            ids.append(obj.id)
+            ids.append(id!)
         }
     }
     
@@ -35,6 +42,7 @@ final class Selection<T: Identifiable> {
 
 struct TaskContainerView: View {
     @Environment(\.database) var database
+    @FocusState var focusedTaskID: KillerTask.ID?
         
     let taskListMonitor: QueryMonitor<TaskListViewModel> = .init()
     let orphanMonitor: QueryMonitor<TaskListViewModel> = .init()
@@ -49,15 +57,18 @@ struct TaskContainerView: View {
     
     var body: some View {
         ScrollView {
-            TaskListView(.orphaned, monitor: orphanMonitor)
+            TaskListView(.orphaned, monitor: orphanMonitor, focus: $focusedTaskID)
                 .padding(.horizontal, 16)
                 .environment(\.taskListMonitor, self.taskListMonitor)
+                .onChange(of: focusedTaskID) {
+                    taskSelection.focus(focusedTaskID)
+                }
         }
         .defaultScrollAnchor(.center)
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
                 HStack {
-                    DoneButton()
+                    DoneButton(focusedTask: self.$focusedTaskID)
                     Spacer()
                     UndoButton()
                     RedoButton()
@@ -124,7 +135,7 @@ struct NewTaskButton: View {
             
             Task.detached {
                 let query = await self.query
-                await database?.insert(KillerTask.self, \.body <- currentText, \.parentID <- selection.picked, context: query)
+                await database?.insert(KillerTask.self, \.body <- currentText, \.parentID <- selection.focused, context: query)
             }
         }
     }
@@ -132,10 +143,11 @@ struct NewTaskButton: View {
 
 struct DoneButton: View {
     @Environment(\.database) var database
+    var focusedTask: FocusState<KillerTask.ID?>.Binding
     
     var body: some View {
         Button("Done") {
-            print("done")
+            focusedTask.wrappedValue = nil
         }
     }
 }
