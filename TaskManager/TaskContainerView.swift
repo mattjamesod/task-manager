@@ -56,7 +56,7 @@ struct TaskContainerView: View {
     @State var taskSelection = Selection<KillerTask>()
     
     var body: some View {
-        ScrollView {
+        CenteredScrollView {
             TaskListView(.orphaned, monitor: orphanMonitor, focus: $focusedTaskID)
                 .padding(.horizontal, 16)
                 .environment(\.taskListMonitor, self.taskListMonitor)
@@ -64,7 +64,6 @@ struct TaskContainerView: View {
                     taskSelection.focus(focusedTaskID)
                 }
         }
-        .defaultScrollAnchor(.center)
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
                 HStack {
@@ -196,5 +195,23 @@ struct KillerBorderedButtonStyle: ButtonStyle {
             }
             .brightness(configuration.isPressed ? 0.1 : 0)
             .animation(.easeInOut, value: configuration.isPressed)
+    }
+}
+
+// GeometryReader is needed here since the deafultScrollAnchor method behaves incorrectly
+// with the scrollTransition method, and thinks the top of teh scroll view is where the content
+// ends, not the top of the scroll view as determined by the border method...
+
+struct CenteredScrollView<Content: View>: View {
+    let contentBuilder: () -> Content
+    
+    var body: some View {
+        GeometryReader { proxy in
+            ScrollView {
+                contentBuilder()
+                    .frame(minHeight: proxy.size.height)
+            }
+            .defaultScrollAnchor(.center)
+        }
     }
 }
