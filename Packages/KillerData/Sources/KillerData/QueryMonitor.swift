@@ -99,21 +99,23 @@ extension Database {
             self.apply = tableExpression
         }
         
-        public static let allActiveTasks: Query = .init { base in
+        public static let allActiveTasks: Query = .init(tableExpression: { base in
             let table = Schema.Tasks.tableExpression
             
             return base
                 .filter(table[Schema.Tasks.completedAt] == nil && table[Schema.Tasks.deletedAt] == nil)
                 .order(table[Schema.Tasks.createdAt].asc)
-        }
+        })
         
-        public static let completedTasks: Query = .init { base in
+        public static let completedTasks: Query = .init(insertArguments: [
+            Schema.Tasks.createdAt <- Date.now
+        ], tableExpression: { base in
             let table = Schema.Tasks.tableExpression
             
             return base
                 .filter(table[Schema.Tasks.completedAt] != nil && table[Schema.Tasks.deletedAt] == nil)
                 .order(table[Schema.Tasks.createdAt].asc)
-        }
+        })
         
         public static let orphaned: Query = .init { base in
             let tasks = Schema.Tasks.tableExpression
@@ -127,17 +129,21 @@ extension Database {
         }
         
         public static func children(of parentID: Int?) -> Query {
-            .init { base in
+            .init(insertArguments: [
+                Schema.Tasks.parentID <- parentID
+            ], tableExpression: { base in
                 let tasks = Schema.Tasks.tableExpression
                 return base.filter(tasks[Schema.Tasks.parentID] == parentID)
-            }
+            })
         }
         
-        public static let deletedTasks: Query = .init(insertArguments: Schema.Tasks.deletedAt <- Date.now) { base in
+        public static let deletedTasks: Query = .init(insertArguments: [
+            Schema.Tasks.deletedAt <- Date.now
+        ], tableExpression: { base in
             base
                 .filter(Schema.Tasks.deletedAt != nil)
                 .order(Schema.Tasks.deletedAt.asc)
-        }
+        })
         
         let apply: @Sendable (SQLite.Table) -> SQLite.Table
         
