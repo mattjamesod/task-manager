@@ -16,7 +16,7 @@ struct TaskView: View {
             VStack(alignment: .leading) {
                 TaskBodyField(task: self.task)
                 
-                if selection.focused == task.id {
+                if selection.chosen == task.id {
                     Text("metadata")
                         .foregroundStyle(.gray)
                 }

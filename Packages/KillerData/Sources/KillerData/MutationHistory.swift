@@ -39,6 +39,14 @@ public actor MutationHistory: CustomConsoleLogger {
         log("operation undone; undo level is \(undoLevel)")
     }
     
+    public func canUndo() async -> Bool {
+        !self.operations.isEmpty
+    }
+    
+    public func canRedo() async -> Bool {
+        self.undoLevel > 0
+    }
+    
     public func redo() async {
         guard undoLevel > 0 else {
             log("ignoring redo request: nothing to redo")

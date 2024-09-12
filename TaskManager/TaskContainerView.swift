@@ -8,7 +8,7 @@ import KillerData
 final class Selection<T: Identifiable> {
     private(set) var ids: [T.ID] = []
     
-    var focused: T.ID? {
+    var chosen: T.ID? {
         ids.count == 1 ? ids.first! : nil
     }
     
@@ -16,11 +16,11 @@ final class Selection<T: Identifiable> {
         ids.last
     }
     
-    func focus(_ obj: T) {
-        focus(obj.id)
+    func choose(_ obj: T) {
+        choose(id: obj.id)
     }
     
-    func focus(_ id: T.ID?) {
+    func choose(id: T.ID?) {
         if id == nil {
             ids.removeAll()
         }
@@ -40,6 +40,10 @@ final class Selection<T: Identifiable> {
     }
 }
 
+extension EnvironmentValues {
+    @Entry var focusedTaskID: FocusState<KillerTask.ID?>.Binding?
+}
+
 struct TaskContainerView: View {
     @Environment(\.database) var database
     @FocusState var focusedTaskID: KillerTask.ID?
@@ -57,17 +61,19 @@ struct TaskContainerView: View {
     
     var body: some View {
         CenteredScrollView {
-            TaskListView(.orphaned, monitor: orphanMonitor, focus: $focusedTaskID)
+            TaskListView(.orphaned, monitor: orphanMonitor)
                 .padding(.horizontal, 16)
                 .environment(\.taskListMonitor, self.taskListMonitor)
                 .onChange(of: focusedTaskID) {
-                    taskSelection.focus(focusedTaskID)
+                    taskSelection.choose(id: focusedTaskID)
                 }
         }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
                 HStack {
-                    DoneButton(focusedTask: self.$focusedTaskID)
+                    if focusedTaskID != nil {
+                        DoneButton()
+                    }
                     Spacer()
                     UndoButton()
                     RedoButton()
@@ -79,6 +85,7 @@ struct TaskContainerView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 8)
         }
+        .environment(\.focusedTaskID, $focusedTaskID)
         .environment(\.contextQuery, self.query)
         .environment(taskSelection)
         .task {
@@ -134,7 +141,7 @@ struct NewTaskButton: View {
             
             Task.detached {
                 let query = await self.query
-                await database?.insert(KillerTask.self, \.body <- currentText, \.parentID <- selection.focused, context: query)
+                await database?.insert(KillerTask.self, \.body <- currentText, \.parentID <- selection.chosen, context: query)
             }
         }
     }
@@ -142,11 +149,11 @@ struct NewTaskButton: View {
 
 struct DoneButton: View {
     @Environment(\.database) var database
-    var focusedTask: FocusState<KillerTask.ID?>.Binding
+    @Environment(\.focusedTaskID) var focusedTaskID
     
     var body: some View {
         Button("Done") {
-            focusedTask.wrappedValue = nil
+            focusedTaskID?.wrappedValue = nil
         }
     }
 }
@@ -211,7 +218,6 @@ struct CenteredScrollView<Content: View>: View {
                 contentBuilder()
                     .frame(minHeight: proxy.size.height)
             }
-            .defaultScrollAnchor(.center)
         }
     }
 }
