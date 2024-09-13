@@ -52,7 +52,7 @@ extension Database {
         public static let completedTasks: Scope = .init(
             name: "Completed",
             insertArguments: [
-                Schema.Tasks.createdAt <- Date.now
+                Schema.Tasks.completedAt <- Date.now
             ],
             tableExpression: { base in
                 let table = Schema.Tasks.tableExpression
