@@ -43,7 +43,7 @@ extension Database {
             static var create: String {
                 self.tableExpression.create(ifNotExists: true) {
                     $0.column(id, primaryKey: .autoincrement)
-                    $0.column(body)
+                    $0.column(body, defaultValue: "")
                     $0.column(createdAt)
                     $0.column(updatedAt)
                     $0.column(completedAt, defaultValue: nil)

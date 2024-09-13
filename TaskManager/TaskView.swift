@@ -17,7 +17,7 @@ struct TaskView: View {
                 TaskBodyField(task: self.task)
                 
                 if selection.chosen == task.id {
-                    Text("metadata")
+                    AddSubtaskButton(task: self.task)
                         .foregroundStyle(.gray)
                 }
             }
@@ -49,14 +49,31 @@ struct TaskView: View {
 
 struct CompleteButton: View {
     @Environment(\.database) var database
-    @Environment(\.contextQuery) var contextQuery
+    @Environment(\.contextQuery) var query
     
     let task: KillerTask
     
     var body: some View {
-        Button.async(action: { await database?.update(task, recursive: true, context: contextQuery, \.completedAt <- Date.now) }) {
+        Button.async {
+            await database?.update(task, recursive: true, context: self.query, \.completedAt <- Date.now)
+        } label: {
             Label("Complete", systemImage: "checkmark")
                 .labelStyle(.iconOnly)
+        }
+    }
+}
+
+struct AddSubtaskButton: View {
+    @Environment(\.database) var database
+    @Environment(\.contextQuery) var query
+    
+    let task: KillerTask
+    
+    var body: some View {
+        Button.async {
+        	await database?.insert(KillerTask.self, \.parentID <- task.id, context: self.query)
+        } label: {
+            Label("Add Subtask", systemImage: "arrow.turn.down.right")
         }
     }
 }
