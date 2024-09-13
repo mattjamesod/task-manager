@@ -63,9 +63,9 @@ struct TaskListView: View {
     @State var viewModel: TaskListViewModel
     
     let monitor: QueryMonitor<TaskListViewModel>?
-    let detailQuery: Database.Query?
+    let detailQuery: Database.Scope?
     
-    init(_ detailQuery: Database.Query? = nil, monitor: QueryMonitor<TaskListViewModel>) {
+    init(_ detailQuery: Database.Scope? = nil, monitor: QueryMonitor<TaskListViewModel>) {
         self.viewModel = TaskListViewModel()
         self.monitor = monitor
         self.detailQuery = detailQuery

@@ -4,7 +4,7 @@ import KillerData
 struct NavigationStackOption: Identifiable {
     let id: Int
     let title: String
-    let query: Database.Query
+    let query: Database.Scope
 }
 
 extension NavigationStackOption: Hashable {
@@ -33,18 +33,13 @@ struct TaskManagerApp: App {
     }
     
     @State var presentedOptions: [NavigationStackOption] = []
-    
-    let options: [NavigationStackOption] = [
-        .init(id: 0, title: "Active", query: .allActiveTasks),
-        .init(id: 1, title: "Completed", query: .completedTasks),
-        .init(id: 2, title: "Recently Deleted", query: .deletedTasks)
-    ]
         
     var body: some Scene {
         WindowGroup {
             if let database {
                 VStack(spacing: 0) {
-                    TaskContainerView(query: .allActiveTasks)
+                    ScopeListView()
+//                    TaskContainerView(query: .allActiveTasks)
                         .environment(\.database, database)
 //                    TaskContainerView(query: .allActiveTasks)
 //                        .environment(\.database, database)

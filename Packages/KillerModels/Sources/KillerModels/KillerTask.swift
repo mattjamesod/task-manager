@@ -1,7 +1,6 @@
 import Foundation
 
-/// Represents a task in a SwiftUI view
-public struct KillerTask: Sendable, Identifiable, Equatable, Clonable {
+public struct KillerTask: Sendable, Identifiable, Equatable, Clonable, Timestamped {
     public init(id: Int, body: String, createdAt: Date, updatedAt: Date, completedAt: Date? = nil, deletedAt: Date? = nil, parentID: Int? = nil) {
         self.id = id
         self.body = body
@@ -23,29 +22,14 @@ public struct KillerTask: Sendable, Identifiable, Equatable, Clonable {
     public var deletedAt: Date?
 }
 
-public protocol Clonable {
-    func cloned<T>(suchThat path: WritableKeyPath<Self, T>, is value: T) -> Self
-    func cloned<each T>(suchThat properties: repeat WritableKeyPath<Self, each T>, are value: repeat each T) -> Self
-}
-
-public extension Clonable {
-    func cloned<T>(suchThat path: WritableKeyPath<Self, T>, is value: T) -> Self {
-        var clone = self
-        clone[keyPath: path] = value
-        return clone
-    }
-    
-    func cloned<each T>(suchThat properties: repeat WritableKeyPath<Self, each T>, are values: repeat each T) -> Self {
-        var clone = self
-        for (property, value) in repeat (each properties, each values) {
-            clone[keyPath: property] = value
-        }
-        return clone
-    }
-}
-
 public protocol RecursiveData: Identifiable where ID == Int {
     var parentID: Int? { get }
 }
 
 extension KillerTask: RecursiveData { }
+
+public protocol Timestamped {
+    var createdAt: Date { get }
+    var updatedAt: Date { get set }
+    var deletedAt: Date? { get set }
+}

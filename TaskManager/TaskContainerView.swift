@@ -4,6 +4,46 @@ import AsyncAlgorithms
 import KillerModels
 import KillerData
 
+struct ScopeListView: View {
+    @State var selectedScope: Database.Scope? = nil
+    
+    let hardCodedScopes: [Database.Scope] = [
+        .allActiveTasks,
+        .completedTasks,
+        .deletedTasks
+    ]
+    
+    var body: some View {
+        if let selectedScope {
+            TaskContainerView(query: selectedScope)
+                .overlay(alignment: .topLeading, content: {
+                    Button("Back") {
+                        withAnimation {
+                            self.selectedScope = nil
+                        }
+                    }
+                    .padding(.leading, 16)
+                })
+        }
+        else {
+            CenteredScrollView {
+                VStack {
+                    ForEach(self.hardCodedScopes) { scope in
+                        Button {
+                            withAnimation {
+                                selectedScope = scope
+                            }
+                        } label: {
+                            Text(scope.name)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+    }
+}
+
 @Observable @MainActor
 final class Selection<T: Identifiable> {
     private(set) var ids: [T.ID] = []
@@ -51,9 +91,9 @@ struct TaskContainerView: View {
     let taskListMonitor: QueryMonitor<TaskListViewModel> = .init()
     let orphanMonitor: QueryMonitor<TaskListViewModel> = .init()
     
-    let query: Database.Query
+    let query: Database.Scope
     
-    init(query: Database.Query) {
+    init(query: Database.Scope) {
         self.query = query
     }
     
@@ -67,6 +107,11 @@ struct TaskContainerView: View {
                 .onChange(of: focusedTaskID) {
                     taskSelection.choose(id: focusedTaskID)
                 }
+        }
+        .safeAreaInset(edge: .top) {
+            Text(query.name)
+                .font(.title)
+                .fontWeight(.semibold)
         }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
@@ -108,7 +153,7 @@ struct TaskContainerView: View {
 
 extension EnvironmentValues {
     @Entry var taskListMonitor: QueryMonitor<TaskListViewModel>? = nil
-    @Entry var contextQuery: Database.Query? = nil
+    @Entry var contextQuery: Database.Scope? = nil
 }
 
 struct NewTaskEntryField: View {
