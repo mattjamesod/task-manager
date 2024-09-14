@@ -50,18 +50,24 @@ struct ScopeListView: View {
     @Binding var selectedScope: Database.Scope?
     
     var body: some View {
-        CenteredScrollView {
+        ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 ForEach(self.hardCodedScopes) { scope in
                     Button {
                         selectedScope = scope
                     } label: {
-                        Text(scope.name)
+                        Label(scope.name, systemImage: "chevron.right")
                     }
                 }
+                .fadeOutScrollTransition()
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16)
+        }
+        .safeAreaInset(edge: .top) {
+            Text("Scopes")
+                .font(.title)
+                .fontWeight(.semibold)
         }
     }
 }

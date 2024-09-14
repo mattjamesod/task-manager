@@ -78,8 +78,6 @@ struct TaskContainerView: View {
                     .fontWeight(.semibold)
             }
         }
-        .overlay(alignment: .topLeading, content: {
-        })
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
                 HStack {

@@ -12,7 +12,7 @@ extension Database {
         public var updatedAt: Date
         public var deletedAt: Date?
         
-        let insertArguments: [SQLite.Setter]
+        let insertArguments: [SQLite.Setter] 
         
         public func compose(with other: Scope?) -> Scope {
             guard let other else { return self }
