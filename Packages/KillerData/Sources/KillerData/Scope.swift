@@ -99,3 +99,9 @@ extension Database {
         )
     }
 }
+
+extension Database.Scope: Equatable {
+    public static func ==(lhs: Database.Scope, rhs: Database.Scope) -> Bool {
+        lhs.id == rhs.id
+    }
+}

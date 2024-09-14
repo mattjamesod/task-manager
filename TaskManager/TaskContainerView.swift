@@ -4,46 +4,6 @@ import AsyncAlgorithms
 import KillerModels
 import KillerData
 
-struct ScopeListView: View {
-    @State var selectedScope: Database.Scope? = nil
-    
-    let hardCodedScopes: [Database.Scope] = [
-        .allActiveTasks,
-        .completedTasks,
-        .deletedTasks
-    ]
-    
-    var body: some View {
-        if let selectedScope {
-            TaskContainerView(query: selectedScope)
-                .overlay(alignment: .topLeading, content: {
-                    Button("Back") {
-                        withAnimation {
-                            self.selectedScope = nil
-                        }
-                    }
-                    .padding(.leading, 16)
-                })
-        }
-        else {
-            CenteredScrollView {
-                VStack {
-                    ForEach(self.hardCodedScopes) { scope in
-                        Button {
-                            withAnimation {
-                                selectedScope = scope
-                            }
-                        } label: {
-                            Text(scope.name)
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity)
-            }
-        }
-    }
-}
-
 @Observable @MainActor
 final class Selection<T: Identifiable> {
     private(set) var ids: [T.ID] = []
@@ -86,6 +46,7 @@ extension EnvironmentValues {
 
 struct TaskContainerView: View {
     @Environment(\.database) var database
+    @Environment(\.selectedScope) var selectedScope
     @FocusState var focusedTaskID: KillerTask.ID?
         
     let taskListMonitor: QueryMonitor<TaskListViewModel> = .init()
@@ -109,10 +70,16 @@ struct TaskContainerView: View {
                 }
         }
         .safeAreaInset(edge: .top) {
-            Text(query.name)
-                .font(.title)
-                .fontWeight(.semibold)
+            ZStack {
+                DynamicBackButton()
+                
+                Text(query.name)
+                    .font(.title)
+                    .fontWeight(.semibold)
+            }
         }
+        .overlay(alignment: .topLeading, content: {
+        })
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
                 HStack {
