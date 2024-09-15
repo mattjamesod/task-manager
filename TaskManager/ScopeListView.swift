@@ -13,6 +13,7 @@ struct ScopeNavigation: View {
             if let selectedScope {
                 TaskContainerView(query: selectedScope)
                     .environment(\.selectedScope, $selectedScope)
+                    .id(selectedScope.id)
                     .transition(.move(edge: .trailing))
             }
             else {
