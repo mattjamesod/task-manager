@@ -3,6 +3,9 @@ import KillerData
 
 @main
 struct TaskManagerApp: App {
+    
+    @Environment(\.openWindow) var openWindow
+    
     let database: Database?
     
     init() {
@@ -34,6 +37,13 @@ struct TaskManagerApp: App {
             .toolbarBackground(.hidden, for: .windowToolbar)
             .containerBackground(.white, for: .window)
 #endif
+        }
+        .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About Scopes") {
+                    openWindow(id: "about")
+                }
+            }
         }
 //        .backgroundTask(.appRefresh("RECENTLY_DELETED_PURGE")) {
 //
