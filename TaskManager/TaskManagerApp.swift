@@ -17,20 +17,39 @@ struct TaskManagerApp: App {
         
     var body: some Scene {
         WindowGroup {
-            if let database {
-                VStack(spacing: 0) {
-                    ScopeNavigation()
-//                    TaskContainerView(query: .allActiveTasks)
-                        .environment(\.database, database)
+            Group {
+                if let database {
+                    VStack(spacing: 0) {
+                        ScopeNavigation()
+                        //                    TaskContainerView(query: .allActiveTasks)
+                            .environment(\.database, database)
+                    }
+                }
+                else {
+                    CatastrophicErrorView()
                 }
             }
-            else {
-                CatastrophicErrorView()
-            }
+            .toolbar(removing: .title)
+#if os(macOS)
+            .toolbarBackground(.hidden, for: .windowToolbar)
+            .containerBackground(.white, for: .window)
+#endif
         }
 //        .backgroundTask(.appRefresh("RECENTLY_DELETED_PURGE")) {
 //
 //        }
+        
+#if os(macOS)
+        Window("About Scopes", id: "about") {
+            Text("About")
+                .font(.largeTitle)
+                .padding(36)
+                .containerBackground(.thickMaterial, for: .window)
+        }
+        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
+        .restorationBehavior(.disabled)
+#endif
     }
 }
 

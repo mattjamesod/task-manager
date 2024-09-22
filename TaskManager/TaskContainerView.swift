@@ -214,20 +214,3 @@ struct KillerBorderedButtonStyle: ButtonStyle {
             .animation(.easeInOut, value: configuration.isPressed)
     }
 }
-
-// GeometryReader is needed here since the deafultScrollAnchor method behaves incorrectly
-// with the scrollTransition method, and thinks the top of teh scroll view is where the content
-// ends, not the top of the scroll view as determined by the border method...
-
-struct CenteredScrollView<Content: View>: View {
-    let contentBuilder: () -> Content
-    
-    var body: some View {
-        GeometryReader { proxy in
-            ScrollView {
-                contentBuilder()
-                    .frame(minHeight: proxy.size.height)
-            }
-        }
-    }
-}
