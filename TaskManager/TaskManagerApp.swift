@@ -24,7 +24,7 @@ struct TaskManagerApp: App {
                 if let database {
                     VStack(spacing: 0) {
                         ScopeNavigation()
-                        //                    TaskContainerView(query: .allActiveTasks)
+//                        TaskContainerView(query: .allActiveTasks)
                             .environment(\.database, database)
                     }
                 }
@@ -52,34 +52,19 @@ struct TaskManagerApp: App {
 #if os(macOS)
         Window("About Scopes", id: "about") {
             AboutView()
+                .fixedSize()
+                .containerBackground(.white, for: .window)
         }
-        .windowStyle(.plain)
+        .windowStyle(.hiddenTitleBar)
+        .windowLevel(.floating)
         .windowResizability(.contentSize)
-        .restorationBehavior(.disabled)
+//        .restorationBehavior(.disabled)
         .commandsRemoved()
-        .defaultWindowPlacement { content, context in
-            let displayBounds = context.defaultDisplay.bounds
-            let contentSize = content.sizeThatFits(.unspecified)
-            let position = CGPoint(
-              x: displayBounds.midX - (contentSize.width / 2),
-              y: displayBounds.midY - (contentSize.height / 2)
-            )
-            return WindowPlacement(position, size: contentSize)
-          }
 #endif
     }
 }
 
 struct AboutView: View {
-    @GestureState var isDraggingWindow = false
-
-    var dragWindow: some Gesture {
-      WindowDragGesture()
-        .updating($isDraggingWindow) { _, state, _ in
-          state = true
-        }
-    }
-
     private let appVersion: String? = Bundle.main.releaseVersionNumber
     private let buildNumber: String? = Bundle.main.buildVersionNumber
     
@@ -88,43 +73,40 @@ struct AboutView: View {
     }
     
     private var buildText: String {
-        buildNumber == nil ? "Unknown Build" : "Build \(buildNumber!)"
+        buildNumber == nil ? "Unknown Build" : "\(buildNumber!)"
     }
     
     var body: some View {
-        HStack {
+        HStack(spacing: 24) {
             Rectangle()
                 .foregroundStyle(.yellow)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: 24))
                 .aspectRatio(1, contentMode: .fit)
-                .frame(width: 64)
+                .frame(width: 128)
             
-            VStack(alignment: .leading) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("Scopes")
-                    .fontWeight(.bold)
-                Text(versionText)
-                Text(buildText)
+                    .font(.title)
+                    .fontWeight(.semibold)
+                VStack(alignment: .leading) {
+                    Text(versionText + " (\(buildText))")
+                        .foregroundStyle(.gray)
+                }
+                
+                 HStack(spacing: 0) {
+                     Text("© 2024 ")
+                     Link(destination: URL(string: "https://andhash39.com")!) {
+                         Text("Matthew James O'Donnell")
+                             .underline()
+                             .foregroundStyle(.blue)
+                     }
+                     .cursor(.pointingHand)
+                 }
+                 .foregroundStyle(.gray)
             }
         }
         .ignoresSafeArea()
-        .padding(24)
-        .background {
-            ZStack {
-                RoundedRectangle(cornerRadius: 9)
-                    .foregroundStyle(.thickMaterial)
-//                RoundedRectangle(cornerRadius: 9)
-//                    .strokeBorder(.gray, lineWidth: 0.3)
-            }
-        }
-        .gesture(dragWindow)
-        .opacity(isDraggingWindow ? 0.8 : 1)
-        .onChange(of: isDraggingWindow) {
-          if isDraggingWindow {
-            NSCursor.closedHand.push()
-          } else {
-            NSCursor.pop()
-          }
-        }
+        .padding(48)
     }
 }
 
@@ -151,6 +133,30 @@ struct CatastrophicErrorView: View {
                 .foregroundStyle(.gray)
             
             // TODO: add helpful links/info here
+        }
+    }
+}
+
+extension View {
+    public func cursor(_ cursor: NSCursor) -> some View {
+        if #available(macOS 13.0, *) {
+            return self.onContinuousHover { phase in
+                switch phase {
+                case .active(_):
+                    guard NSCursor.current != cursor else { return }
+                    cursor.push()
+                case .ended:
+                    NSCursor.pop()
+                }
+            }
+        } else {
+            return self.onHover { inside in
+                if inside {
+                    cursor.push()
+                } else {
+                    NSCursor.pop()
+                }
+            }
         }
     }
 }
