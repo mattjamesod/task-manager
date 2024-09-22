@@ -51,15 +51,89 @@ struct TaskManagerApp: App {
         
 #if os(macOS)
         Window("About Scopes", id: "about") {
-            Text("About")
-                .font(.largeTitle)
-                .padding(36)
-                .containerBackground(.thickMaterial, for: .window)
+            AboutView()
         }
-        .windowStyle(.hiddenTitleBar)
+        .windowStyle(.plain)
         .windowResizability(.contentSize)
         .restorationBehavior(.disabled)
+        .commandsRemoved()
+        .defaultWindowPlacement { content, context in
+            let displayBounds = context.defaultDisplay.bounds
+            let contentSize = content.sizeThatFits(.unspecified)
+            let position = CGPoint(
+              x: displayBounds.midX - (contentSize.width / 2),
+              y: displayBounds.midY - (contentSize.height / 2)
+            )
+            return WindowPlacement(position, size: contentSize)
+          }
 #endif
+    }
+}
+
+struct AboutView: View {
+    @GestureState var isDraggingWindow = false
+
+    var dragWindow: some Gesture {
+      WindowDragGesture()
+        .updating($isDraggingWindow) { _, state, _ in
+          state = true
+        }
+    }
+
+    private let appVersion: String? = Bundle.main.releaseVersionNumber
+    private let buildNumber: String? = Bundle.main.buildVersionNumber
+    
+    private var versionText: String {
+        appVersion == nil ? "Unknown Version" : "Version \(appVersion!)"
+    }
+    
+    private var buildText: String {
+        buildNumber == nil ? "Unknown Build" : "Build \(buildNumber!)"
+    }
+    
+    var body: some View {
+        HStack {
+            Rectangle()
+                .foregroundStyle(.yellow)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .aspectRatio(1, contentMode: .fit)
+                .frame(width: 64)
+            
+            VStack(alignment: .leading) {
+                Text("Scopes")
+                    .fontWeight(.bold)
+                Text(versionText)
+                Text(buildText)
+            }
+        }
+        .ignoresSafeArea()
+        .padding(24)
+        .background {
+            ZStack {
+                RoundedRectangle(cornerRadius: 9)
+                    .foregroundStyle(.thickMaterial)
+//                RoundedRectangle(cornerRadius: 9)
+//                    .strokeBorder(.gray, lineWidth: 0.3)
+            }
+        }
+        .gesture(dragWindow)
+        .opacity(isDraggingWindow ? 0.8 : 1)
+        .onChange(of: isDraggingWindow) {
+          if isDraggingWindow {
+            NSCursor.closedHand.push()
+          } else {
+            NSCursor.pop()
+          }
+        }
+    }
+}
+
+extension Bundle {
+    var releaseVersionNumber: String? {
+        return infoDictionary?["CFBundleShortVersionString"] as? String
+    }
+    var buildVersionNumber: String? {
+        return infoDictionary?["CFBundleVersion"] as? String
     }
 }
 
