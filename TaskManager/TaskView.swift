@@ -12,6 +12,7 @@ struct TaskView: View {
     var body: some View {
         HStack {
             CompleteButton(task: self.task)
+                .buttonStyle(KillerInlineButtonStyle())
             
             VStack(alignment: .leading) {
                 TaskBodyField(task: self.task)

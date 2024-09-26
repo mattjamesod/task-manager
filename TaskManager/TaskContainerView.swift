@@ -72,6 +72,7 @@ struct TaskContainerView: View {
         .safeAreaInset(edge: .top) {
             ZStack {
                 DynamicBackButton()
+                    .buttonStyle(KillerInlineButtonStyle())
                 
                 Text(query.name)
                     .font(.title)
@@ -127,7 +128,9 @@ struct NewTaskEntryField: View {
     var body: some View {
         HStack {
             TextField("New Task", text: $enteredText)
+                .textFieldStyle(.plain)
             NewTaskButton(enteredText: $enteredText)
+                .buttonStyle(KillerInlineButtonStyle())
         }
         .padding(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
         .background {
@@ -210,6 +213,15 @@ struct KillerBorderedButtonStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: 12)
                     .foregroundStyle(.ultraThinMaterial)
             }
+            .brightness(configuration.isPressed ? 0.1 : 0)
+            .animation(.easeInOut, value: configuration.isPressed)
+    }
+}
+
+struct KillerInlineButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(Color.accentColor)
             .brightness(configuration.isPressed ? 0.1 : 0)
             .animation(.easeInOut, value: configuration.isPressed)
     }

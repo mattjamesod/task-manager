@@ -17,6 +17,7 @@ struct TaskBodyField: View {
     
     var body: some View {
         DebouncedTextField("Task", text: $taskBody)
+            .textFieldStyle(.plain)
             .onLocalChange(of: $taskBody, source: task.body, setupFromSource: true) {
                 Task.detached {
                     await database?.update(task, \.body <- taskBody)
