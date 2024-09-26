@@ -6,22 +6,42 @@ extension EnvironmentValues {
 }
 
 struct ScopeNavigation: View {
-    @State var selectedScope: Database.Scope? = nil
+    @State var selection: Database.Scope?
     
     var body: some View {
-        Group {
-            if let selectedScope {
-                TaskContainerView(query: selectedScope)
-                    .environment(\.selectedScope, $selectedScope)
-                    .id(selectedScope.id)
-                    .transition(.move(edge: .trailing))
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 0) {
+                ScopeListView(selectedScope: self.$selection)
+                    .frame(width: 300)
+                
+                Divider().ignoresSafeArea()
+                
+                if let selection {
+                    TaskContainerView(query: selection)
+                        .environment(\.selectedScope, $selection)
+                        .id(selection.id)
+                        .frame(minWidth: 300)
+                }
+                else {
+                    Text("No list selected")
+                        .frame(minWidth: 300, maxWidth: .infinity)
+                }
             }
-            else {
-                ScopeListView(selectedScope: self.$selectedScope)
-                    .transition(.move(edge: .leading))
+            
+            Group {
+                if let selection {
+                    TaskContainerView(query: selection)
+                        .environment(\.selectedScope, $selection)
+                        .id(selection.id)
+                        .transition(.move(edge: .trailing))
+                }
+                else {
+                    ScopeListView(selectedScope: self.$selection)
+                        .transition(.move(edge: .leading))
+                }
             }
+            .animation(.snappy(duration: 0.3), value: self.selection)
         }
-        .animation(.snappy(duration: 0.3), value: self.selectedScope)
     }
 }
 

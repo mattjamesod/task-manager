@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		A003DE8B2C95711A005057A9 /* ScopeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003DE8A2C957116005057A9 /* ScopeListView.swift */; };
+		A031618C2CA53E450031B2E6 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A031618B2CA53E410031B2E6 /* AboutView.swift */; };
 		A03581E02C5771690078F59E /* TaskView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A03581DF2C5771650078F59E /* TaskView.swift */; };
 		A0456FDE2C2E0FD200DC2879 /* KillerData in Frameworks */ = {isa = PBXBuildFile; productRef = A0456FDD2C2E0FD200DC2879 /* KillerData */; };
 		A0456FE12C2EA10200DC2879 /* KillerModels in Frameworks */ = {isa = PBXBuildFile; productRef = A0456FE02C2EA10200DC2879 /* KillerModels */; };
@@ -49,6 +50,7 @@
 
 /* Begin PBXFileReference section */
 		A003DE8A2C957116005057A9 /* ScopeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScopeListView.swift; sourceTree = "<group>"; };
+		A031618B2CA53E410031B2E6 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		A03581DF2C5771650078F59E /* TaskView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskView.swift; sourceTree = "<group>"; };
 		A0456FE52C2FEAE900DC2879 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A055B5BA2C25E52200BCB5C2 /* TaskManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TaskManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -126,6 +128,7 @@
 			children = (
 				A0456FE52C2FEAE900DC2879 /* Info.plist */,
 				A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */,
+				A031618B2CA53E410031B2E6 /* AboutView.swift */,
 				A003DE8A2C957116005057A9 /* ScopeListView.swift */,
 				A055B5BF2C25E52200BCB5C2 /* TaskContainerView.swift */,
 				A06A95F82C4E3DB4004302DF /* TaskListView.swift */,
@@ -313,6 +316,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A055B5C02C25E52200BCB5C2 /* TaskContainerView.swift in Sources */,
+				A031618C2CA53E450031B2E6 /* AboutView.swift in Sources */,
 				A079C6BD2C8AEE020053BC4F /* TaskBodyField.swift in Sources */,
 				A055B5BE2C25E52200BCB5C2 /* TaskManagerApp.swift in Sources */,
 				A06A95F92C4E3DB8004302DF /* TaskListView.swift in Sources */,
