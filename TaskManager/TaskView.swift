@@ -3,16 +3,24 @@ import KillerModels
 import KillerData
 
 struct TaskView: View {
+    enum CompleteButtonPosition {
+        case leading
+        case trailing
+    }
+    
     @Environment(\.database) var database
     @Environment(\.contextQuery) var contextQuery
     @Environment(Selection<KillerTask>.self) var selection
         
     let task: KillerTask
+    let completeButtonPosition: CompleteButtonPosition = .leading
     
     var body: some View {
         HStack {
-            CompleteButton(task: self.task)
-                .buttonStyle(KillerInlineButtonStyle())
+            if completeButtonPosition == .leading {
+                CompleteButton(task: self.task)
+                    .buttonStyle(KillerInlineButtonStyle())
+            }
             
             VStack(alignment: .leading) {
                 TaskBodyField(task: self.task)
@@ -24,6 +32,11 @@ struct TaskView: View {
             }
             
             Spacer()
+            
+            if completeButtonPosition == .trailing {
+                CompleteButton(task: self.task)
+                    .buttonStyle(KillerInlineButtonStyle())
+            }
         }
         .padding(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
         .background {
@@ -52,14 +65,43 @@ struct CompleteButton: View {
     @Environment(\.database) var database
     @Environment(\.contextQuery) var query
     
+    @ScaledMetric var checkboxWidth: Double = 16
+    @State var isOn: Bool
+    
     let task: KillerTask
     
+    init(task: KillerTask) {
+        self.task = task
+        self._isOn = State(initialValue: task.completedAt != nil)
+    }
+    
     var body: some View {
-        Button.async {
-            await database?.update(task, recursive: true, context: self.query, \.completedAt <- Date.now)
-        } label: {
-            Label("Complete", systemImage: "checkmark")
-                .labelStyle(.iconOnly)
+        Toggle(isOn: $isOn) {
+            ZStack {
+                RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
+                    .strokeBorder(isOn ? .blue : .gray, lineWidth: 2)
+                
+                if isOn {
+                    RoundedRectangle(cornerRadius: (self.checkboxWidth / 3) - 4)
+                        .foregroundStyle(.blue)
+                        .padding(4)
+                }
+            }
+            .aspectRatio(1, contentMode: .fit)
+            .frame(width: self.checkboxWidth)
+            .contentShape(Rectangle())
+        }
+        .toggleStyle(.button)
+        .onChange(of: isOn) {
+            let isOn = self.isOn
+            Task.detached {
+                if isOn {
+                    await database?.update(task, recursive: true, context: self.query, \.completedAt <- Date.now)
+                }
+                else {
+                    await database?.update(task, recursive: true, context: self.query, \.completedAt <- nil)
+                }
+            }
         }
     }
 }

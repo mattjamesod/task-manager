@@ -40,8 +40,8 @@ struct ScopeNavigation: View {
                         .transition(.move(edge: .leading))
                 }
             }
-            .animation(.snappy(duration: 0.3), value: self.selection)
         }
+        .animation(.snappy(duration: 0.3), value: self.selection)
     }
 }
 
@@ -87,7 +87,6 @@ struct ScopeListView: View {
         }
         .safeAreaInset(edge: .top) {
             Text("Scopes")
-                .font(.title)
                 .fontWeight(.semibold)
         }
     }

@@ -75,9 +75,9 @@ struct TaskContainerView: View {
                     .buttonStyle(KillerInlineButtonStyle())
                 
                 Text(query.name)
-                    .font(.title)
                     .fontWeight(.semibold)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
