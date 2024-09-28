@@ -2,6 +2,16 @@ import SwiftUI
 import KillerModels
 import KillerData
 
+fileprivate extension EnvironmentValues {
+    @Entry var taskCompleteButtonPosition: TaskView.CompleteButtonPosition = .leading
+}
+
+extension View {
+    func taskCompleteButton(position: TaskView.CompleteButtonPosition) -> some View {
+        self.environment(\.taskCompleteButtonPosition, position)
+    }
+}
+
 struct TaskView: View {
     enum CompleteButtonPosition {
         case leading
@@ -10,10 +20,10 @@ struct TaskView: View {
     
     @Environment(\.database) var database
     @Environment(\.contextQuery) var contextQuery
+    @Environment(\.taskCompleteButtonPosition) var completeButtonPosition
     @Environment(Selection<KillerTask>.self) var selection
         
     let task: KillerTask
-    let completeButtonPosition: CompleteButtonPosition = .leading
     
     var body: some View {
         HStack {
@@ -65,8 +75,12 @@ struct CompleteButton: View {
     @Environment(\.database) var database
     @Environment(\.contextQuery) var query
     
-    @ScaledMetric var checkboxWidth: Double = 16
-    @State var isOn: Bool
+    @ScaledMetric private var checkboxWidth: Double = 16
+    @ScaledMetric private var checkboxBorderWidth: Double = 1.5
+    
+    @State private var isOn: Bool
+    
+    private let delay: Duration = .seconds(0.5)
     
     let task: KillerTask
     
@@ -79,10 +93,12 @@ struct CompleteButton: View {
         Toggle(isOn: $isOn) {
             ZStack {
                 RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
-                    .strokeBorder(isOn ? .blue : .gray, lineWidth: 2)
+                    .strokeBorder(isOn ? .blue : .gray, lineWidth: self.checkboxBorderWidth)
                 
                 if isOn {
-                    RoundedRectangle(cornerRadius: (self.checkboxWidth / 3) - 4)
+                    Image(systemName: "checkmark")
+                        .resizable()
+                        .fontWeight(.bold)
                         .foregroundStyle(.blue)
                         .padding(4)
                 }
@@ -95,6 +111,8 @@ struct CompleteButton: View {
         .onChange(of: isOn) {
             let isOn = self.isOn
             Task.detached {
+                try? await Task.sleep(for: self.delay)
+                
                 if isOn {
                     await database?.update(task, recursive: true, context: self.query, \.completedAt <- Date.now)
                 }

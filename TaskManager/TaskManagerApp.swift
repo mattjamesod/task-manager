@@ -38,6 +38,9 @@ struct TaskManagerApp: App {
             .containerBackground(.white, for: .window)
 #endif
         }
+//        .backgroundTask(.appRefresh("RECENTLY_DELETED_PURGE")) {
+//
+//        }
 #if os(macOS)
         .commands {
             CommandGroup(replacing: .appInfo) {
@@ -45,17 +48,39 @@ struct TaskManagerApp: App {
                     openWindow(id: "about")
                 }
             }
+            CommandGroup(replacing: .appSettings) {
+                Button("Settings...") {
+                    openWindow(id: "settings")
+                }
+                .keyboardShortcut(.init(","))
+            }
         }
 #endif
-//        .backgroundTask(.appRefresh("RECENTLY_DELETED_PURGE")) {
-//
-//        }
         
 #if os(macOS)
         AboutWindow()
+        SettingsWindow()
 #endif
     }
 }
+
+#if os(macOS)
+
+struct SettingsWindow: Scene {
+    var body: some Scene {
+        Window("Settinsg", id: "settings") {
+            Text("Settings")
+                .frame(width: 800, height: 800)
+                .fixedSize()
+                .containerBackground(.white, for: .window)
+        }
+        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
+        .restorationBehavior(.disabled)
+    }
+}
+
+#endif
 
 struct CatastrophicErrorView: View {
     var body: some View {

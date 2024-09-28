@@ -10,6 +10,9 @@ struct ScopeNavigation: View {
     
     var body: some View {
         ViewThatFits(in: .horizontal) {
+            
+            // widescreen desktop view
+            
             HStack(spacing: 0) {
                 ScopeListView(selectedScope: self.$selection)
                     .frame(width: 300)
@@ -27,6 +30,9 @@ struct ScopeNavigation: View {
                         .frame(minWidth: 300, maxWidth: .infinity)
                 }
             }
+            .taskCompleteButton(position: .leading)
+            
+            // compact / mobile view
             
             Group {
                 if let selection {
@@ -40,6 +46,7 @@ struct ScopeNavigation: View {
                         .transition(.move(edge: .leading))
                 }
             }
+            .taskCompleteButton(position: .trailing)
         }
         .animation(.snappy(duration: 0.3), value: self.selection)
     }
