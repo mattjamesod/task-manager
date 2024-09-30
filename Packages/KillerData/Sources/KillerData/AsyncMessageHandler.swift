@@ -10,46 +10,34 @@ public enum DatabaseMessage: Sendable {
     case recordDeleted(id: Int)
 }
 
-extension DatabaseMessage {
+public actor AsyncMessageHandler<T: Sendable>: CustomConsoleLogger {
     public struct Thread: Identifiable, Sendable {
-        public var id: UUID = .init()
-        public var events: AsyncChannel<DatabaseMessage>
+        nonisolated public let id: UUID = .init()
+        public var events: AsyncChannel<T>
         
         public init() {
             self.events = .init()
         }
     }
-}
-
-public protocol DatabaseMessageHandler: Actor {
-    typealias MessageThread = AsyncChannel<DatabaseMessage>
-    func subscribe() -> DatabaseMessage.Thread
-    func unsubscribe(_ thread: DatabaseMessage.Thread)
-    func send(_ message: DatabaseMessage) async
-}
-
-public actor KillerTaskMessageHandler: DatabaseMessageHandler, CustomConsoleLogger {
-    nonisolated public var logToConsole: Bool { false }
     
-    static public var instance: KillerTaskMessageHandler = .init()
-    private var messageThreads: [DatabaseMessage.Thread] = []
+    nonisolated public var logToConsole: Bool { true }
     
-    private init() { }
+    private var messageThreads: [Thread] = []
     
-    public func subscribe() -> DatabaseMessage.Thread {
-        let newThread = DatabaseMessage.Thread()
+    public func subscribe() -> Thread {
+        let newThread = Thread()
         self.messageThreads.append(newThread)
         self.log("New task subscription, total: \(self.messageThreads.count)")
         return newThread
     }
     
-    public func unsubscribe(_ thread: DatabaseMessage.Thread) {
+    public func unsubscribe(_ thread: Thread) {
         guard let index = self.messageThreads.firstIndex(where: { $0.id == thread.id }) else { return }
         self.messageThreads.remove(at: index)
         self.log("Removed task subscription, total: \(self.messageThreads.count)")
     }
     
-    public func send(_ message: DatabaseMessage) async {
+    public func send(_ message: T) async {
         self.log("Sending DB message about tasks to \(self.messageThreads.count) listeners: \(message)")
         for thread in messageThreads {
             await thread.events.send(message)

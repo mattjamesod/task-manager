@@ -80,7 +80,7 @@ struct CompleteButton: View {
     
     @State private var isOn: Bool
     
-    private let delay: Duration = .seconds(0.5)
+    private let delay: Duration = .zero//.seconds(0.5)
     
     let task: KillerTask
     

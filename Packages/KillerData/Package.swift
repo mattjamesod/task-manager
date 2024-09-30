@@ -26,6 +26,7 @@ let package = Package(
                 .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                 "KillerModels",
                 .product(name: "UtilExtensions", package: "AndHashUtilities"),
+                .product(name: "Logging", package: "AndHashUtilities"),
             ]
         ),
         .testTarget(

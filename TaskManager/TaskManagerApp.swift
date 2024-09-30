@@ -70,7 +70,7 @@ struct SettingsWindow: Scene {
     var body: some Scene {
         Window("Settinsg", id: "settings") {
             Text("Settings")
-                .frame(width: 800, height: 800)
+                .frame(width: 600, height: 400)
                 .fixedSize()
                 .containerBackground(.white, for: .window)
         }

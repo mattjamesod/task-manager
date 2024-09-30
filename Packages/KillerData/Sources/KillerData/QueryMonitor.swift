@@ -1,28 +1,36 @@
 @preconcurrency import SQLite
 import Foundation
+import Logging
 import KillerModels
 
-public actor QueryMonitor<StateContainer: SynchronisedStateContainer> {
+public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomConsoleLogger {
     public init() { }
     
-    private var dbMessageThread: DatabaseMessage.Thread? = nil
+    public let logToConsole: Bool = false
+    
+    private var dbMessageThread: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
     
     private var registeredStateContainers: [StateContainer] = []
     
     public func keepSynchronised(state: StateContainer) {
+        self.log("QM subscription started")
         registeredStateContainers.append(state)
     }
     
     public func deregister(state: StateContainer) {
+        self.log("QM subscription ended")
         guard let index = registeredStateContainers.firstIndex(where: { $0.id == state.id }) else { return }
         registeredStateContainers.remove(at: index)
     }
     
     public func beginMonitoring(_ query: Database.Scope, on database: Database) async {
+        self.log("started monitoring")
         dbMessageThread = await StateContainer.ModelType.messageHandler.subscribe()
         let syncEngine = SyncEngine<StateContainer.ModelType>(for: database, context: query)
         
         for await event in dbMessageThread!.events {
+            self.log("received event: \(event)")
+            
             switch event {
             case .recordChange(let id):
                 await push(syncResult: await syncEngine.sync(id))
@@ -37,10 +45,12 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer> {
     }
     
     public func beginMonitoring(_ query: Database.Scope, recursive: Bool, on database: Database) async where StateContainer.ModelType: RecursiveData {
+        self.log("started monitoring")
         dbMessageThread = await StateContainer.ModelType.messageHandler.subscribe()
         let syncEngine = SyncEngine<StateContainer.ModelType>(for: database, context: query)
         
         for await event in dbMessageThread!.events {
+            self.log("received event: \(event)")
             switch event {
             case .recordChange(let id):
                 for result in await syncEngine.sync(id) {
@@ -57,6 +67,7 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer> {
     }
     
     public func stopMonitoring() async {
+        self.log("stopped monitoring")
         guard let dbMessageThread else { return }
         await StateContainer.ModelType.messageHandler.unsubscribe(dbMessageThread)
         self.dbMessageThread = nil

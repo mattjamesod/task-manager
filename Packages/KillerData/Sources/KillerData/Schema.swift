@@ -13,7 +13,6 @@ public protocol ModelSchema {
 
 public protocol SchemaBacked: Sendable {
     associatedtype SchemaType: ModelSchema
-    associatedtype MessageHandlerType: DatabaseMessageHandler
     
     static func create(from databaseRecord: SQLite.Row) throws -> Self
     static func getSchemaExpression<T>(for keyPath: KeyPath<Self, T>) throws -> SQLite.Expression<T> where T: SQLite.Value
@@ -23,7 +22,7 @@ public protocol SchemaBacked: Sendable {
     var createdAt: Date { get }
     var updatedAt: Date { get }
     var deletedAt: Date? { get }
-    static var messageHandler: MessageHandlerType { get }
+    static var messageHandler: AsyncMessageHandler<DatabaseMessage> { get }
 }
 
 extension Database {
@@ -76,8 +75,7 @@ extension Database {
 
 extension KillerTask: SchemaBacked {
     public typealias SchemaType = Database.Schema.Tasks
-    
-    public static var messageHandler: KillerTaskMessageHandler { .instance }
+    public static let messageHandler: AsyncMessageHandler<DatabaseMessage> = .init()
     
     public static func create(from databaseRecord: SQLite.Row) throws -> KillerTask {
         do {
