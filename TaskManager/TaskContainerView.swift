@@ -47,10 +47,13 @@ extension EnvironmentValues {
 struct TaskContainerView: View {
     @Environment(\.database) var database
     @Environment(\.selectedScope) var selectedScope
+    @Environment(\.navigationSizeClass) var navigationSizeClass
     @FocusState var focusedTaskID: KillerTask.ID?
         
     let taskListMonitor: QueryMonitor<TaskListViewModel> = .init()
     let orphanMonitor: QueryMonitor<TaskListViewModel> = .init()
+    
+    @State var monitorTasks: [Task<Void, Never>] = []
     
     let query: Database.Scope
     
@@ -73,6 +76,7 @@ struct TaskContainerView: View {
             ZStack {
                 DynamicBackButton()
                     .buttonStyle(KillerInlineButtonStyle())
+                    .opacity(navigationSizeClass == .regular ? 0 : 1)
                 
                 Text(query.name)
                     .fontWeight(.semibold)
@@ -99,15 +103,29 @@ struct TaskContainerView: View {
         .environment(\.focusedTaskID, $focusedTaskID)
         .environment(\.contextQuery, self.query)
         .environment(taskSelection)
-        .task {
+        .onAppear {
             guard let database else { return }
-            await taskListMonitor.beginMonitoring(query, on: database)
-        }
-        .task {
-            guard let database else { return }
-            await orphanMonitor.beginMonitoring(query.compose(with: .orphaned), recursive: true, on: database)
+            
+            monitorTasks = [
+                Task.detached {
+                    await taskListMonitor.beginMonitoring(
+                        query,
+                        on: database
+                    )
+                },
+                Task.detached {
+                    await orphanMonitor.beginMonitoring(
+                        query.compose(with: .orphaned), recursive: true,
+                        on: database
+                    )
+                }
+            ]
         }
         .onDisappear {
+            monitorTasks.forEach {
+                $0.cancel()
+            }
+            
             Task.detached {
                 await taskListMonitor.stopMonitoring()
                 await orphanMonitor.stopMonitoring()

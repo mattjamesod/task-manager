@@ -1,9 +1,28 @@
 import SwiftUI
 import KillerData
 
+enum NavigationSizeClass {
+    case regular
+    case compact
+}
+
 extension EnvironmentValues {
     @Entry var selectedScope: Binding<Database.Scope?>?
+    @Entry var navigationSizeClass: NavigationSizeClass = .regular
 }
+
+// The problem:
+
+// starting the macOS app with more than one window, where one is mobile, the sync engine
+// just totally craps the bed
+
+// if they're all desktop, it's fine
+
+// chaning their size after boot is also fine
+
+// the issue must be with view that fits: the second listed view behaves weird
+
+// EVEN IF the second view is just text
 
 struct ScopeNavigation: View {
     @State var selection: Database.Scope?
@@ -31,6 +50,7 @@ struct ScopeNavigation: View {
                 }
             }
             .taskCompleteButton(position: .leading)
+            .environment(\.navigationSizeClass, .regular)
             
             // compact / mobile view
             
@@ -47,6 +67,7 @@ struct ScopeNavigation: View {
                 }
             }
             .taskCompleteButton(position: .trailing)
+            .environment(\.navigationSizeClass, .compact)
         }
         .animation(.snappy(duration: 0.3), value: self.selection)
     }
