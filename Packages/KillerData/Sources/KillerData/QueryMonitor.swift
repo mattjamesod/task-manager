@@ -8,8 +8,8 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
     
     public let logToConsole: Bool = false
     
+    private var monitorTask: Task<Void, Never>? = nil
     private var dbMessageThread: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
-    
     private var registeredStateContainers: [StateContainer] = []
     
     public func keepSynchronised(state: StateContainer) {
@@ -28,18 +28,20 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
         dbMessageThread = await StateContainer.ModelType.messageHandler.subscribe()
         let syncEngine = SyncEngine<StateContainer.ModelType>(for: database, context: query)
         
-        for await event in dbMessageThread!.events {
-            self.log("received event: \(event)")
-            
-            switch event {
-            case .recordChange(let id):
-                await push(syncResult: await syncEngine.sync(id))
-            case .recordsChanged(let ids):
-                for result in await syncEngine.sync(ids) {
-                    await push(syncResult: result)
+        self.monitorTask = Task {
+            for await event in dbMessageThread!.events {
+                self.log("received event: \(event)")
+                
+                switch event {
+                case .recordChange(let id):
+                    await push(syncResult: await syncEngine.sync(id))
+                case .recordsChanged(let ids):
+                    for result in await syncEngine.sync(ids) {
+                        await push(syncResult: result)
+                    }
+                case .recordDeleted(let id):
+                    await push(syncResult: .remove(id))
                 }
-            case .recordDeleted(let id):
-                await push(syncResult: .remove(id))
             }
         }
     }
@@ -49,19 +51,21 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
         dbMessageThread = await StateContainer.ModelType.messageHandler.subscribe()
         let syncEngine = SyncEngine<StateContainer.ModelType>(for: database, context: query)
         
-        for await event in dbMessageThread!.events {
-            self.log("received event: \(event)")
-            switch event {
-            case .recordChange(let id):
-                for result in await syncEngine.sync(id) {
-                    await push(syncResult: result)
+        self.monitorTask = Task {
+            for await event in dbMessageThread!.events {
+                self.log("received event: \(event)")
+                switch event {
+                case .recordChange(let id):
+                    for result in await syncEngine.sync(id) {
+                        await push(syncResult: result)
+                    }
+                case .recordsChanged(let ids):
+                    for result in await syncEngine.sync(ids) {
+                        await push(syncResult: result)
+                    }
+                case .recordDeleted(let id):
+                    await push(syncResult: .remove(id))
                 }
-            case .recordsChanged(let ids):
-                for result in await syncEngine.sync(ids) {
-                    await push(syncResult: result)
-                }
-            case .recordDeleted(let id):
-                await push(syncResult: .remove(id))
             }
         }
     }
@@ -69,6 +73,8 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
     public func stopMonitoring() async {
         self.log("stopped monitoring")
         guard let dbMessageThread else { return }
+        self.monitorTask?.cancel()
+        self.monitorTask = nil
         await StateContainer.ModelType.messageHandler.unsubscribe(dbMessageThread)
         self.dbMessageThread = nil
     }

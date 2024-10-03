@@ -53,8 +53,6 @@ struct TaskContainerView: View {
     let taskListMonitor: QueryMonitor<TaskListViewModel> = .init()
     let orphanMonitor: QueryMonitor<TaskListViewModel> = .init()
     
-    @State var monitorTasks: [Task<Void, Never>] = []
-    
     let query: Database.Scope
     
     init(query: Database.Scope) {
@@ -106,26 +104,19 @@ struct TaskContainerView: View {
         .onAppear {
             guard let database else { return }
             
-            monitorTasks = [
-                Task.detached {
-                    await taskListMonitor.beginMonitoring(
-                        query,
-                        on: database
-                    )
-                },
-                Task.detached {
-                    await orphanMonitor.beginMonitoring(
-                        query.compose(with: .orphaned), recursive: true,
-                        on: database
-                    )
-                }
-            ]
+            Task.detached {
+                await taskListMonitor.beginMonitoring(
+                    query,
+                    on: database
+                )
+                
+                await orphanMonitor.beginMonitoring(
+                    query.compose(with: .orphaned), recursive: true,
+                    on: database
+                )
+            }
         }
         .onDisappear {
-            monitorTasks.forEach {
-                $0.cancel()
-            }
-            
             Task.detached {
                 await taskListMonitor.stopMonitoring()
                 await orphanMonitor.stopMonitoring()
