@@ -34,8 +34,7 @@ struct ScopeNavigation: View {
             HStack(spacing: 0) {
                 ScopeListView(selectedScope: self.$selection)
                     .frame(width: 300)
-                
-                Divider().ignoresSafeArea()
+                    .background(.ultraThinMaterial, ignoresSafeAreaEdges: .all)
                 
                 if let selection {
                     TaskContainerView(query: selection)
