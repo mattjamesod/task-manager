@@ -105,3 +105,9 @@ extension Database.Scope: Equatable {
         lhs.id == rhs.id
     }
 }
+
+extension Database.Scope: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}

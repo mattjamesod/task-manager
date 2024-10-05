@@ -7,7 +7,7 @@ struct AboutWindow: Scene {
         Window("About Scopes", id: "about") {
             AboutView()
                 .fixedSize()
-                .containerBackground(.white, for: .window)
+                .mainWindowContent()
         }
         .windowStyle(.hiddenTitleBar)
         .windowLevel(.floating)

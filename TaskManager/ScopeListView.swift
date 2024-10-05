@@ -11,27 +11,26 @@ extension EnvironmentValues {
     @Entry var navigationSizeClass: NavigationSizeClass = .regular
 }
 
-// The problem:
-
-// starting the macOS app with more than one window, where one is mobile, the sync engine
-// just totally craps the bed
-
-// if they're all desktop, it's fine
-
-// chaning their size after boot is also fine
-
-// the issue must be with view that fits: the second listed view behaves weird
-
-// EVEN IF the second view is just text
-
 struct ScopeNavigation: View {
     @State var selection: Database.Scope?
     
     var body: some View {
         ViewThatFits(in: .horizontal) {
-            
-            // widescreen desktop view
-            
+            ScopeNavigation.Regular(selection: $selection)
+                .taskCompleteButton(position: .leading)
+                .environment(\.navigationSizeClass, .regular)
+                        
+            ScopeNavigation.Compact(selection: $selection)
+                .taskCompleteButton(position: .trailing)
+                .environment(\.navigationSizeClass, .compact)
+        }
+        .animation(.snappy(duration: 0.3), value: self.selection)
+    }
+    
+    struct Regular: View {
+        @Binding var selection: Database.Scope?
+        
+        var body: some View {
             HStack(spacing: 0) {
                 ScopeListView(selectedScope: self.$selection)
                     .frame(width: 300)
@@ -49,11 +48,13 @@ struct ScopeNavigation: View {
                         .frame(minWidth: 300, maxWidth: .infinity)
                 }
             }
-            .taskCompleteButton(position: .leading)
-            .environment(\.navigationSizeClass, .regular)
-            
-            // compact / mobile view
-            
+        }
+    }
+    
+    struct Compact: View {
+        @Binding var selection: Database.Scope?
+        
+        var body: some View {
             Group {
                 if let selection {
                     TaskContainerView(query: selection)
@@ -66,10 +67,7 @@ struct ScopeNavigation: View {
                         .transition(.move(edge: .leading))
                 }
             }
-            .taskCompleteButton(position: .trailing)
-            .environment(\.navigationSizeClass, .compact)
         }
-        .animation(.snappy(duration: 0.3), value: self.selection)
     }
 }
 
@@ -100,18 +98,33 @@ struct ScopeListView: View {
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 12) {
                 ForEach(self.hardCodedScopes) { scope in
-                    Button {
+                    GridRow {
+                        if scope.name == "Completed" {
+                            Image(systemName: "pencil")
+                                .gridColumnAlignment(.center)
+                                .fontWeight(.bold)
+                                .foregroundStyle(.gray)
+                        }
+                        else {
+                            Image(systemName: "list.bullet.indent")
+                                .gridColumnAlignment(.center)
+                                .fontWeight(.bold)
+                                .foregroundStyle(.gray)
+                        }
+                        
+                        Text(scope.name)
+                            .gridColumnAlignment(.leading)
+                    }
+                    .fadeOutScrollTransition()
+                    .onTapGesture {
                         selectedScope = scope
-                    } label: {
-                        Label(scope.name, systemImage: "chevron.right")
                     }
                 }
-                .fadeOutScrollTransition()
             }
+            .padding(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 16)
         }
         .safeAreaInset(edge: .top) {
             Text("Scopes")

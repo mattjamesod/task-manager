@@ -4,9 +4,6 @@ import UtilViews
 
 @main
 struct TaskManagerApp: App {
-    
-    @Environment(\.openWindow) var openWindow
-    
     let database: Database?
     
     init() {
@@ -20,26 +17,36 @@ struct TaskManagerApp: App {
     }
         
     var body: some Scene {
+        ScopeNavigationWindow(database: self.database)
+#if os(macOS)
+        AboutWindow()
+        SettingsWindow()
+#endif
+    }
+}
+
+
+struct ScopeNavigationWindow: Scene {
+    @Environment(\.openWindow) var openWindow
+    
+    let database: Database?
+    
+    var body: some Scene {
         WindowGroup {
             Group {
                 if let database {
-                    VStack(spacing: 0) {
-                        ScopeNavigation(selection: .allActiveTasks)
-                            .environment(\.database, database)
-                    }
+                    ScopeNavigation(selection: .allActiveTasks)
+                        .environment(\.database, database)
+                        .mainWindowContent()
                 }
                 else {
                     CatastrophicErrorView()
+                        .mainWindowContent()
                 }
             }
-            .toolbar(removing: .title)
-#if os(macOS)
-            .toolbarBackground(.hidden, for: .windowToolbar)
-            .containerBackground(.white, for: .window)
-#endif
         }
 //        .backgroundTask(.appRefresh("RECENTLY_DELETED_PURGE")) {
-//
+//            
 //        }
 #if os(macOS)
         .commands {
@@ -56,11 +63,6 @@ struct TaskManagerApp: App {
             }
         }
 #endif
-        
-#if os(macOS)
-        AboutWindow()
-        SettingsWindow()
-#endif
     }
 }
 
@@ -72,7 +74,7 @@ struct SettingsWindow: Scene {
             Text("Settings")
                 .frame(width: 600, height: 400)
                 .fixedSize()
-                .containerBackground(.white, for: .window)
+                .mainWindowContent()
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
@@ -97,5 +99,30 @@ struct CatastrophicErrorView: View {
             
             // TODO: add helpful links/info here
         }
+    }
+}
+
+struct MainWindowContentViewModifier: ViewModifier {
+    @Environment(\.colorScheme) var colorScheme
+    
+    func body(content: Content) -> some View {
+        content
+            .preferredColorScheme(TestingOverrides.colorScheme)
+            .toolbar(removing: .title)
+#if os(macOS)
+            .toolbarBackground(.hidden, for: .windowToolbar)
+            .containerBackground(colorScheme == .dark ? Color(white: 0.1) : Color.white, for: .window)
+#endif
+    }
+}
+
+enum TestingOverrides {
+    static let colorScheme: ColorScheme? = nil
+}
+
+extension View {
+    func mainWindowContent() -> some View {
+        self
+            .modifier(MainWindowContentViewModifier())
     }
 }
