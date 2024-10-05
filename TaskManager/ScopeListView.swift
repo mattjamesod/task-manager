@@ -30,21 +30,37 @@ struct ScopeNavigation: View {
     struct Regular: View {
         @Binding var selection: Database.Scope?
         
+        @State var scopeListWidth: Double = 300
+        
         var body: some View {
             HStack(spacing: 0) {
                 ScopeListView(selectedScope: self.$selection)
-                    .frame(width: 300)
+                    .frame(width: self.scopeListWidth)
                     .background(.ultraThinMaterial, ignoresSafeAreaEdges: .all)
+                
+                Rectangle()
+                    .frame(width: 0)
+                    .overlay {
+                        Rectangle()
+                            .frame(width: 15)
+                            .opacity(0)
+                            .ignoresSafeArea()
+                            .cursor(.columnResize)
+                            .gesture(DragGesture().onChanged { gestureValue in
+                                scopeListWidth += gestureValue.translation.width
+                            })
+                    }
+                    .zIndex(1)
                 
                 if let selection {
                     TaskContainerView(query: selection)
                         .environment(\.selectedScope, $selection)
                         .id(selection.id)
-                        .frame(minWidth: 300)
+                        .frame(minWidth: 400)
                 }
                 else {
                     Text("No list selected")
-                        .frame(minWidth: 300, maxWidth: .infinity)
+                        .frame(minWidth: 400, maxWidth: .infinity)
                 }
             }
         }

@@ -90,7 +90,10 @@ struct TaskListView: View {
         .task {
             guard let database else { return }
             
-            viewModel.tasks = await database.fetch(KillerTask.self, context: contextQuery?.compose(with: self.detailQuery))
+            viewModel.tasks = await database.fetch(
+                KillerTask.self,
+                context: contextQuery?.compose(with: self.detailQuery)
+            )
         }
         .task {
             let vm = viewModel
