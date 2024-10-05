@@ -98,37 +98,47 @@ struct ScopeListView: View {
     
     var body: some View {
         ScrollView {
-            Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 12) {
+            VStack(alignment: .leading, spacing: 0) {
                 ForEach(self.hardCodedScopes) { scope in
-                    GridRow {
-                        if scope.name == "Completed" {
-                            Image(systemName: "pencil")
-                                .gridColumnAlignment(.center)
-                                .fontWeight(.bold)
-                                .foregroundStyle(.gray)
-                        }
-                        else {
-                            Image(systemName: "list.bullet.indent")
-                                .gridColumnAlignment(.center)
-                                .fontWeight(.bold)
-                                .foregroundStyle(.gray)
-                        }
-                        
-                        Text(scope.name)
-                            .gridColumnAlignment(.leading)
-                    }
-                    .fadeOutScrollTransition()
-                    .onTapGesture {
+                    Button {
                         selectedScope = scope
+                    } label: {
+                        Label(scope.name, systemImage: scope.name == "Completed" ? "pencil" : "list.bullet.indent")
+                            .labelStyle(ScopeListLabelStyle(selected: scope == selectedScope))
                     }
                 }
             }
-            .padding(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .buttonStyle(.plain)
         }
         .safeAreaInset(edge: .top) {
             Text("Scopes")
                 .fontWeight(.semibold)
         }
+    }
+}
+
+struct ScopeListLabelStyle: LabelStyle {
+    @ScaledMetric var iconWidth: Double = 12
+    let selected: Bool
+    
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: self.iconWidth) {
+            configuration.icon
+                .fontWeight(.bold)
+                .foregroundStyle(.gray)
+                .frame(width: self.iconWidth, alignment: .center)
+            
+            configuration.title
+        }
+        .fadeOutScrollTransition()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+        .background {
+            RoundedRectangle(cornerRadius: 8)
+                .foregroundStyle(.thickMaterial)
+                .opacity(selected ? 1 : 0)
+        }
+        .padding(.horizontal, 12)
+        .contentShape(Rectangle())
     }
 }
