@@ -94,6 +94,7 @@ struct ScopeListView: View {
         .deletedTasks
     ]
     
+    @Namespace var namespace
     @Binding var selectedScope: Database.Scope?
     
     var body: some View {
@@ -104,12 +105,16 @@ struct ScopeListView: View {
                         selectedScope = scope
                     } label: {
                         Label(scope.name, systemImage: scope.name == "Completed" ? "pencil" : "list.bullet.indent")
-                            .labelStyle(ScopeListLabelStyle(selected: scope == selectedScope))
+                            .labelStyle(ScopeListLabelStyle(
+                                selected: scope == selectedScope,
+                                animationNamespace: namespace
+                            ))
                     }
                 }
             }
             .buttonStyle(.plain)
         }
+        .safeAreaPadding(.top, 12)
         .safeAreaInset(edge: .top) {
             Text("Scopes")
                 .fontWeight(.semibold)
@@ -119,7 +124,9 @@ struct ScopeListView: View {
 
 struct ScopeListLabelStyle: LabelStyle {
     @ScaledMetric var iconWidth: Double = 12
+    
     let selected: Bool
+    let animationNamespace: Namespace.ID
     
     func makeBody(configuration: Configuration) -> some View {
         HStack(spacing: self.iconWidth) {
@@ -134,11 +141,14 @@ struct ScopeListLabelStyle: LabelStyle {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
         .background {
-            RoundedRectangle(cornerRadius: 8)
-                .foregroundStyle(.thickMaterial)
-                .opacity(selected ? 1 : 0)
+            if selected {
+                RoundedRectangle(cornerRadius: 8)
+                    .foregroundStyle(.thickMaterial)
+                    .matchedGeometryEffect(id: "ScopeListViewSelected", in: animationNamespace)
+            }
         }
         .padding(.horizontal, 12)
         .contentShape(Rectangle())
+        .animation(.interactiveSpring(duration: 0.1), value: self.selected)
     }
 }

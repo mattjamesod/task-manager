@@ -143,11 +143,7 @@ struct AddSubtaskButton: View {
 extension View {
     func fadeOutScrollTransition() -> some View {
         self.scrollTransition(axis: .vertical) { content, phase in
-            #if(os(iOS))
             let phases: [ScrollTransitionPhase] = [.topLeading, .bottomTrailing]
-            #else
-            let phases: [ScrollTransitionPhase] = [.topLeading]
-            #endif
             
             let applies = phases.contains(phase)
             

@@ -70,6 +70,7 @@ struct TaskContainerView: View {
                     taskSelection.choose(id: focusedTaskID)
                 }
         }
+        .safeAreaPadding(.top, 12)
         .safeAreaInset(edge: .top) {
             ZStack {
                 DynamicBackButton()
