@@ -28,40 +28,43 @@ struct ScopeNavigation: View {
     }
     
     struct Regular: View {
+        private static var defaultScopeListWidth: Double = 330
+        
         @Binding var selection: Database.Scope?
         
-        @State var scopeListWidth: Double = 300
+        @State var scopeListVisibility: Bool = true
+        @State var scopeListWidth: Double = Self.defaultScopeListWidth
+        
+        // this calculation means it's impossible to switch to compact view
+        // through resizing the scope list view column
+        private var taskContainerMinWidth: Double {
+            400 + Self.defaultScopeListWidth - scopeListWidth
+        }
         
         var body: some View {
             HStack(spacing: 0) {
-                ScopeListView(selectedScope: self.$selection)
-                    .frame(width: self.scopeListWidth)
-                    .background(.ultraThinMaterial, ignoresSafeAreaEdges: .all)
+                if scopeListVisibility {
+                    ScopeListView(selectedScope: self.$selection)
+                        .frame(width: self.scopeListWidth)
+                        .background(.ultraThinMaterial, ignoresSafeAreaEdges: .all)
+                    
+#if os(macOS)
+                    ColumnResizeHandle(visibility: $scopeListVisibility, width: $scopeListWidth)
+#endif
+                }
                 
-                Rectangle()
-                    .frame(width: 0)
-                    .overlay {
-                        Rectangle()
-                            .frame(width: 15)
-                            .opacity(0)
-                            .ignoresSafeArea()
-                            .cursor(.columnResize)
-                            .gesture(DragGesture().onChanged { gestureValue in
-                                scopeListWidth += gestureValue.translation.width
-                            })
+                Group {
+                    if let selection {
+                        TaskContainerView(query: selection)
+                            .environment(\.selectedScope, $selection)
+                            .id(selection.id)
                     }
-                    .zIndex(1)
-                
-                if let selection {
-                    TaskContainerView(query: selection)
-                        .environment(\.selectedScope, $selection)
-                        .id(selection.id)
-                        .frame(minWidth: 400)
+                    else {
+                        Text("No list selected")
+                            .frame(maxWidth: .infinity)
+                    }
                 }
-                else {
-                    Text("No list selected")
-                        .frame(minWidth: 400, maxWidth: .infinity)
-                }
+                .frame(minWidth: self.taskContainerMinWidth)
             }
         }
     }
@@ -85,6 +88,41 @@ struct ScopeNavigation: View {
         }
     }
 }
+
+#if os(macOS)
+
+struct ColumnResizeHandle: View {
+    @Binding var visibility: Bool
+    @Binding var width: Double
+    
+    let minimum: Double = 150
+    let maximum: Double = 400
+    
+    var body: some View {
+        Rectangle()
+            .frame(width: 0)
+            .overlay {
+                Rectangle()
+                    .frame(width: 15)
+                    .opacity(0)
+                    .ignoresSafeArea()
+                    .cursor(.columnResize)
+                    .gesture(DragGesture().onChanged { gestureValue in
+                        guard !(width >= maximum && gestureValue.translation.width > 0) else { return }
+                        
+                        if (width + gestureValue.translation.width) <= minimum {
+//                            visibility = false
+                        }
+                        else {
+                            width += gestureValue.translation.width
+                        }
+                    })
+            }
+            .zIndex(1)
+    }
+}
+
+#endif
 
 struct DynamicBackButton: View {
     @Environment(\.selectedScope) var selectedScope
