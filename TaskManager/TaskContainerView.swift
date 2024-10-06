@@ -133,7 +133,7 @@ extension EnvironmentValues {
 }
 
 struct NewTaskEntryField: View {
-    @State var enteredText: String = ""
+    @SceneStorage("newTaskEntryText") var enteredText: String = ""
     
     var body: some View {
         HStack {

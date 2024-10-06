@@ -32,8 +32,8 @@ struct ScopeNavigation: View {
         
         @Binding var selection: Database.Scope?
         
-        @State var scopeListVisibility: Bool = true
-        @State var scopeListWidth: Double = Self.defaultScopeListWidth
+        @SceneStorage("scopeListVisibility") var scopeListVisibility: Bool = true
+        @SceneStorage("scopeListWidth") var scopeListWidth: Double = Self.defaultScopeListWidth
         
         // this calculation means it's impossible to switch to compact view
         // through resizing the scope list view column
