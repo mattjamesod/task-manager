@@ -80,7 +80,7 @@ struct CompleteButton: View {
     
     @State private var isOn: Bool
     
-    private let delay: Duration = .zero//.seconds(0.5)
+    private let delay: Duration = .seconds(0.3)
     
     let task: KillerTask
     
@@ -149,8 +149,12 @@ extension View {
             
             return content
                 .opacity(applies ? 0.5 : 1.0)
-                .blur(radius: applies ? 1 : 0)
-                .scaleEffect(applies ? 0.9 : 1, anchor: .center)
+                .blur(radius: applies ? 2 : 0)
+                .scaleEffect(
+                    x: applies ? 0.98 : 1,
+                    y: applies ? 1.2 : 1,
+                    anchor: phase == .topLeading ? .bottom : .top
+                )
         }
     }
 }

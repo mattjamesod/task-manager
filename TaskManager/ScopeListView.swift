@@ -46,13 +46,13 @@ struct ScopeNavigation: View {
                 if scopeListVisibility {
                     HStack(spacing: 0) {
                         ScopeListView(selectedScope: self.$selection)
-                            .frame(width: self.scopeListWidth)
                             .background(.ultraThinMaterial, ignoresSafeAreaEdges: .all)
+                            .frame(width: self.scopeListWidth)
 #if os(macOS)
                         ColumnResizeHandle(visible: $scopeListVisibility, width: $scopeListWidth)
 #endif
                     }
-                    .transition(.move(edge: .leading).combined(with: .opacity))
+                    .transition(.move(edge: .leading))
                 }
                 
                 Group {
@@ -68,6 +68,7 @@ struct ScopeNavigation: View {
                                 } label: {
                                     Label("Toggle Scopes Column", systemImage: "sidebar.left")
                                         .labelStyle(.iconOnly)
+                                        .font(.title3)
                                         .padding(.leading, 16)
                                 }
                                 .buttonStyle(KillerInlineButtonStyle())
@@ -120,14 +121,14 @@ struct ColumnResizeHandle: View {
             .pointerStyle(.columnResize)
             .gesture(DragGesture()
                 .onChanged { gestureValue in
-                    if !(width >= maximum && gestureValue.translation.width > 0) {
-                        width += gestureValue.translation.width
+                    if width < maximum || gestureValue.translation.width <= 0 {
+                        width = max(width + gestureValue.translation.width, minimum)
                     }
                 }
                 .onEnded { gestureValue in
                     if (width + gestureValue.translation.width) <= minimum {
                         withAnimation {
-//                            visible = false
+                            visible = false
                         }
                     }
                 }
@@ -197,7 +198,7 @@ struct ScopeListLabelStyle: LabelStyle {
     let animationNamespace: Namespace.ID
     
     func makeBody(configuration: Configuration) -> some View {
-        HStack(spacing: self.iconWidth) {
+        HStack(spacing: self.iconWidth * 1.5) {
             configuration.icon
                 .fontWeight(.bold)
                 .foregroundStyle(.gray)
