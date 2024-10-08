@@ -56,7 +56,7 @@ struct AboutView: View {
                              .foregroundStyle(.blue)
                      }
                      #if os(macOS)
-                     .cursor(.pointingHand)
+                     .pointerStyle(.link)
                      #endif
                  }
                  .foregroundStyle(.gray)

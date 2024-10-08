@@ -44,13 +44,15 @@ struct ScopeNavigation: View {
         var body: some View {
             HStack(spacing: 0) {
                 if scopeListVisibility {
-                    ScopeListView(selectedScope: self.$selection)
-                        .frame(width: self.scopeListWidth)
-                        .background(.ultraThinMaterial, ignoresSafeAreaEdges: .all)
-                    
+                    HStack(spacing: 0) {
+                        ScopeListView(selectedScope: self.$selection)
+                            .frame(width: self.scopeListWidth)
+                            .background(.ultraThinMaterial, ignoresSafeAreaEdges: .all)
 #if os(macOS)
-                    ColumnResizeHandle(visibility: $scopeListVisibility, width: $scopeListWidth)
+                        ColumnResizeHandle(visible: $scopeListVisibility, width: $scopeListWidth)
 #endif
+                    }
+                    .transition(.move(edge: .leading).combined(with: .opacity))
                 }
                 
                 Group {
@@ -58,6 +60,18 @@ struct ScopeNavigation: View {
                         TaskContainerView(query: selection)
                             .environment(\.selectedScope, $selection)
                             .id(selection.id)
+                            .overlay(alignment: .topLeading) {
+                                Button {
+                                    withAnimation {
+                                        self.scopeListVisibility.toggle()
+                                    }
+                                } label: {
+                                    Label("Toggle Scopes Column", systemImage: "sidebar.left")
+                                        .labelStyle(.iconOnly)
+                                        .padding(.leading, 16)
+                                }
+                                .buttonStyle(KillerInlineButtonStyle())
+                            }
                     }
                     else {
                         Text("No list selected")
@@ -92,7 +106,7 @@ struct ScopeNavigation: View {
 #if os(macOS)
 
 struct ColumnResizeHandle: View {
-    @Binding var visibility: Bool
+    @Binding var visible: Bool
     @Binding var width: Double
     
     let minimum: Double = 150
@@ -100,25 +114,26 @@ struct ColumnResizeHandle: View {
     
     var body: some View {
         Rectangle()
-            .frame(width: 0)
-            .overlay {
-                Rectangle()
-                    .frame(width: 15)
-                    .opacity(0)
-                    .ignoresSafeArea()
-                    .cursor(.columnResize)
-                    .gesture(DragGesture().onChanged { gestureValue in
-                        guard !(width >= maximum && gestureValue.translation.width > 0) else { return }
-                        
-                        if (width + gestureValue.translation.width) <= minimum {
-//                            visibility = false
+            .frame(width: 15)
+            .opacity(0)
+            .contentShape(Rectangle())
+            .pointerStyle(.columnResize)
+            .gesture(DragGesture()
+                .onChanged { gestureValue in
+                    if !(width >= maximum && gestureValue.translation.width > 0) {
+                        width += gestureValue.translation.width
+                    }
+                }
+                .onEnded { gestureValue in
+                    if (width + gestureValue.translation.width) <= minimum {
+                        withAnimation {
+//                            visible = false
                         }
-                        else {
-                            width += gestureValue.translation.width
-                        }
-                    })
-            }
-            .zIndex(1)
+                    }
+                }
+            )
+            .offset(x: -7.5)
+            .ignoresSafeArea()
     }
 }
 
@@ -189,6 +204,7 @@ struct ScopeListLabelStyle: LabelStyle {
                 .frame(width: self.iconWidth, alignment: .center)
             
             configuration.title
+                .lineLimit(1)
         }
         .fadeOutScrollTransition()
         .frame(maxWidth: .infinity, alignment: .leading)
