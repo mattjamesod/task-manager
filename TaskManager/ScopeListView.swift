@@ -24,7 +24,7 @@ struct ScopeNavigation: View {
                 .taskCompleteButton(position: .trailing)
                 .environment(\.navigationSizeClass, .compact)
         }
-        .animation(.snappy(duration: 0.3), value: self.selection)
+        .geometryGroup()
     }
     
     struct Regular: View {
@@ -88,7 +88,11 @@ struct ScopeNavigation: View {
         @Binding var selection: Database.Scope?
         
         var body: some View {
-            Group {
+            // Using a Group here while inside ViewThatFits causes the transition to not
+            // fire at all, so we use HStack with a single child.
+            //
+            // No, I have no idea why. :shrg
+            HStack {
                 if let selection {
                     TaskContainerView(query: selection)
                         .environment(\.selectedScope, $selection)
@@ -100,6 +104,7 @@ struct ScopeNavigation: View {
                         .transition(.move(edge: .leading))
                 }
             }
+            .animation(.interactiveSpring(duration: 0.2), value: selection)
         }
     }
 }
