@@ -64,7 +64,7 @@ struct TaskContainerView: View {
     var body: some View {
         CenteredScrollView {
             TaskListView(.orphaned, monitor: orphanMonitor)
-                .padding(.horizontal, 16)
+                .containerPadding(axis: .horizontal)
                 .environment(\.taskListMonitor, self.taskListMonitor)
                 .onChange(of: focusedTaskID) {
                     taskSelection.choose(id: focusedTaskID)
@@ -96,7 +96,7 @@ struct TaskContainerView: View {
                 
                 NewTaskEntryField()
             }
-            .padding(.horizontal, 16)
+            .containerPadding(axis: .horizontal)
             .padding(.bottom, 8)
         }
         .environment(\.focusedTaskID, $focusedTaskID)
@@ -142,7 +142,7 @@ struct NewTaskEntryField: View {
             NewTaskButton(enteredText: $enteredText)
                 .buttonStyle(KillerInlineButtonStyle())
         }
-        .padding(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+        .containerPadding()
         .background {
             RoundedRectangle(cornerRadius: 12)
                 .foregroundStyle(.ultraThinMaterial)
@@ -218,7 +218,7 @@ struct KillerBorderedButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundStyle(Color.accentColor)
-            .padding(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+            .containerPadding()
             .background {
                 RoundedRectangle(cornerRadius: 12)
                     .foregroundStyle(.ultraThinMaterial)

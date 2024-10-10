@@ -48,7 +48,7 @@ struct TaskView: View {
                     .buttonStyle(KillerInlineButtonStyle())
             }
         }
-        .padding(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+        .containerPadding()
         .background {
             if selection.ids.contains(task.id) {
                 RoundedRectangle(cornerRadius: 12)

@@ -1,14 +1,8 @@
 import SwiftUI
 import KillerData
 
-enum NavigationSizeClass {
-    case regular
-    case compact
-}
-
 extension EnvironmentValues {
     @Entry var selectedScope: Binding<Database.Scope?>?
-    @Entry var navigationSizeClass: NavigationSizeClass = .regular
 }
 
 struct ScopeNavigation: View {
@@ -197,13 +191,14 @@ struct ScopeListView: View {
 }
 
 struct ScopeListLabelStyle: LabelStyle {
-    @ScaledMetric var iconWidth: Double = 12
+    @ScaledMetric private var iconWidth: Double = 12
+    @ScaledMetric private var spacing: Double = 18
     
     let selected: Bool
     let animationNamespace: Namespace.ID
     
     func makeBody(configuration: Configuration) -> some View {
-        HStack(spacing: self.iconWidth * 1.5) {
+        HStack(spacing: self.spacing) {
             configuration.icon
                 .fontWeight(.bold)
                 .foregroundStyle(.gray)
@@ -214,7 +209,7 @@ struct ScopeListLabelStyle: LabelStyle {
         }
         .fadeOutScrollTransition()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+        .containerPadding()
         .background {
             if selected {
                 RoundedRectangle(cornerRadius: 8)
@@ -222,7 +217,7 @@ struct ScopeListLabelStyle: LabelStyle {
                     .matchedGeometryEffect(id: "ScopeListViewSelected", in: animationNamespace)
             }
         }
-        .padding(.horizontal, 12)
+        .containerPadding(axis: .horizontal)
         .contentShape(Rectangle())
         .animation(.interactiveSpring(duration: 0.1), value: self.selected)
     }
