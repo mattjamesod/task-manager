@@ -213,26 +213,3 @@ extension Button {
         Button(action: { Task.detached { await action() }}, label: label)
     }
 }
-
-struct KillerBorderedButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .foregroundStyle(Color.accentColor)
-            .containerPadding()
-            .background {
-                RoundedRectangle(cornerRadius: 12)
-                    .foregroundStyle(.ultraThinMaterial)
-            }
-            .brightness(configuration.isPressed ? 0.1 : 0)
-            .animation(.easeInOut, value: configuration.isPressed)
-    }
-}
-
-struct KillerInlineButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .foregroundStyle(Color.accentColor)
-            .brightness(configuration.isPressed ? 0.1 : 0)
-            .animation(.easeInOut, value: configuration.isPressed)
-    }
-}

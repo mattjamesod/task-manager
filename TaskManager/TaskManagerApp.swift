@@ -117,7 +117,7 @@ struct MainWindowContentViewModifier: ViewModifier {
 }
 
 enum TestingOverrides {
-    static let colorScheme: ColorScheme? = nil
+    static let colorScheme: ColorScheme? = .dark
 }
 
 extension View {

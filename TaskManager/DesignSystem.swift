@@ -17,7 +17,7 @@ struct ContainerPaddingViewModifier: ViewModifier {
     
     private var padding: EdgeInsets {
         switch (axis, navigationSizeClass) {
-        case (nil, .regular): EdgeInsets(vertical: 8, horizontal: 12)
+            case (nil, .regular): EdgeInsets(vertical: 8, horizontal: 12)
             case (nil, .compact): EdgeInsets(vertical: 10, horizontal: 16)
             case (.horizontal, .regular): EdgeInsets(vertical: 0, horizontal: 12)
             case (.horizontal, .compact): EdgeInsets(vertical: 0, horizontal: 16)
@@ -35,5 +35,28 @@ struct ContainerPaddingViewModifier: ViewModifier {
 extension View {
     func containerPadding(axis: Axis? = nil) -> some View {
         self.modifier(ContainerPaddingViewModifier(axis: axis))
+    }
+}
+
+struct KillerBorderedButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(Color.accentColor)
+            .containerPadding()
+            .background {
+                RoundedRectangle(cornerRadius: 12)
+                    .foregroundStyle(.ultraThinMaterial)
+            }
+            .brightness(configuration.isPressed ? 0.1 : 0)
+            .animation(.easeInOut, value: configuration.isPressed)
+    }
+}
+
+struct KillerInlineButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(Color.accentColor)
+            .brightness(configuration.isPressed ? 0.1 : 0)
+            .animation(.easeInOut, value: configuration.isPressed)
     }
 }

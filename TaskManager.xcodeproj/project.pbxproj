@@ -56,7 +56,7 @@
 		A031618D2CA93F070031B2E6 /* KillerSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KillerSettings.swift; sourceTree = "<group>"; };
 		A03581DF2C5771650078F59E /* TaskView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskView.swift; sourceTree = "<group>"; };
 		A04126292CB7E5FA001C5B8D /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
-		A0456FE52C2FEAE900DC2879 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		A0456FE52C2FEAE900DC2879 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A055B5BA2C25E52200BCB5C2 /* TaskManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TaskManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManagerApp.swift; sourceTree = "<group>"; };
 		A055B5BF2C25E52200BCB5C2 /* TaskContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskContainerView.swift; sourceTree = "<group>"; };
@@ -130,9 +130,9 @@
 		A055B5BC2C25E52200BCB5C2 /* TaskManager */ = {
 			isa = PBXGroup;
 			children = (
+				A0456FE52C2FEAE900DC2879 /* Info.plist */,
 				A04126292CB7E5FA001C5B8D /* DesignSystem.swift */,
 				A031618D2CA93F070031B2E6 /* KillerSettings.swift */,
-				A0456FE52C2FEAE900DC2879 /* Info.plist */,
 				A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */,
 				A031618B2CA53E410031B2E6 /* AboutView.swift */,
 				A003DE8A2C957116005057A9 /* ScopeListView.swift */,

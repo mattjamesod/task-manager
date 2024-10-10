@@ -79,23 +79,44 @@ struct ScopeNavigation: View {
     }
     
     struct Compact: View {
+        @State var drag: Double = 0
+        
         @Binding var selection: Database.Scope?
         
         var body: some View {
-            // Using a Group here while inside ViewThatFits causes the transition to not
-            // fire at all, so we use HStack with a single child.
-            //
-            // No, I have no idea why. :shrg
-            HStack {
-                if let selection {
-                    TaskContainerView(query: selection)
-                        .environment(\.selectedScope, $selection)
-                        .id(selection.id)
-                        .transition(.move(edge: .trailing))
-                }
-                else {
+            ZStack {
+                ZStack {
+                    Color(white: 0.1).ignoresSafeArea()
                     ScopeListView(selectedScope: self.$selection)
                         .transition(.move(edge: .leading))
+                }
+                
+                if let selection {
+                    ZStack {
+                        Color.black.ignoresSafeArea()
+                        TaskContainerView(query: selection)
+                            .environment(\.selectedScope, $selection)
+                    }
+                    .offset(x: self.drag)
+                    .gesture(
+                        DragGesture()
+                            .onChanged { gesture in
+                                if gesture.startLocation.x < 100 {
+                                    self.drag = gesture.translation.width
+                                }
+                            }
+                            .onEnded { gesture in
+                                if gesture.translation.width > 100 {
+                                    self.selection = nil
+                                }
+                                
+                                withAnimation {
+                                    self.drag = 0
+                                }
+                            }
+                    )
+                    .id(selection.id)
+                    .transition(.move(edge: .trailing))
                 }
             }
             .animation(.interactiveSpring(duration: 0.2), value: selection)
@@ -148,9 +169,12 @@ struct DynamicBackButton: View {
                 scope.wrappedValue = nil
             } label: {
                 Label("Back", systemImage: "chevron.left")
+                    .labelStyle(.iconOnly)
+                    .fontWeight(.semibold)
+                    .containerPadding(axis: .horizontal)
+                    .contentShape(Rectangle())
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.leading, 16)
         }
     }
 }
