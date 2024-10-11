@@ -83,43 +83,46 @@ struct ScopeNavigation: View {
         
         @Binding var selection: Database.Scope?
         
+        @Environment(\.colorScheme) var colorScheme
+        
         var body: some View {
             ZStack {
                 ZStack {
-                    Color(white: 0.1).ignoresSafeArea()
+                    Rectangle()
+                        .foregroundStyle(.ultraThinMaterial)
+                        .ignoresSafeArea()
                     ScopeListView(selectedScope: self.$selection)
-                        .transition(.move(edge: .leading))
                 }
-                
-                if let selection {
-                    ZStack {
-                        Color.black.ignoresSafeArea()
+                HStack {
+                    if let selection {
                         TaskContainerView(query: selection)
                             .environment(\.selectedScope, $selection)
+                            .backgroundFill()
+                            .id(selection.id)
+                            .geometryGroup()
+                            .transition(.move(edge: .trailing))
                     }
-                    .offset(x: self.drag)
-                    .gesture(
-                        DragGesture()
-                            .onChanged { gesture in
-                                if gesture.startLocation.x < 100 {
-                                    self.drag = gesture.translation.width
-                                }
-                            }
-                            .onEnded { gesture in
-                                if gesture.translation.width > 100 {
-                                    self.selection = nil
-                                }
-                                
-                                withAnimation {
-                                    self.drag = 0
-                                }
-                            }
-                    )
-                    .id(selection.id)
-                    .transition(.move(edge: .trailing))
                 }
+                .offset(x: self.drag)
+                .gesture(
+                    DragGesture()
+                        .onChanged { gesture in
+                            if gesture.startLocation.x < 100 {
+                                self.drag = gesture.translation.width
+                            }
+                        }
+                        .onEnded { gesture in
+                            if gesture.translation.width > 100 {
+                                self.selection = nil
+                            }
+                            
+                            withAnimation {
+                                self.drag = 0
+                            }
+                        }
+                )
             }
-            .animation(.interactiveSpring(duration: 0.2), value: selection)
+            .animation(.interactiveSpring(duration: 0.4), value: selection)
         }
     }
 }

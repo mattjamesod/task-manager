@@ -60,3 +60,56 @@ struct KillerInlineButtonStyle: ButtonStyle {
             .animation(.easeInOut, value: configuration.isPressed)
     }
 }
+
+struct BackgroundFillViewModifier: ViewModifier {
+    @Environment(\.colorScheme) var colorScheme
+    
+    let color: Color?
+    
+    init(_ color: Color?) {
+        self.color = color
+    }
+    
+    func body(content: Content) -> some View {
+        ZStack {
+            (self.color ?? colorScheme.backgroundColor).ignoresSafeArea()
+            content
+        }
+    }
+}
+
+extension View {
+    func backgroundFill(color: Color? = nil) -> some View {
+        self.modifier(BackgroundFillViewModifier(color))
+    }
+}
+
+@MainActor
+extension ColorScheme {
+    var backgroundColor: Color {
+        self == .dark ?
+            (DeviceKind.current.isMobile ? Color.black : Color(white: 0.1)) :
+            Color.white
+    }
+}
+
+@MainActor
+enum DeviceKind {
+    case phone
+    case pad
+    case other
+    
+    var isMobile: Bool {
+        [ .phone, .pad ].contains(self)
+    }
+    
+    static var current: Self {
+#if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone ?
+            .phone :
+            .pad
+#else
+        .other
+#endif
+    }
+}

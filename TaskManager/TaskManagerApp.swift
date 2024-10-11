@@ -111,13 +111,13 @@ struct MainWindowContentViewModifier: ViewModifier {
             .toolbar(removing: .title)
 #if os(macOS)
             .toolbarBackground(.hidden, for: .windowToolbar)
-            .containerBackground(colorScheme == .dark ? Color(white: 0.1) : Color.white, for: .window)
+            .containerBackground(colorScheme.backgroundColor, for: .window)
 #endif
     }
 }
 
 enum TestingOverrides {
-    static let colorScheme: ColorScheme? = .dark
+    static let colorScheme: ColorScheme? = nil
 }
 
 extension View {
