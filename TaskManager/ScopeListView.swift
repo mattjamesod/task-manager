@@ -22,6 +22,8 @@ struct ScopeNavigation: View {
     }
     
     struct Regular: View {
+        @Environment(\.colorScheme) var colorScheme
+        
         private static var defaultScopeListWidth: Double = 330
         
         @Binding var selection: Database.Scope?
@@ -39,9 +41,23 @@ struct ScopeNavigation: View {
             HStack(spacing: 0) {
                 if scopeListVisibility {
                     HStack(spacing: 0) {
-                        ScopeListView(selectedScope: self.$selection)
-                            .background(.ultraThinMaterial, ignoresSafeAreaEdges: .all)
-                            .frame(width: self.scopeListWidth)
+                        ZStack(alignment: .trailing) {
+                            ScopeListView(selectedScope: self.$selection)
+                            
+                            LinearGradient(
+                                gradient: Gradient(colors: [
+                                    Color.black.opacity(0),
+                                    Color(white: 0.95).opacity(0.3),
+                                    Color(white: 0.95),
+                                ]),
+                                startPoint: .leading, endPoint: .trailing
+                            )
+                            .frame(width: 12)
+                            .ignoresSafeArea()
+                            .opacity(colorScheme == .light ? 1 : 0)
+                        }
+                        .background(.ultraThinMaterial, ignoresSafeAreaEdges: .all)
+                        .frame(width: self.scopeListWidth)
 #if os(macOS)
                         ColumnResizeHandle(visible: $scopeListVisibility, width: $scopeListWidth)
 #endif
@@ -91,7 +107,7 @@ struct ScopeNavigation: View {
                     ScopeListView(selectedScope: self.$selection)
                         .backgroundFill(style: .ultraThinMaterial)
                 }
-                HStack {
+                ZStack {
                     if let selection {
                         TaskContainerView(query: selection)
                             .environment(\.selectedScope, $selection)
