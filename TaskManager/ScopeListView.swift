@@ -88,10 +88,8 @@ struct ScopeNavigation: View {
         var body: some View {
             ZStack {
                 ZStack {
-                    Rectangle()
-                        .foregroundStyle(.ultraThinMaterial)
-                        .ignoresSafeArea()
                     ScopeListView(selectedScope: self.$selection)
+                        .backgroundFill(style: .ultraThinMaterial)
                 }
                 HStack {
                     if let selection {

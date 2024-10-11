@@ -61,26 +61,38 @@ struct KillerInlineButtonStyle: ButtonStyle {
     }
 }
 
-struct BackgroundFillViewModifier: ViewModifier {
-    @Environment(\.colorScheme) var colorScheme
+struct BackgroundFillViewModifier<StyleType: ShapeStyle>: ViewModifier {
+    let style: StyleType
     
-    let color: Color?
-    
-    init(_ color: Color?) {
-        self.color = color
+    init(_ style: StyleType) {
+        self.style = style
     }
     
     func body(content: Content) -> some View {
         ZStack {
-            (self.color ?? colorScheme.backgroundColor).ignoresSafeArea()
+            Rectangle()
+                .foregroundStyle(style)
+                .ignoresSafeArea()
             content
         }
     }
 }
 
+struct DefaultBackgroundFillViewModifier: ViewModifier {
+    @Environment(\.colorScheme) var colorScheme
+    
+    func body(content: Content) -> some View {
+        content.modifier(BackgroundFillViewModifier(colorScheme.backgroundColor))
+    }
+}
+
 extension View {
-    func backgroundFill(color: Color? = nil) -> some View {
-        self.modifier(BackgroundFillViewModifier(color))
+    func backgroundFill() -> some View {
+        self.modifier(DefaultBackgroundFillViewModifier())
+    }
+    
+    func backgroundFill<StyleType: ShapeStyle>(style: StyleType) -> some View {
+        self.modifier(BackgroundFillViewModifier(style))
     }
 }
 
