@@ -1,6 +1,50 @@
 import SwiftUI
 import UtilExtensions
 
+// On RTL localisation
+//
+// It makes sense to me that in RTL languages, the swipe should come from
+// the RHS of the screen. However, this is hard to implement since CGPoint uses
+// absolute x, y coords not leading/trailing.
+//
+// Basic tests show that apple's navigation stack doesn't do this either, so fuck it
+
+// TODO: make this into a generic swipe gesture modifier
+
+struct EdgeSwipeViewModifier: ViewModifier {
+    @State private var dragAmount: Double = 0
+    
+    // need a starting threshold and a success threshold in future...
+    private let threshold: Double = 80
+    private let onSuccess: () -> ()
+    
+    init(onSuccess: @escaping () -> ()) {
+        self.onSuccess = onSuccess
+    }
+    
+    func body(content: Content) -> some View {
+        content
+            .offset(x: dragAmount)
+            .gesture(
+                DragGesture()
+                    .onChanged { gesture in
+                        guard gesture.startLocation.x < threshold else { return }
+                        dragAmount = max(0, gesture.translation.width)
+                    }
+                    .onEnded { gesture in
+                        if gesture.translation.width > threshold { onSuccess() }
+                        withAnimation(.interactiveSpring(duration: 0.4)) { dragAmount = 0 }
+                    }
+            )
+    }
+}
+
+extension View {
+    func onEdgeSwipe(onSuccess: @escaping () -> ()) -> some View {
+        self.modifier(EdgeSwipeViewModifier(onSuccess: onSuccess))
+    }
+}
+
 enum NavigationSizeClass {
     case regular
     case compact

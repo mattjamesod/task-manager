@@ -1,88 +1,85 @@
 import SwiftUI
 import KillerData
 
-struct ScopeCompactNavigation: View {
-    @GestureState private var dragAmount: Double = 0
+struct KillerStackNavigation<Selection: Hashable, SelectorView: View, ContentView: View>: View {
+    @Binding var pushed: Selection?
     
-    @Binding var selection: Database.Scope?
+    let selectorView: (Binding<Selection?>) -> SelectorView
+    let contentView: (Selection) -> ContentView
     
     var body: some View {
         ZStack {
-            ScopeListView(selectedScope: self.$selection)
-                .safeAreaPadding(.top, 12)
-                .safeAreaInset(edge: .top) {
-                    Text("Scopes")
-                        .fontWeight(.semibold)
-                }
+            selectorView($pushed)
                 .backgroundFill(style: .ultraThinMaterial)
             
+            // Group is weird here for unknown reasons, the animations don't play
             ZStack {
-                if let selection {
-                    TaskContainerView(scope: selection)
+                if let pushed {
+                    contentView(pushed)
                         .backgroundFill()
-                        .id(selection.id)
-                        .safeAreaPadding(.top, 12)
-                        .safeAreaInset(edge: .top) {
-                            ZStack {
-                                Text(selection.name)
-                                    .fontWeight(.semibold)
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                                
-                                Button {
-                                    self.selection = nil
-                                } label: {
-                                    Label("Back", systemImage: "chevron.backward")
-                                        .labelStyle(.iconOnly)
-                                        .fontWeight(.semibold)
-                                        .containerPadding(axis: .horizontal)
-                                        .contentShape(Rectangle())
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .buttonStyle(KillerInlineButtonStyle())
-                            }
-                        }
                         .geometryGroup()
                         .transition(.move(edge: .trailing))
                 }
             }
-            .onEdgeSwipe { selection = nil }
+            .onEdgeSwipe { pushed = nil }
         }
-        .animation(.interactiveSpring(duration: 0.4), value: selection)
+        .animation(.interactiveSpring(duration: 0.4), value: pushed)
     }
 }
 
-struct EdgeSwipeViewModifier: ViewModifier {
-    @Environment(\.layoutDirection) var layoutDirection
+struct ScopeCompactNavigation: View {
+    @Binding var selection: Database.Scope?
     
-    @State private var dragAmount: Double = 0
-    
-    // need a starting threshold and a success threshold in future...
-    private let threshold: Double = 80
-    private let onSuccess: () -> ()
-    
-    init(onSuccess: @escaping () -> ()) {
-        self.onSuccess = onSuccess
-    }
-    
-    func body(content: Content) -> some View {
-        content
-            .offset(x: dragAmount)
-            .gesture(
-                DragGesture()
-                    .onChanged { gesture in
-                        guard gesture.startLocation.x < threshold else { return }
-                        dragAmount = max(0, gesture.translation.width)
+    var body: some View {
+        KillerStackNavigation(pushed: $selection) {
+            ScopeListView(selectedScope: $0)
+                .killerToolbar {
+                    Text("Scopes")
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
+        } contentView: { selection in
+            TaskContainerView(scope: selection)
+                .id(selection.id)
+                .killerToolbar {
+                    Text(selection.name)
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    
+                    Button {
+                        self.selection = nil
+                    } label: {
+                        Label("Back", systemImage: "chevron.backward")
+                            .labelStyle(.iconOnly)
+                            .fontWeight(.semibold)
+                            .containerPadding(axis: .horizontal)
+                            .contentShape(Rectangle())
                     }
-                    .onEnded { gesture in
-                        if gesture.translation.width > threshold { onSuccess() }
-                        withAnimation(.interactiveSpring(duration: 0.4)) { dragAmount = 0 }
-                    }
-            )
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+        }
     }
 }
 
 extension View {
-    func onEdgeSwipe(onSuccess: @escaping () -> ()) -> some View {
-        self.modifier(EdgeSwipeViewModifier(onSuccess: onSuccess))
+    func killerToolbar(@ViewBuilder content: () -> some View) -> some View {
+        self
+            .safeAreaPadding(.top, 12)
+            .safeAreaInset(edge: .top) {
+                KillerToolbar(content: content)
+            }
+    }
+}
+
+struct KillerToolbar<Content: View>: View {
+    @ViewBuilder var content: Content
+    
+    var body: some View {
+        ZStack {
+            ForEach(subviews: content) { subView in
+                subView
+            }
+        }
+        .buttonStyle(KillerInlineButtonStyle())
     }
 }
