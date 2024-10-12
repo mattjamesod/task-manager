@@ -107,70 +107,10 @@ struct ScopeNavigation: View {
     }
     
     struct Compact: View {
-        @State var drag: Double = 0
-        
         @Binding var selection: Database.Scope?
         
-        @Environment(\.colorScheme) var colorScheme
-        
         var body: some View {
-            ZStack {
-                ScopeListView(selectedScope: self.$selection)
-                    .safeAreaPadding(.top, 12)
-                    .safeAreaInset(edge: .top) {
-                        Text("Scopes")
-                            .fontWeight(.semibold)
-                    }
-                    .backgroundFill(style: .ultraThinMaterial)
-                ZStack {
-                    if let selection {
-                        TaskContainerView(scope: selection)
-                            .backgroundFill()
-                            .id(selection.id)
-                            .safeAreaPadding(.top, 12)
-                            .safeAreaInset(edge: .top) {
-                                ZStack {
-                                    Text(selection.name)
-                                        .fontWeight(.semibold)
-                                        .frame(maxWidth: .infinity, alignment: .center)
-                                    
-                                    Button {
-                                        self.selection = nil
-                                    } label: {
-                                        Label("Back", systemImage: "chevron.left")
-                                            .labelStyle(.iconOnly)
-                                            .fontWeight(.semibold)
-                                            .containerPadding(axis: .horizontal)
-                                            .contentShape(Rectangle())
-                                    }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .buttonStyle(KillerInlineButtonStyle())
-                                }
-                            }
-                            .geometryGroup()
-                            .transition(.move(edge: .trailing))
-                    }
-                }
-                .offset(x: self.drag)
-                .gesture(
-                    DragGesture()
-                        .onChanged { gesture in
-                            if gesture.startLocation.x < 100 {
-                                self.drag = gesture.translation.width
-                            }
-                        }
-                        .onEnded { gesture in
-                            if gesture.translation.width > 100 {
-                                self.selection = nil
-                            }
-                            
-                            withAnimation {
-                                self.drag = 0
-                            }
-                        }
-                )
-            }
-            .animation(.interactiveSpring(duration: 0.4), value: selection)
+            ScopeCompactNavigation(selection: $selection)
         }
     }
 }
