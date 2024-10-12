@@ -63,6 +63,8 @@ struct ScopeNavigation: View {
                         }
                         .background(.ultraThinMaterial, ignoresSafeAreaEdges: .all)
                         .frame(width: self.scopeListWidth)
+                        
+                        Divider().ignoresSafeArea()
 #if os(macOS)
                         ColumnResizeHandle(visible: $scopeListVisibility, width: $scopeListWidth)
 #endif
