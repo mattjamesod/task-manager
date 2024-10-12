@@ -46,17 +46,16 @@ extension EnvironmentValues {
 
 struct TaskContainerView: View {
     @Environment(\.database) var database
-    @Environment(\.selectedScope) var selectedScope
     @Environment(\.navigationSizeClass) var navigationSizeClass
     @FocusState var focusedTaskID: KillerTask.ID?
         
     let taskListMonitor: QueryMonitor<TaskListViewModel> = .init()
     let orphanMonitor: QueryMonitor<TaskListViewModel> = .init()
     
-    let query: Database.Scope
+    let scope: Database.Scope
     
-    init(query: Database.Scope) {
-        self.query = query
+    init(scope: Database.Scope) {
+        self.scope = scope
     }
     
     @State var taskSelection = Selection<KillerTask>()
@@ -72,15 +71,13 @@ struct TaskContainerView: View {
         }
         .safeAreaPadding(.top, 12)
         .safeAreaInset(edge: .top) {
-            ZStack {
-                DynamicBackButton()
-                    .buttonStyle(KillerInlineButtonStyle())
-                    .opacity(navigationSizeClass == .regular ? 0 : 1)
+//                DynamicBackButton()
+//                    .buttonStyle(KillerInlineButtonStyle())
+//                    .opacity(navigationSizeClass == .regular ? 0 : 1)
                 
-                Text(query.name)
-                    .fontWeight(.semibold)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+             Text(scope.name)
+                 .fontWeight(.semibold)
+                 .frame(maxWidth: .infinity, alignment: .center)
         }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
@@ -100,19 +97,19 @@ struct TaskContainerView: View {
             .padding(.bottom, 8)
         }
         .environment(\.focusedTaskID, $focusedTaskID)
-        .environment(\.contextQuery, self.query)
+        .environment(\.contextQuery, self.scope)
         .environment(taskSelection)
         .onAppear {
             guard let database else { return }
             
             Task.detached {
                 await taskListMonitor.beginMonitoring(
-                    query,
+                    scope,
                     on: database
                 )
                 
                 await orphanMonitor.beginMonitoring(
-                    query.compose(with: .orphaned), recursive: true,
+                    scope.compose(with: .orphaned), recursive: true,
                     on: database
                 )
             }

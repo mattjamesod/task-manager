@@ -67,8 +67,7 @@ struct ScopeNavigation: View {
                 
                 Group {
                     if let selection {
-                        TaskContainerView(query: selection)
-                            .environment(\.selectedScope, $selection)
+                        TaskContainerView(scope: selection)
                             .id(selection.id)
                             .overlay(alignment: .topLeading) {
                                 Button {
@@ -109,10 +108,22 @@ struct ScopeNavigation: View {
                 }
                 ZStack {
                     if let selection {
-                        TaskContainerView(query: selection)
-                            .environment(\.selectedScope, $selection)
+                        TaskContainerView(scope: selection)
                             .backgroundFill()
                             .id(selection.id)
+                            .overlay(alignment: .topLeading) {
+                                Button {
+                                    self.selection = nil
+                                } label: {
+                                    Label("Back", systemImage: "chevron.left")
+                                        .labelStyle(.iconOnly)
+                                        .fontWeight(.semibold)
+                                        .containerPadding(axis: .horizontal)
+                                        .contentShape(Rectangle())
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .buttonStyle(KillerInlineButtonStyle())
+                            }
                             .geometryGroup()
                             .transition(.move(edge: .trailing))
                     }
@@ -176,25 +187,6 @@ struct ColumnResizeHandle: View {
 }
 
 #endif
-
-struct DynamicBackButton: View {
-    @Environment(\.selectedScope) var selectedScope
-    
-    var body: some View {
-        if let scope = self.selectedScope  {
-            Button {
-                scope.wrappedValue = nil
-            } label: {
-                Label("Back", systemImage: "chevron.left")
-                    .labelStyle(.iconOnly)
-                    .fontWeight(.semibold)
-                    .containerPadding(axis: .horizontal)
-                    .contentShape(Rectangle())
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-}
 
 struct ScopeListView: View {
     let hardCodedScopes: [Database.Scope] = [
