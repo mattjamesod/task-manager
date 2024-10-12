@@ -163,19 +163,20 @@ struct ColumnResizeHandle: View {
             .frame(width: 15)
             .opacity(0)
             .contentShape(Rectangle())
-            .pointerStyle(.columnResize)
+            .pointerStyle(visible ? .columnResize : .default)
             .gesture(DragGesture()
                 .onChanged { gestureValue in
-                    if width < maximum || gestureValue.translation.width <= 0 {
-                        width = max(width + gestureValue.translation.width, minimum)
-                    }
-                }
-                .onEnded { gestureValue in
-                    if (width + gestureValue.translation.width) <= minimum {
-                        withAnimation {
-                            visible = false
+                    print(width)
+                    guard width < maximum || gestureValue.translation.width < 0 else { return }
+                    guard width >= minimum  || gestureValue.translation.width > 0 else {
+                        // dragged off the edge of the window, collapse the column
+                        if width + gestureValue.translation.width < 0 {
+                            withAnimation(.interactiveSpring(duration: 0.4)) { visible = false }
                         }
+                        return
                     }
+                    
+                    width = width + gestureValue.translation.width
                 }
             )
             .offset(x: -7.5)
