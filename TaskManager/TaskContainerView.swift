@@ -69,16 +69,6 @@ struct TaskContainerView: View {
                     taskSelection.choose(id: focusedTaskID)
                 }
         }
-        .safeAreaPadding(.top, 12)
-        .safeAreaInset(edge: .top) {
-//                DynamicBackButton()
-//                    .buttonStyle(KillerInlineButtonStyle())
-//                    .opacity(navigationSizeClass == .regular ? 0 : 1)
-                
-             Text(scope.name)
-                 .fontWeight(.semibold)
-                 .frame(maxWidth: .infinity, alignment: .center)
-        }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
                 HStack {

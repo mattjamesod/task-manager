@@ -43,6 +43,11 @@ struct ScopeNavigation: View {
                     HStack(spacing: 0) {
                         ZStack(alignment: .trailing) {
                             ScopeListView(selectedScope: self.$selection)
+                                .safeAreaPadding(.top, 12)
+                                .safeAreaInset(edge: .top) {
+                                    Text("Scopes")
+                                        .fontWeight(.semibold)
+                                }
                             
                             LinearGradient(
                                 gradient: Gradient(colors: [
@@ -69,18 +74,26 @@ struct ScopeNavigation: View {
                     if let selection {
                         TaskContainerView(scope: selection)
                             .id(selection.id)
-                            .overlay(alignment: .topLeading) {
-                                Button {
-                                    withAnimation {
-                                        self.scopeListVisibility.toggle()
+                            .safeAreaPadding(.top, 12)
+                            .safeAreaInset(edge: .top) {
+                                ZStack {
+                                    Text(selection.name)
+                                        .fontWeight(.semibold)
+                                        .frame(maxWidth: .infinity, alignment: .center)
+                                    
+                                    Button {
+                                        withAnimation {
+                                            self.scopeListVisibility.toggle()
+                                        }
+                                    } label: {
+                                        Label("Toggle Scopes Column", systemImage: "sidebar.left")
+                                            .labelStyle(.iconOnly)
+                                            .font(.title3)
+                                            .padding(.leading, 16)
                                     }
-                                } label: {
-                                    Label("Toggle Scopes Column", systemImage: "sidebar.left")
-                                        .labelStyle(.iconOnly)
-                                        .font(.title3)
-                                        .padding(.leading, 16)
+                                    .buttonStyle(KillerInlineButtonStyle())
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                                 }
-                                .buttonStyle(KillerInlineButtonStyle())
                             }
                     }
                     else {
@@ -102,27 +115,37 @@ struct ScopeNavigation: View {
         
         var body: some View {
             ZStack {
-                ZStack {
-                    ScopeListView(selectedScope: self.$selection)
-                        .backgroundFill(style: .ultraThinMaterial)
-                }
+                ScopeListView(selectedScope: self.$selection)
+                    .safeAreaPadding(.top, 12)
+                    .safeAreaInset(edge: .top) {
+                        Text("Scopes")
+                            .fontWeight(.semibold)
+                    }
+                    .backgroundFill(style: .ultraThinMaterial)
                 ZStack {
                     if let selection {
                         TaskContainerView(scope: selection)
                             .backgroundFill()
                             .id(selection.id)
-                            .overlay(alignment: .topLeading) {
-                                Button {
-                                    self.selection = nil
-                                } label: {
-                                    Label("Back", systemImage: "chevron.left")
-                                        .labelStyle(.iconOnly)
+                            .safeAreaPadding(.top, 12)
+                            .safeAreaInset(edge: .top) {
+                                ZStack {
+                                    Text(selection.name)
                                         .fontWeight(.semibold)
-                                        .containerPadding(axis: .horizontal)
-                                        .contentShape(Rectangle())
+                                        .frame(maxWidth: .infinity, alignment: .center)
+                                    
+                                    Button {
+                                        self.selection = nil
+                                    } label: {
+                                        Label("Back", systemImage: "chevron.left")
+                                            .labelStyle(.iconOnly)
+                                            .fontWeight(.semibold)
+                                            .containerPadding(axis: .horizontal)
+                                            .contentShape(Rectangle())
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .buttonStyle(KillerInlineButtonStyle())
                                 }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .buttonStyle(KillerInlineButtonStyle())
                             }
                             .geometryGroup()
                             .transition(.move(edge: .trailing))
@@ -214,11 +237,6 @@ struct ScopeListView: View {
                 }
             }
             .buttonStyle(.plain)
-        }
-        .safeAreaPadding(.top, 12)
-        .safeAreaInset(edge: .top) {
-            Text("Scopes")
-                .fontWeight(.semibold)
         }
     }
 }
