@@ -9,79 +9,14 @@ struct ScopeNavigation: View {
     @State var selection: Database.Scope?
     
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            ScopeNavigation.Regular(selection: $selection)
-                .taskCompleteButton(position: .leading)
-                .environment(\.navigationSizeClass, .regular)
-                        
-            ScopeNavigation.Compact(selection: $selection)
-                .taskCompleteButton(position: .trailing)
-                .environment(\.navigationSizeClass, .compact)
-        }
-        .geometryGroup()
-    }
-    
-    struct Regular: View {
-        @Binding var selection: Database.Scope?
-        
-        var body: some View {
-            KillerSidebarNavigation(selection: $selection) { selection in
-                ScopeListView(selectedScope: selection)
-            } contentView: { selection in
-            	TaskContainerView(scope: selection)
-            	    .id(selection.id)
-            }
-        }
-    }
-    
-    struct Compact: View {
-        @Binding var selection: Database.Scope?
-        
-        var body: some View {
-            KillerStackNavigation(pushed: $selection) { selection in
-                ScopeListView(selectedScope: selection)
-            } contentView: { selection in
-                TaskContainerView(scope: selection)
-            }
+        DynamicNavigation(selection: $selection) { selection in
+            ScopeListView(selectedScope: selection)
+        } contentView: { selection in
+            TaskContainerView(scope: selection)
+                .id(selection.id)
         }
     }
 }
-
-#if os(macOS)
-
-struct ColumnResizeHandle: View {
-    @Binding var visible: Bool
-    @Binding var width: Double
-    
-    let minimum: Double = 150
-    let maximum: Double = 400
-    
-    var body: some View {
-        Rectangle()
-            .frame(width: 15)
-            .opacity(0)
-            .contentShape(Rectangle())
-            .pointerStyle(.columnResize)
-            .gesture(DragGesture()
-                .onChanged { gestureValue in
-                    if width < maximum || gestureValue.translation.width <= 0 {
-                        width = max(width + gestureValue.translation.width, minimum)
-                    }
-                }
-                .onEnded { gestureValue in
-                    if (width + gestureValue.translation.width) <= minimum {
-                        withAnimation {
-                            visible = false
-                        }
-                    }
-                }
-            )
-            .offset(x: -7.5)
-            .ignoresSafeArea()
-    }
-}
-
-#endif
 
 struct ScopeListView: View {
     let hardCodedScopes: [Database.Scope] = [
@@ -110,6 +45,7 @@ struct ScopeListView: View {
             }
             .buttonStyle(.plain)
         }
+        .safeAreaPadding(.top, 24)
     }
 }
 

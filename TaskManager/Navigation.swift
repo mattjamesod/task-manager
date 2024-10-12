@@ -1,43 +1,74 @@
 import SwiftUI
 import KillerData
 
+struct DynamicNavigation<Selection: Hashable, SelectorView: View, ContentView: View>: View {
+    
+    @Binding var selection: Selection?
+    
+    let selectorView: (Binding<Selection?>) -> SelectorView
+    let contentView: (Selection) -> ContentView
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            KillerSidebarNavigation(
+                selection: $selection,
+                selectorView: selectorView,
+                contentView: contentView
+            )
+            .environment(\.navigationSizeClass, .regular)
+            .taskCompleteButton(position: .leading)
+            
+            KillerStackNavigation(
+                selection: $selection,
+                selectorView: selectorView,
+                contentView: contentView
+            )
+            .environment(\.navigationSizeClass, .compact)
+            .taskCompleteButton(position: .trailing)
+        }
+    }
+}
+
+
 struct KillerStackNavigation<Selection: Hashable, SelectorView: View, ContentView: View>: View {
-    @Binding var pushed: Selection?
+    @Binding var selection: Selection?
     
     let selectorView: (Binding<Selection?>) -> SelectorView
     let contentView: (Selection) -> ContentView
     
     var body: some View {
         ZStack {
-            selectorView($pushed)
+            selectorView($selection)
                 .backgroundFill(style: .ultraThinMaterial)
             
             // Group is weird here for unknown reasons, the animations don't play
             ZStack {
-                if let pushed {
-                    contentView(pushed)
+                if let selection {
+                    contentView(selection)
                         .backgroundFill()
                         .safeAreaPadding(.top, 12)
                         .safeAreaInset(edge: .top) {
-                            Button {
-                                self.pushed = nil
-                            } label: {
-                                Label("Back", systemImage: "chevron.backward")
-                                    .labelStyle(.iconOnly)
-                                    .fontWeight(.semibold)
-                                    .containerPadding(axis: .horizontal)
-                                    .contentShape(Rectangle())
+                            ZStack {
+                                Button {
+                                    self.selection = nil
+                                } label: {
+                                    Label("Back", systemImage: "chevron.backward")
+                                        .labelStyle(.iconOnly)
+                                        .fontWeight(.semibold)
+                                        .containerPadding(axis: .horizontal)
+                                        .contentShape(Rectangle())
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .buttonStyle(KillerInlineButtonStyle())
                             }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .buttonStyle(KillerInlineButtonStyle())
                         }
                         .geometryGroup()
                         .transition(.move(edge: .trailing))
                 }
             }
-            .onEdgeSwipe { pushed = nil }
+            .onEdgeSwipe { selection = nil }
         }
-        .animation(.interactiveSpring(duration: 0.4), value: pushed)
+        .animation(.interactiveSpring(duration: 0.4), value: selection)
     }
 }
 
@@ -117,3 +148,39 @@ struct KillerSidebarNavigation<Selection: Hashable, SelectorView: View, ContentV
         }
     }
 }
+
+#if os(macOS)
+
+struct ColumnResizeHandle: View {
+    @Binding var visible: Bool
+    @Binding var width: Double
+    
+    let minimum: Double = 150
+    let maximum: Double = 400
+    
+    var body: some View {
+        Rectangle()
+            .frame(width: 15)
+            .opacity(0)
+            .contentShape(Rectangle())
+            .pointerStyle(.columnResize)
+            .gesture(DragGesture()
+                .onChanged { gestureValue in
+                    if width < maximum || gestureValue.translation.width <= 0 {
+                        width = max(width + gestureValue.translation.width, minimum)
+                    }
+                }
+                .onEnded { gestureValue in
+                    if (width + gestureValue.translation.width) <= minimum {
+                        withAnimation {
+                            visible = false
+                        }
+                    }
+                }
+            )
+            .offset(x: -7.5)
+            .ignoresSafeArea()
+    }
+}
+
+#endif
