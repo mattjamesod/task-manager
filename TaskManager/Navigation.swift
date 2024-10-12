@@ -17,6 +17,20 @@ struct KillerStackNavigation<Selection: Hashable, SelectorView: View, ContentVie
                 if let pushed {
                     contentView(pushed)
                         .backgroundFill()
+                        .safeAreaPadding(.top, 12)
+                        .safeAreaInset(edge: .top) {
+                            Button {
+                                self.pushed = nil
+                            } label: {
+                                Label("Back", systemImage: "chevron.backward")
+                                    .labelStyle(.iconOnly)
+                                    .fontWeight(.semibold)
+                                    .containerPadding(axis: .horizontal)
+                                    .contentShape(Rectangle())
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .buttonStyle(KillerInlineButtonStyle())
+                        }
                         .geometryGroup()
                         .transition(.move(edge: .trailing))
                 }
@@ -27,59 +41,79 @@ struct KillerStackNavigation<Selection: Hashable, SelectorView: View, ContentVie
     }
 }
 
-struct ScopeCompactNavigation: View {
-    @Binding var selection: Database.Scope?
+
+struct KillerSidebarNavigation<Selection: Hashable, SelectorView: View, ContentView: View>: View {
+    @Environment(\.colorScheme) var colorScheme
+    
+    @Binding var selection: Selection?
+    
+    let selectorView: (Binding<Selection?>) -> SelectorView
+    let contentView: (Selection) -> ContentView
+    
+    @SceneStorage("sidebarVisibile") var sidebarVisibile: Bool = true
+    @SceneStorage("sidebarWidth") var sidebarWidth: Double = 330
+    
+    // this calculation means it's impossible to switch to compact view
+    // through resizing the sidebar
+    private var contentMinWidth: Double {
+        400 + 330 - sidebarWidth
+    }
     
     var body: some View {
-        KillerStackNavigation(pushed: $selection) {
-            ScopeListView(selectedScope: $0)
-                .killerToolbar {
-                    Text("Scopes")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                }
-        } contentView: { selection in
-            TaskContainerView(scope: selection)
-                .id(selection.id)
-                .killerToolbar {
-                    Text(selection.name)
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                    
-                    Button {
-                        self.selection = nil
-                    } label: {
-                        Label("Back", systemImage: "chevron.backward")
-                            .labelStyle(.iconOnly)
-                            .fontWeight(.semibold)
-                            .containerPadding(axis: .horizontal)
-                            .contentShape(Rectangle())
+        HStack(spacing: 0) {
+            if sidebarVisibile {
+                HStack(spacing: 0) {
+                    ZStack(alignment: .trailing) {
+                        selectorView($selection)
+                        
+                        LinearGradient(
+                            gradient: Gradient(colors: [
+                                Color.black.opacity(0),
+                                Color(white: 0.95).opacity(0.3),
+                                Color(white: 0.95),
+                            ]),
+                            startPoint: .leading, endPoint: .trailing
+                        )
+                        .frame(width: 12)
+                        .ignoresSafeArea()
+                        .opacity(colorScheme == .light ? 1 : 0)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(.ultraThinMaterial, ignoresSafeAreaEdges: .all)
+                    .frame(width: self.sidebarWidth)
+                    
+                    Divider().ignoresSafeArea()
+#if os(macOS)
+                    ColumnResizeHandle(visible: $sidebarVisibile, width: $sidebarWidth)
+#endif
                 }
-        }
-    }
-}
-
-extension View {
-    func killerToolbar(@ViewBuilder content: () -> some View) -> some View {
-        self
-            .safeAreaPadding(.top, 12)
-            .safeAreaInset(edge: .top) {
-                KillerToolbar(content: content)
+                .transition(.move(edge: .leading))
             }
-    }
-}
-
-struct KillerToolbar<Content: View>: View {
-    @ViewBuilder var content: Content
-    
-    var body: some View {
-        ZStack {
-            ForEach(subviews: content) { subView in
-                subView
+            
+            ZStack {
+                if let selection {
+                    contentView(selection)
+                        .safeAreaPadding(.top, 12)
+                        .safeAreaInset(edge: .top) {
+                            Button {
+                                withAnimation {
+                                    self.sidebarVisibile.toggle()
+                                }
+                            } label: {
+                                Label("Toggle Sidebar", systemImage: "sidebar.left")
+                                    .labelStyle(.iconOnly)
+                                    .font(.title3)
+                                    .padding(.leading, 16)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .buttonStyle(KillerInlineButtonStyle())
+                        }
+                }
+                else {
+                    Text("No list selected")
+                        .frame(maxWidth: .infinity)
+                }
             }
+            .frame(minWidth: self.contentMinWidth)
         }
-        .buttonStyle(KillerInlineButtonStyle())
     }
 }

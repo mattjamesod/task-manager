@@ -22,88 +22,14 @@ struct ScopeNavigation: View {
     }
     
     struct Regular: View {
-        @Environment(\.colorScheme) var colorScheme
-        
-        private static var defaultScopeListWidth: Double = 330
-        
         @Binding var selection: Database.Scope?
         
-        @SceneStorage("scopeListVisibility") var scopeListVisibility: Bool = true
-        @SceneStorage("scopeListWidth") var scopeListWidth: Double = Self.defaultScopeListWidth
-        
-        // this calculation means it's impossible to switch to compact view
-        // through resizing the scope list view column
-        private var taskContainerMinWidth: Double {
-            400 + Self.defaultScopeListWidth - scopeListWidth
-        }
-        
         var body: some View {
-            HStack(spacing: 0) {
-                if scopeListVisibility {
-                    HStack(spacing: 0) {
-                        ZStack(alignment: .trailing) {
-                            ScopeListView(selectedScope: self.$selection)
-                                .safeAreaPadding(.top, 12)
-                                .safeAreaInset(edge: .top) {
-                                    Text("Scopes")
-                                        .fontWeight(.semibold)
-                                }
-                            
-                            LinearGradient(
-                                gradient: Gradient(colors: [
-                                    Color.black.opacity(0),
-                                    Color(white: 0.95).opacity(0.3),
-                                    Color(white: 0.95),
-                                ]),
-                                startPoint: .leading, endPoint: .trailing
-                            )
-                            .frame(width: 12)
-                            .ignoresSafeArea()
-                            .opacity(colorScheme == .light ? 1 : 0)
-                        }
-                        .background(.ultraThinMaterial, ignoresSafeAreaEdges: .all)
-                        .frame(width: self.scopeListWidth)
-                        
-                        Divider().ignoresSafeArea()
-#if os(macOS)
-                        ColumnResizeHandle(visible: $scopeListVisibility, width: $scopeListWidth)
-#endif
-                    }
-                    .transition(.move(edge: .leading))
-                }
-                
-                Group {
-                    if let selection {
-                        TaskContainerView(scope: selection)
-                            .id(selection.id)
-                            .safeAreaPadding(.top, 12)
-                            .safeAreaInset(edge: .top) {
-                                ZStack {
-                                    Text(selection.name)
-                                        .fontWeight(.semibold)
-                                        .frame(maxWidth: .infinity, alignment: .center)
-                                    
-                                    Button {
-                                        withAnimation {
-                                            self.scopeListVisibility.toggle()
-                                        }
-                                    } label: {
-                                        Label("Toggle Scopes Column", systemImage: "sidebar.left")
-                                            .labelStyle(.iconOnly)
-                                            .font(.title3)
-                                            .padding(.leading, 16)
-                                    }
-                                    .buttonStyle(KillerInlineButtonStyle())
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                }
-                            }
-                    }
-                    else {
-                        Text("No list selected")
-                            .frame(maxWidth: .infinity)
-                    }
-                }
-                .frame(minWidth: self.taskContainerMinWidth)
+            KillerSidebarNavigation(selection: $selection) { selection in
+                ScopeListView(selectedScope: selection)
+            } contentView: { selection in
+            	TaskContainerView(scope: selection)
+            	    .id(selection.id)
             }
         }
     }
@@ -112,7 +38,11 @@ struct ScopeNavigation: View {
         @Binding var selection: Database.Scope?
         
         var body: some View {
-            ScopeCompactNavigation(selection: $selection)
+            KillerStackNavigation(pushed: $selection) { selection in
+                ScopeListView(selectedScope: selection)
+            } contentView: { selection in
+                TaskContainerView(scope: selection)
+            }
         }
     }
 }
