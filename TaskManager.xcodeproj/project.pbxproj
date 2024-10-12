@@ -132,10 +132,10 @@
 		A055B5BC2C25E52200BCB5C2 /* TaskManager */ = {
 			isa = PBXGroup;
 			children = (
-				A041262F2CBA711B001C5B8D /* Navigation.swift */,
 				A0456FE52C2FEAE900DC2879 /* Info.plist */,
 				A04126292CB7E5FA001C5B8D /* DesignSystem.swift */,
 				A031618D2CA93F070031B2E6 /* KillerSettings.swift */,
+				A041262F2CBA711B001C5B8D /* Navigation.swift */,
 				A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */,
 				A031618B2CA53E410031B2E6 /* AboutView.swift */,
 				A003DE8A2C957116005057A9 /* ScopeListView.swift */,

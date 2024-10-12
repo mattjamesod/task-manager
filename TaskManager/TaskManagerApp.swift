@@ -70,7 +70,7 @@ struct ScopeNavigationWindow: Scene {
 
 struct SettingsWindow: Scene {
     var body: some Scene {
-        Window("Settinsg", id: "settings") {
+        Window("Settings", id: "settings") {
             Text("Settings")
                 .frame(width: 600, height: 400)
                 .fixedSize()
@@ -86,18 +86,22 @@ struct SettingsWindow: Scene {
 
 struct CatastrophicErrorView: View {
     var body: some View {
-        VStack(spacing: 36) {
+        VStack(spacing: 18) {
             Image(systemName: "exclamationmark.triangle")
                 .resizable()
                 .aspectRatio(1, contentMode: .fit)
                 .foregroundStyle(.red)
-                .frame(maxWidth: 72)
+                .frame(maxWidth: 36)
             
-            Text("An unexpected problem has occurred")
-                .font(.title3)
+            Text("An unexpected problem has occurred.")
+                .font(.title)
+                .fontWeight(.semibold)
                 .foregroundStyle(.gray)
             
             // TODO: add helpful links/info here
+            
+            Text("Please get in touch with support.")
+                .foregroundStyle(.gray)
         }
     }
 }

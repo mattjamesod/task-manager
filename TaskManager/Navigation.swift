@@ -87,7 +87,7 @@ struct KillerSidebarNavigation<Selection: Hashable, SelectorView: View, ContentV
     // this calculation means it's impossible to switch to compact view
     // through resizing the sidebar
     private var contentMinWidth: Double {
-        400 + 330 - sidebarWidth
+        250 + 330 - sidebarWidth
     }
     
     var body: some View {
@@ -140,8 +140,14 @@ struct KillerSidebarNavigation<Selection: Hashable, SelectorView: View, ContentV
                         }
                 }
                 else {
-                    Text("No list selected")
-                        .frame(maxWidth: .infinity)
+                    VStack(spacing: 8) {
+                        Text("Nothing Selected")
+                            .font(.title)
+                            .fontWeight(.bold)
+                        Text(String("¯\u{005C}_(ツ)_/¯"))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .foregroundStyle(.gray)
                 }
             }
             .frame(minWidth: self.contentMinWidth)
@@ -166,8 +172,8 @@ struct ColumnResizeHandle: View {
             .pointerStyle(visible ? .columnResize : .default)
             .gesture(DragGesture()
                 .onChanged { gestureValue in
-                    print(width)
                     guard width < maximum || gestureValue.translation.width < 0 else { return }
+                    
                     guard width >= minimum  || gestureValue.translation.width > 0 else {
                         // dragged off the edge of the window, collapse the column
                         if width + gestureValue.translation.width < 0 {
