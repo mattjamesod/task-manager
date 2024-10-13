@@ -123,21 +123,6 @@ struct KillerSidebarNavigation<Selection: Hashable, SelectorView: View, ContentV
             ZStack {
                 if let selection {
                     contentView(selection)
-                        .safeAreaPadding(.top, 12)
-                        .safeAreaInset(edge: .top) {
-                            Button {
-                                withAnimation {
-                                    self.sidebarVisibile.toggle()
-                                }
-                            } label: {
-                                Label("Toggle Sidebar", systemImage: "sidebar.left")
-                                    .labelStyle(.iconOnly)
-                                    .font(.title3)
-                                    .padding(.leading, 16)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .buttonStyle(KillerInlineButtonStyle())
-                        }
                 }
                 else {
                     VStack(spacing: 8) {
@@ -150,7 +135,22 @@ struct KillerSidebarNavigation<Selection: Hashable, SelectorView: View, ContentV
                     .foregroundStyle(.gray)
                 }
             }
-            .frame(minWidth: self.contentMinWidth)
+            .frame(minWidth: self.contentMinWidth, maxHeight: .infinity)
+            .safeAreaPadding(.top, 12)
+            .safeAreaInset(edge: .top) {
+                Button {
+                    withAnimation {
+                        self.sidebarVisibile.toggle()
+                    }
+                } label: {
+                    Label("Toggle Sidebar", systemImage: "sidebar.left")
+                        .labelStyle(.iconOnly)
+                        .font(.title3)
+                        .padding(.leading, 16)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .buttonStyle(KillerInlineButtonStyle())
+            }
         }
     }
 }
@@ -172,17 +172,16 @@ struct ColumnResizeHandle: View {
             .pointerStyle(visible ? .columnResize : .default)
             .gesture(DragGesture()
                 .onChanged { gestureValue in
+                    guard visible else { return }
                     guard width < maximum || gestureValue.translation.width < 0 else { return }
+                    guard width >= minimum  || gestureValue.translation.width > 0 else { return }
                     
-                    guard width >= minimum  || gestureValue.translation.width > 0 else {
-                        // dragged off the edge of the window, collapse the column
-                        if width + gestureValue.translation.width < 0 {
-                            withAnimation(.interactiveSpring(duration: 0.4)) { visible = false }
-                        }
-                        return
+                    // dragged off the edge of the window, collapse the column
+                    if width + gestureValue.translation.width < 0 {
+                        withAnimation(.interactiveSpring(duration: 0.4)) { visible = false }
                     }
                     
-                    width = width + gestureValue.translation.width
+                    width = max(width + gestureValue.translation.width, minimum)
                 }
             )
             .offset(x: -7.5)
