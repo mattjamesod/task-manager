@@ -55,18 +55,17 @@ extension EnvironmentValues {
 }
 
 struct ContainerPaddingViewModifier: ViewModifier {
-    @Environment(\.navigationSizeClass) var navigationSizeClass
-    
+    let deviceKind = DeviceKind.current
     let axis: Axis?
     
     private var padding: EdgeInsets {
-        switch (axis, navigationSizeClass) {
-            case (nil, .regular): EdgeInsets(vertical: 8, horizontal: 12)
-            case (nil, .compact): EdgeInsets(vertical: 10, horizontal: 16)
-            case (.horizontal, .regular): EdgeInsets(vertical: 0, horizontal: 12)
-            case (.horizontal, .compact): EdgeInsets(vertical: 0, horizontal: 16)
-            case (.vertical, .regular): EdgeInsets(vertical: 8, horizontal: 0)
-            case (.vertical, .compact): EdgeInsets(vertical: 10, horizontal: 0)
+        switch (axis, deviceKind) {
+            case (nil, .other): EdgeInsets(vertical: 8, horizontal: 12)
+            case (nil, _): EdgeInsets(vertical: 10, horizontal: 16)
+            case (.horizontal, .other): EdgeInsets(vertical: 0, horizontal: 12)
+            case (.horizontal, _): EdgeInsets(vertical: 0, horizontal: 16)
+            case (.vertical, .other): EdgeInsets(vertical: 8, horizontal: 0)
+            case (.vertical, _): EdgeInsets(vertical: 10, horizontal: 0)
         }
     }
     
