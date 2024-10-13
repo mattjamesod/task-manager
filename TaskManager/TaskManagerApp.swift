@@ -61,6 +61,16 @@ struct ScopeNavigationWindow: Scene {
                 }
                 .keyboardShortcut(.init(","))
             }
+            CommandGroup(replacing: .undoRedo) {
+                Button("Undo") {
+                    Task.detached { await database?.undo() }
+                }
+                .keyboardShortcut(.init("z"))
+                Button("Redo") {
+                    Task.detached { await database?.redo() }
+                }
+                .keyboardShortcut(.init("z", modifiers: [.command, .shift]))
+            }
         }
 #endif
     }
