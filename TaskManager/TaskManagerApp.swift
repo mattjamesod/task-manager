@@ -25,9 +25,16 @@ struct TaskManagerApp: App {
     }
 }
 
+extension EnvironmentValues {
+    @Entry var canUndo: Bool = false
+    @Entry var canRedo: Bool = false
+}
 
 struct ScopeNavigationWindow: Scene {
     @Environment(\.openWindow) var openWindow
+    
+    @State var canUndo: Bool = false
+    @State var canRedo: Bool = false
     
     let database: Database?
     
@@ -38,6 +45,18 @@ struct ScopeNavigationWindow: Scene {
                     ScopeNavigation(selection: .allActiveTasks)
                         .environment(\.database, database)
                         .mainWindowContent()
+                        .task {
+                            let thread = await MutationHistory.messageHandler.subscribe()
+                            
+                            for await message in thread.events {
+                                switch message {
+                                case .canRedo(let canRedo): self.canRedo = canRedo
+                                case .canUndo(let canUndo): self.canUndo = canUndo
+                                }
+                            }
+                        }
+                        .environment(\.canUndo, self.canUndo)
+                        .environment(\.canRedo, self.canRedo)
                 }
                 else {
                     CatastrophicErrorView()
@@ -63,12 +82,23 @@ struct ScopeNavigationWindow: Scene {
             }
             CommandGroup(replacing: .undoRedo) {
                 Button("Undo") {
-                    Task.detached { await database?.undo() }
+                    guard let database else { return }
+                    
+                    Task.detached {
+                        await database.undo()
+                    }
                 }
+                .disabled(!canUndo)
                 .keyboardShortcut(.init("z"))
+                
                 Button("Redo") {
-                    Task.detached { await database?.redo() }
+                    guard let database else { return }
+                    
+                    Task.detached {
+                        await database.redo()
+                    }
                 }
+                .disabled(!canRedo)
                 .keyboardShortcut(.init("z", modifiers: [.command, .shift]))
             }
         }

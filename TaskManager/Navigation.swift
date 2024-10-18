@@ -136,16 +136,17 @@ struct KillerSidebarNavigation<Selection: Hashable, SelectorView: View, ContentV
                 }
             }
             .frame(minWidth: self.contentMinWidth, maxHeight: .infinity)
-            .safeAreaPadding(.top, 12)
             .safeAreaInset(edge: .top) {
                 Button {
                     withAnimation {
                         self.sidebarVisibile.toggle()
                     }
                 } label: {
-                    Label("Toggle Sidebar", systemImage: "sidebar.left")
+                    Label("Toggle Sidebar", systemImage: "arrow.backward")
+                        .rotationEffect(.degrees(sidebarVisibile ? 0 : -180))
                         .labelStyle(.iconOnly)
                         .font(.title3)
+                        .fontWeight(.semibold)
                         .padding(.leading, 16)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -161,12 +162,14 @@ struct ColumnResizeHandle: View {
     @Binding var visible: Bool
     @Binding var width: Double
     
+    let handleWidth: Double = 10
+    
     let minimum: Double = 150
     let maximum: Double = 400
     
     var body: some View {
         Rectangle()
-            .frame(width: 15)
+            .frame(width: handleWidth)
             .opacity(0)
             .contentShape(Rectangle())
             .pointerStyle(visible ? .columnResize : .default)
@@ -184,7 +187,7 @@ struct ColumnResizeHandle: View {
                     width = max(width + gestureValue.translation.width, minimum)
                 }
             )
-            .offset(x: -7.5)
+            .offset(x: -handleWidth / 2)
             .ignoresSafeArea()
     }
 }

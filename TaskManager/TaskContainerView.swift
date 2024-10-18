@@ -76,8 +76,11 @@ struct TaskContainerView: View {
                         DoneButton()
                     }
                     Spacer()
-                    UndoButton()
-                    RedoButton()
+                    Group {
+                        UndoButton()
+                        RedoButton()
+                    }
+                    .opacity(DeviceKind.current.isMobile ? 1 : 0)
                 }
                 .buttonStyle(KillerBorderedButtonStyle())
                 
@@ -170,6 +173,7 @@ struct DoneButton: View {
 
 struct UndoButton: View {
     @Environment(\.database) var database
+    @Environment(\.canUndo) var canUndo
     
     var body: some View {
         Button("Undo") {
@@ -177,11 +181,13 @@ struct UndoButton: View {
                 await database?.undo()
             }
         }
+        .disabled(!canUndo)
     }
 }
 
 struct RedoButton: View {
     @Environment(\.database) var database
+    @Environment(\.canRedo) var canRedo
     
     var body: some View {
         Button("Redo") {
@@ -189,6 +195,7 @@ struct RedoButton: View {
                 await database?.redo()
             }
         }
+        .disabled(!canRedo)
     }
 }
 

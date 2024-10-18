@@ -1,8 +1,28 @@
 import SwiftUI
 import Logging
 
+public struct Bijection: Sendable {
+    public init(
+        goForward: @escaping @Sendable () async -> Void,
+        goBackward: @escaping @Sendable () async -> Void
+    ) {
+        self.goForward = goForward
+        self.goBackward = goBackward
+    }
+    
+    public let goForward: @Sendable () async -> Void
+    public let goBackward: @Sendable () async -> Void
+}
+
+public enum MutationHistoryMessage: Sendable {
+    case canUndo(Bool)
+    case canRedo(Bool)
+}
+
 public actor MutationHistory: CustomConsoleLogger {
     public nonisolated let logToConsole: Bool = true
+    
+    public static let messageHandler: AsyncMessageHandler<MutationHistoryMessage> = .init()
     
     var operations: [Bijection] = []
     var undoLevel: Int = 0
@@ -21,6 +41,8 @@ public actor MutationHistory: CustomConsoleLogger {
         
         operations.append(operation)
         
+        alertListenersToState()
+        
         log("recorded operation; \(operations.count) in history")
     }
     
@@ -36,15 +58,9 @@ public actor MutationHistory: CustomConsoleLogger {
         
         undoLevel += 1
         
+        alertListenersToState()
+        
         log("operation undone; undo level is \(undoLevel)")
-    }
-    
-    public func canUndo() async -> Bool {
-        !self.operations.isEmpty
-    }
-    
-    public func canRedo() async -> Bool {
-        self.undoLevel > 0
     }
     
     public func redo() async {
@@ -59,19 +75,23 @@ public actor MutationHistory: CustomConsoleLogger {
         
         undoLevel -= 1
         
+        alertListenersToState()
+        
         log("operation redone; undo level is \(undoLevel)")
     }
-}
-
-public struct Bijection: Sendable {
-    public init(
-        goForward: @escaping @Sendable () async -> Void,
-        goBackward: @escaping @Sendable () async -> Void
-    ) {
-        self.goForward = goForward
-        self.goBackward = goBackward
+    
+    private func alertListenersToState() {
+        Task {
+            await MutationHistory.messageHandler.send(.canUndo(self.canUndo))
+            await MutationHistory.messageHandler.send(.canRedo(self.canRedo))
+        }
     }
     
-    public let goForward: @Sendable () async -> Void
-    public let goBackward: @Sendable () async -> Void
+    private var canUndo: Bool {
+        undoLevel < operations.count
+    }
+    
+    private var canRedo: Bool {
+        self.undoLevel > 0
+    }
 }
