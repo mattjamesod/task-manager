@@ -148,10 +148,12 @@ struct CatastrophicErrorView: View {
 
 struct MainWindowContentViewModifier: ViewModifier {
     @Environment(\.colorScheme) var colorScheme
+    @Environment(\.layoutDirection) var layoutDirection
     
     func body(content: Content) -> some View {
         content
             .preferredColorScheme(TestingOverrides.colorScheme)
+            .environment(\.layoutDirection, TestingOverrides.layoutDirecton ?? layoutDirection)
             .toolbar(removing: .title)
 #if os(macOS)
             .toolbarBackground(.hidden, for: .windowToolbar)
@@ -162,6 +164,7 @@ struct MainWindowContentViewModifier: ViewModifier {
 
 enum TestingOverrides {
     static let colorScheme: ColorScheme? = nil
+    static let layoutDirecton: LayoutDirection? = nil
 }
 
 extension View {

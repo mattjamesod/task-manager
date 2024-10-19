@@ -142,8 +142,7 @@ struct KillerSidebarNavigation<Selection: Hashable, SelectorView: View, ContentV
                         self.sidebarVisibile.toggle()
                     }
                 } label: {
-                    Label("Toggle Sidebar", systemImage: "arrow.backward")
-                        .rotationEffect(.degrees(sidebarVisibile ? 0 : -180))
+                    Label("Toggle Sidebar", systemImage: "sidebar.leading")
                         .labelStyle(.iconOnly)
                         .font(.title3)
                         .fontWeight(.semibold)
