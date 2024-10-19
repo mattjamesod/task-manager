@@ -72,9 +72,12 @@ struct KillerStackNavigation<Selection: Hashable, SelectorView: View, ContentVie
     }
 }
 
+let defaultSidebarWidth: Double = 330
 
 struct KillerSidebarNavigation<Selection: Hashable, SelectorView: View, ContentView: View>: View {
+    
     @Environment(\.colorScheme) var colorScheme
+    @Environment(\.layoutDirection) var layoutDirection
     
     @Binding var selection: Selection?
     
@@ -82,12 +85,12 @@ struct KillerSidebarNavigation<Selection: Hashable, SelectorView: View, ContentV
     let contentView: (Selection) -> ContentView
     
     @SceneStorage("sidebarVisibile") var sidebarVisibile: Bool = true
-    @SceneStorage("sidebarWidth") var sidebarWidth: Double = 330
+    @SceneStorage("sidebarWidth") var sidebarWidth: Double = defaultSidebarWidth
     
     // this calculation means it's impossible to switch to compact view
     // through resizing the sidebar
     private var contentMinWidth: Double {
-        250 + 330 - sidebarWidth
+        250 + defaultSidebarWidth - sidebarWidth
     }
     
     var body: some View {
@@ -103,7 +106,8 @@ struct KillerSidebarNavigation<Selection: Hashable, SelectorView: View, ContentV
                                 Color(white: 0.95).opacity(0.3),
                                 Color(white: 0.95),
                             ]),
-                            startPoint: .leading, endPoint: .trailing
+                            startPoint: layoutDirection == .leftToRight ? .leading : .trailing,
+                            endPoint: layoutDirection == .leftToRight ? .trailing : .leading
                         )
                         .frame(width: 12)
                         .ignoresSafeArea()
@@ -158,6 +162,8 @@ struct KillerSidebarNavigation<Selection: Hashable, SelectorView: View, ContentV
 #if os(macOS)
 
 struct ColumnResizeHandle: View {
+    @Environment(\.layoutDirection) var layoutDirection
+    
     @Binding var visible: Bool
     @Binding var width: Double
     
@@ -174,16 +180,20 @@ struct ColumnResizeHandle: View {
             .pointerStyle(visible ? .columnResize : .default)
             .gesture(DragGesture()
                 .onChanged { gestureValue in
+                    let translationWidth =
+                        gestureValue.translation.width *
+                        (layoutDirection == .rightToLeft ? -1 : 1)
+                    
                     guard visible else { return }
-                    guard width < maximum || gestureValue.translation.width < 0 else { return }
-                    guard width >= minimum  || gestureValue.translation.width > 0 else { return }
+                    guard width < maximum || translationWidth < 0 else { return }
+                    guard width >= minimum  || translationWidth > 0 else { return }
                     
                     // dragged off the edge of the window, collapse the column
-                    if width + gestureValue.translation.width < 0 {
+                    if width + translationWidth < 0 {
                         withAnimation(.interactiveSpring(duration: 0.4)) { visible = false }
                     }
                     
-                    width = max(width + gestureValue.translation.width, minimum)
+                    width = max(width + translationWidth, minimum)
                 }
             )
             .offset(x: -handleWidth / 2)
