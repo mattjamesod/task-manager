@@ -119,9 +119,6 @@ struct KillerSidebarNavigation<Selection: Hashable, SelectorView: View, ContentV
                     .frame(width: self.sidebarWidth)
                     
                     Divider().ignoresSafeArea()
-#if os(macOS)
-                    ColumnResizeHandle(visible: $sidebarVisibile, width: $sidebarWidth)
-#endif
                 }
                 .transition(.move(edge: .leading))
             }
@@ -155,6 +152,12 @@ struct KillerSidebarNavigation<Selection: Hashable, SelectorView: View, ContentV
                 .buttonStyle(KillerInlineButtonStyle())
             }
         }
+#if os(macOS)
+        .overlay(alignment: .leading) {
+            ColumnResizeHandle(visible: $sidebarVisibile, width: $sidebarWidth)
+                .offset(x: self.sidebarWidth)
+        }
+#endif
         .animation(.easeInOut, value: sidebarVisibile)
     }
 }
@@ -196,8 +199,9 @@ struct ColumnResizeHandle: View {
                     width = max(width + translationWidth, minimum)
                 }
             )
-            .offset(x: -handleWidth / 2)
+//            .border(.red)
             .ignoresSafeArea()
+            .offset(x: -handleWidth / 2)
     }
 }
 
