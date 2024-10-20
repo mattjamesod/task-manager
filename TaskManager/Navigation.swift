@@ -39,7 +39,9 @@ struct KillerStackNavigation<Selection: Hashable, SelectorView: View, ContentVie
     var body: some View {
         ZStack {
             selectorView($selection)
+                .scaleEffect(selection != nil ? 0.95 : 1)
                 .backgroundFill(style: .ultraThinMaterial)
+                .brightness(selection != nil ? -0.05 : 0)
             
             // Group is weird here for unknown reasons, the animations don't play
             ZStack {

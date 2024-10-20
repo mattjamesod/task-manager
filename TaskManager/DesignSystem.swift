@@ -116,6 +116,7 @@ struct BackgroundFillViewModifier<StyleType: ShapeStyle>: ViewModifier {
             Rectangle()
                 .foregroundStyle(style)
                 .ignoresSafeArea()
+            
             content
         }
     }
