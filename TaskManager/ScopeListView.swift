@@ -9,12 +9,12 @@ struct ScopeNavigation: View {
     @State var selection: Database.Scope?
     
     var body: some View {
-        DynamicNavigation(selection: $selection) { selection in
-            ScopeListView(selectedScope: selection)
-        } contentView: { selection in
-            TaskContainerView(scope: selection)
-                .id(selection.id)
-        }
+        KillerNavigation.Flexible(
+            selection: $selection,
+            selectorView: ScopeListView.init,
+            contentView: TaskContainerView.init
+        )
+        .taskCompleteButton(position: DeviceKind.current == .other ? .leading : .trailing)
     }
 }
 
@@ -25,7 +25,7 @@ struct ScopeListView: View {
         .deletedTasks
     ]
     
-    @Namespace var namespace
+    @Namespace private var namespace
     @Binding var selectedScope: Database.Scope?
     
     var body: some View {

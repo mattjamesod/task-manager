@@ -50,8 +50,8 @@ struct ScopeNavigationWindow: Scene {
                             
                             for await message in thread.events {
                                 switch message {
-                                case .canRedo(let canRedo): self.canRedo = canRedo
                                 case .canUndo(let canUndo): self.canUndo = canUndo
+                                case .canRedo(let canRedo): self.canRedo = canRedo
                                 }
                             }
                         }

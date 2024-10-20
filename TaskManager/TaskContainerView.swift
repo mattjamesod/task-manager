@@ -113,6 +113,7 @@ struct TaskContainerView: View {
                 await orphanMonitor.stopMonitoring()
             }
         }
+        .id(scope.id)
     }
 }
 

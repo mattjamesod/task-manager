@@ -98,6 +98,7 @@ struct KillerBorderedButtonStyle: ButtonStyle {
 struct KillerInlineButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .contentShape(Rectangle())
             .foregroundStyle(Color.accentColor)
             .brightness(configuration.isPressed ? 0.1 : 0)
             .animation(.easeInOut, value: configuration.isPressed)
