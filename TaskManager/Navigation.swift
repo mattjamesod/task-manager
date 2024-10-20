@@ -143,21 +143,19 @@ struct KillerSidebarNavigation<Selection: Hashable, SelectorView: View, ContentV
             }
             .frame(minWidth: self.contentMinWidth, maxHeight: .infinity)
             .safeAreaInset(edge: .top) {
-                Button {
-                    withAnimation {
-                        self.sidebarVisibile.toggle()
-                    }
-                } label: {
+                Toggle(isOn: $sidebarVisibile) {
                     Label("Toggle Sidebar", systemImage: "sidebar.leading")
                         .labelStyle(.iconOnly)
                         .font(.title3)
                         .fontWeight(.semibold)
-                        .padding(.leading, 16)
                 }
+                .toggleStyle(.button)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading, 16)
                 .buttonStyle(KillerInlineButtonStyle())
             }
         }
+        .animation(.easeInOut, value: sidebarVisibile)
     }
 }
 
