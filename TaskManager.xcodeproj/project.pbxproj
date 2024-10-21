@@ -11,8 +11,6 @@
 		A031618C2CA53E450031B2E6 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A031618B2CA53E410031B2E6 /* AboutView.swift */; };
 		A031618E2CA93F0A0031B2E6 /* KillerSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A031618D2CA93F070031B2E6 /* KillerSettings.swift */; };
 		A03581E02C5771690078F59E /* TaskView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A03581DF2C5771650078F59E /* TaskView.swift */; };
-		A041262A2CB7E5FD001C5B8D /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A04126292CB7E5FA001C5B8D /* DesignSystem.swift */; };
-		A04126302CBA711D001C5B8D /* Navigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A041262F2CBA711B001C5B8D /* Navigation.swift */; };
 		A0456FDE2C2E0FD200DC2879 /* KillerData in Frameworks */ = {isa = PBXBuildFile; productRef = A0456FDD2C2E0FD200DC2879 /* KillerData */; };
 		A0456FE12C2EA10200DC2879 /* KillerModels in Frameworks */ = {isa = PBXBuildFile; productRef = A0456FE02C2EA10200DC2879 /* KillerModels */; };
 		A0456FE42C2EA11500DC2879 /* KillerData in Frameworks */ = {isa = PBXBuildFile; productRef = A0456FE32C2EA11500DC2879 /* KillerData */; };
@@ -22,6 +20,7 @@
 		A055B5C22C25E52300BCB5C2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A055B5C12C25E52300BCB5C2 /* Assets.xcassets */; };
 		A055B5C62C25E52300BCB5C2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A055B5C52C25E52300BCB5C2 /* Preview Assets.xcassets */; };
 		A055B5D02C25E52300BCB5C2 /* DatabaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5CF2C25E52300BCB5C2 /* DatabaseTests.swift */; };
+		A05D96822CC6E97000CEDFB0 /* KillerNavigation in Frameworks */ = {isa = PBXBuildFile; productRef = A05D96812CC6E97000CEDFB0 /* KillerNavigation */; };
 		A06498722C7B4D4C005C545B /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = A06498712C7B4D4C005C545B /* Logging */; };
 		A06498742C7B4D4C005C545B /* UtilAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = A06498732C7B4D4C005C545B /* UtilAlgorithms */; };
 		A06498762C7B4D4C005C545B /* UtilExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = A06498752C7B4D4C005C545B /* UtilExtensions */; };
@@ -56,8 +55,6 @@
 		A031618B2CA53E410031B2E6 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		A031618D2CA93F070031B2E6 /* KillerSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KillerSettings.swift; sourceTree = "<group>"; };
 		A03581DF2C5771650078F59E /* TaskView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskView.swift; sourceTree = "<group>"; };
-		A04126292CB7E5FA001C5B8D /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
-		A041262F2CBA711B001C5B8D /* Navigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation.swift; sourceTree = "<group>"; };
 		A0456FE52C2FEAE900DC2879 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A055B5BA2C25E52200BCB5C2 /* TaskManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TaskManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManagerApp.swift; sourceTree = "<group>"; };
@@ -84,6 +81,7 @@
 				A0456FE12C2EA10200DC2879 /* KillerModels in Frameworks */,
 				A06498742C7B4D4C005C545B /* UtilAlgorithms in Frameworks */,
 				A0DB377C2C2DD02A00D17C00 /* KillerModels in Frameworks */,
+				A05D96822CC6E97000CEDFB0 /* KillerNavigation in Frameworks */,
 				A05115712C2DC08900923202 /* KillerModels in Frameworks */,
 				A0DB37812C2E0ED200D17C00 /* KillerModels in Frameworks */,
 				A0456FDE2C2E0FD200DC2879 /* KillerData in Frameworks */,
@@ -134,9 +132,7 @@
 			children = (
 				A0456FE52C2FEAE900DC2879 /* Info.plist */,
 				A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */,
-				A04126292CB7E5FA001C5B8D /* DesignSystem.swift */,
 				A031618D2CA93F070031B2E6 /* KillerSettings.swift */,
-				A041262F2CBA711B001C5B8D /* Navigation.swift */,
 				A031618B2CA53E410031B2E6 /* AboutView.swift */,
 				A003DE8A2C957116005057A9 /* ScopeListView.swift */,
 				A055B5BF2C25E52200BCB5C2 /* TaskContainerView.swift */,
@@ -202,6 +198,7 @@
 				A06498732C7B4D4C005C545B /* UtilAlgorithms */,
 				A06498752C7B4D4C005C545B /* UtilExtensions */,
 				A06498772C7B4D4C005C545B /* UtilViews */,
+				A05D96812CC6E97000CEDFB0 /* KillerNavigation */,
 			);
 			productName = TaskManager;
 			productReference = A055B5BA2C25E52200BCB5C2 /* TaskManager.app */;
@@ -281,6 +278,7 @@
 				A0456FE22C2EA11500DC2879 /* XCLocalSwiftPackageReference "Packages/KillerData" */,
 				A09B7A6C2C3B0DA500C01586 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
 				A06498702C7B4D4C005C545B /* XCLocalSwiftPackageReference "../packages/AndHashUtilities" */,
+				A05D96802CC6E97000CEDFB0 /* XCLocalSwiftPackageReference "Packages/KillerNavigation" */,
 			);
 			productRefGroup = A055B5BB2C25E52200BCB5C2 /* Products */;
 			projectDirPath = "";
@@ -327,11 +325,9 @@
 				A055B5C02C25E52200BCB5C2 /* TaskContainerView.swift in Sources */,
 				A031618C2CA53E450031B2E6 /* AboutView.swift in Sources */,
 				A079C6BD2C8AEE020053BC4F /* TaskBodyField.swift in Sources */,
-				A041262A2CB7E5FD001C5B8D /* DesignSystem.swift in Sources */,
 				A031618E2CA93F0A0031B2E6 /* KillerSettings.swift in Sources */,
 				A055B5BE2C25E52200BCB5C2 /* TaskManagerApp.swift in Sources */,
 				A06A95F92C4E3DB8004302DF /* TaskListView.swift in Sources */,
-				A04126302CBA711D001C5B8D /* Navigation.swift in Sources */,
 				A03581E02C5771690078F59E /* TaskView.swift in Sources */,
 				A003DE8B2C95711A005057A9 /* ScopeListView.swift in Sources */,
 			);
@@ -708,6 +704,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/KillerData;
 		};
+		A05D96802CC6E97000CEDFB0 /* XCLocalSwiftPackageReference "Packages/KillerNavigation" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/KillerNavigation;
+		};
 		A06498702C7B4D4C005C545B /* XCLocalSwiftPackageReference "../packages/AndHashUtilities" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../packages/AndHashUtilities;
@@ -749,6 +749,10 @@
 		A05115702C2DC08900923202 /* KillerModels */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = KillerModels;
+		};
+		A05D96812CC6E97000CEDFB0 /* KillerNavigation */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = KillerNavigation;
 		};
 		A06498712C7B4D4C005C545B /* Logging */ = {
 			isa = XCSwiftPackageProductDependency;

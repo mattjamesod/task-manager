@@ -1,27 +1,46 @@
 import SwiftUI
-import KillerData
+import KillerStyle
 
-enum KillerNavigation {
-    static let sidebarDefaultWidth: Double = 330
-    static var flexibleBreakPoint: Double { sidebarDefaultWidth + 250 }
+public enum NavigationSizeClass {
+    case regular
+    case compact
 }
 
-extension KillerNavigation {
+public extension EnvironmentValues {
+    @Entry var navigationSizeClass: NavigationSizeClass = .regular
+}
+
+public enum KillerNavigation {
+    private static let sidebarDefaultWidth: Double = 330
+    private static var flexibleBreakPoint: Double { sidebarDefaultWidth + 250 }
+}
+
+public extension KillerNavigation {
     struct Flexible<Selection: Hashable, SelectorView: View, ContentView: View>: View {
         @Binding var selection: Selection?
         
         let selectorView: (Binding<Selection?>) -> SelectorView
         let contentView: (Selection) -> ContentView
         
-        var body: some View {
+        public init(
+            selection: Binding<Selection?>,
+            selectorView: @escaping (Binding<Selection?>) -> SelectorView,
+            contentView: @escaping (Selection) -> ContentView
+        ) {
+            self._selection = selection
+            self.selectorView = selectorView
+            self.contentView = contentView
+        }
+        
+        public var body: some View {
             ViewThatFits(in: .horizontal) {
                 KillerNavigation.Sidebar(
                     selection: $selection,
                     selectorView: selectorView,
                     contentView: contentView
                 )
-                .frame(minWidth: KillerNavigation.flexibleBreakPoint)
                 .environment(\.navigationSizeClass, .regular)
+                .frame(minWidth: KillerNavigation.flexibleBreakPoint)
                 
                 KillerNavigation.Stack(
                     selection: $selection,
@@ -34,14 +53,24 @@ extension KillerNavigation {
     }
 }
 
-extension KillerNavigation {
+public extension KillerNavigation {
     struct Stack<Selection: Hashable, SelectorView: View, ContentView: View>: View {
         @Binding var selection: Selection?
         
         let selectorView: (Binding<Selection?>) -> SelectorView
         let contentView: (Selection) -> ContentView
         
-        var body: some View {
+        public init(
+            selection: Binding<Selection?>,
+            selectorView: @escaping (Binding<Selection?>) -> SelectorView,
+            contentView: @escaping (Selection) -> ContentView
+        ) {
+            self._selection = selection
+            self.selectorView = selectorView
+            self.contentView = contentView
+        }
+        
+        public var body: some View {
             ZStack {
                 selectorView($selection)
                     .scaleEffect(selection != nil ? 0.95 : 1)
@@ -83,7 +112,7 @@ extension KillerNavigation {
 
 extension KillerNavigation {
     struct NoContentView: View {
-        var body: some View {
+        public var body: some View {
             VStack(spacing: 8) {
                 Text("Nothing Selected")
                     .font(.title)
@@ -99,7 +128,7 @@ extension KillerNavigation {
         @Environment(\.colorScheme) var colorScheme
         @Environment(\.layoutDirection) var layoutDirection
         
-        var body: some View {
+        public var body: some View {
             LinearGradient(
                 gradient: Gradient(colors: [
                     Color.black.opacity(0),
@@ -118,7 +147,7 @@ extension KillerNavigation {
     struct SidebarContainerView<Content: View>: View {
         let content: () -> Content
         
-        var body: some View {
+        public var body: some View {
             HStack(spacing: 0) {
                 ZStack(alignment: .trailing) {
                     content()
@@ -131,6 +160,9 @@ extension KillerNavigation {
         }
     }
     
+}
+
+public extension KillerNavigation {
     struct Sidebar<Selection: Hashable, SelectorView: View, ContentView: View>: View {
         @Binding var selection: Selection?
         
@@ -140,7 +172,17 @@ extension KillerNavigation {
         @SceneStorage("sidebarVisibile") var sidebarVisibile: Bool = true
         @SceneStorage("sidebarWidth") var sidebarWidth: Double = KillerNavigation.sidebarDefaultWidth
         
-        var body: some View {
+        public init(
+            selection: Binding<Selection?>,
+            selectorView: @escaping (Binding<Selection?>) -> SelectorView,
+            contentView: @escaping (Selection) -> ContentView
+        ) {
+            self._selection = selection
+            self.selectorView = selectorView
+            self.contentView = contentView
+        }
+        
+        public var body: some View {
             HStack(spacing: 0) {
                 if sidebarVisibile {
                     SidebarContainerView {
@@ -161,16 +203,10 @@ extension KillerNavigation {
                 .frame(minWidth: KillerNavigation.sidebarDefaultWidth)
                 .safeAreaPadding(.top, 12)
                 .safeAreaInset(edge: .top) {
-                    Toggle(isOn: $sidebarVisibile) {
-                        Label("Toggle Sidebar", systemImage: "sidebar.leading")
-                            .labelStyle(.iconOnly)
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                    }
-                    .toggleStyle(.button)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.leading, 16)
-                    .buttonStyle(KillerInlineButtonStyle())
+                    self.toggle
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.leading, 16)
+                        .buttonStyle(KillerInlineButtonStyle())
                 }
             }
 #if os(macOS)
@@ -180,6 +216,16 @@ extension KillerNavigation {
             }
 #endif
             .animation(.interactiveSpring(duration: 0.4), value: sidebarVisibile)
+        }
+        
+        private var toggle: some View {
+            Toggle(isOn: $sidebarVisibile) {
+                Label("Toggle Sidebar", systemImage: "sidebar.leading")
+                    .labelStyle(.iconOnly)
+                    .font(.title3)
+                    .fontWeight(.semibold)
+            }
+            .toggleStyle(.button)
         }
     }
 }
@@ -221,7 +267,6 @@ struct ColumnResizeHandle: View {
                     width = max(width + translationWidth, minimum)
                 }
             )
-//            .border(.red)
             .ignoresSafeArea()
             .offset(x: -handleWidth / 2)
     }

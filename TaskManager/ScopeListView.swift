@@ -1,5 +1,7 @@
 import SwiftUI
 import KillerData
+import KillerStyle
+import KillerNavigation
 
 extension EnvironmentValues {
     @Entry var selectedScope: Binding<Database.Scope?>?

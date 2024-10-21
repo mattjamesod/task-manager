@@ -1,5 +1,4 @@
 import SwiftUI
-import UtilExtensions
 
 // On RTL localisation
 //
@@ -39,18 +38,30 @@ struct EdgeSwipeViewModifier: ViewModifier {
     }
 }
 
-extension View {
+public extension View {
     func onEdgeSwipe(onSuccess: @escaping () -> ()) -> some View {
         self.modifier(EdgeSwipeViewModifier(onSuccess: onSuccess))
     }
+    
+    func containerPadding(axis: Axis? = nil) -> some View {
+        self.modifier(ContainerPaddingViewModifier(axis: axis))
+    }
+    
+    func backgroundFill() -> some View {
+        self.modifier(DefaultBackgroundFillViewModifier())
+    }
+    
+    func backgroundFill<StyleType: ShapeStyle>(style: StyleType) -> some View {
+        self.modifier(BackgroundFillViewModifier(style))
+    }
 }
 
-enum NavigationSizeClass {
+public enum NavigationSizeClass {
     case regular
     case compact
 }
 
-extension EnvironmentValues {
+public extension EnvironmentValues {
     @Entry var navigationSizeClass: NavigationSizeClass = .regular
 }
 
@@ -75,14 +86,10 @@ struct ContainerPaddingViewModifier: ViewModifier {
     }
 }
 
-extension View {
-    func containerPadding(axis: Axis? = nil) -> some View {
-        self.modifier(ContainerPaddingViewModifier(axis: axis))
-    }
-}
-
-struct KillerBorderedButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
+public struct KillerBorderedButtonStyle: ButtonStyle {
+    public init() { }
+    
+    public func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundStyle(Color.accentColor)
             .containerPadding()
@@ -95,8 +102,10 @@ struct KillerBorderedButtonStyle: ButtonStyle {
     }
 }
 
-struct KillerInlineButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
+public struct KillerInlineButtonStyle: ButtonStyle {
+    public init() { }
+    
+    public func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .contentShape(Rectangle())
             .foregroundStyle(Color.accentColor)
@@ -131,18 +140,8 @@ struct DefaultBackgroundFillViewModifier: ViewModifier {
     }
 }
 
-extension View {
-    func backgroundFill() -> some View {
-        self.modifier(DefaultBackgroundFillViewModifier())
-    }
-    
-    func backgroundFill<StyleType: ShapeStyle>(style: StyleType) -> some View {
-        self.modifier(BackgroundFillViewModifier(style))
-    }
-}
-
 @MainActor
-extension ColorScheme {
+public extension ColorScheme {
     var backgroundColor: Color {
         self == .dark ?
             (DeviceKind.current.isMobile ? Color.black : Color(white: 0.1)) :
@@ -151,16 +150,16 @@ extension ColorScheme {
 }
 
 @MainActor
-enum DeviceKind {
+public enum DeviceKind {
     case phone
     case pad
     case other
     
-    var isMobile: Bool {
+    public var isMobile: Bool {
         [ .phone, .pad ].contains(self)
     }
     
-    static var current: Self {
+    public static var current: Self {
 #if os(iOS)
         UIDevice.current.userInterfaceIdiom == .phone ?
             .phone :
