@@ -11,8 +11,14 @@ public extension EnvironmentValues {
 }
 
 public enum KillerNavigation {
-    private static let sidebarDefaultWidth: Double = 330
-    private static var flexibleBreakPoint: Double { sidebarDefaultWidth + 250 }
+    private static let sidebarDefaultWidth: Double = 280
+    private static let sidebarMinWidth: Double = 150
+    private static let sidebarMaxWidth: Double = 280
+    
+    private static let sidebarContentMinWidth: Double = 220
+    
+    // stop resziign the sidebar from popping the flex view
+    private static var flexibleBreakPoint: Double { sidebarContentMinWidth + sidebarMaxWidth }
 }
 
 public extension KillerNavigation {
@@ -200,7 +206,7 @@ public extension KillerNavigation {
                         NoContentView()
                     }
                 }
-                .frame(minWidth: KillerNavigation.sidebarDefaultWidth)
+                .frame(minWidth: KillerNavigation.sidebarContentMinWidth)
                 .safeAreaPadding(.top, 12)
                 .safeAreaInset(edge: .top) {
                     self.toggle
@@ -232,44 +238,42 @@ public extension KillerNavigation {
 
 #if os(macOS)
 
-struct ColumnResizeHandle: View {
-    @Environment(\.layoutDirection) var layoutDirection
-    
-    @Binding var visible: Bool
-    @Binding var width: Double
-    
-    let handleWidth: Double = 10
-    
-    let minimum: Double = 150
-    let maximum: Double = 400
-    
-    var body: some View {
-        Rectangle()
-            .frame(width: handleWidth)
-            .opacity(0)
-            .contentShape(Rectangle())
-            .pointerStyle(visible ? .columnResize : .default)
-            .gesture(DragGesture()
-                .onChanged { gestureValue in
-                    let translationWidth =
+extension KillerNavigation {
+    struct ColumnResizeHandle: View {
+        @Environment(\.layoutDirection) var layoutDirection
+        
+        @Binding var visible: Bool
+        @Binding var width: Double
+        
+        let handleWidth: Double = 10
+        
+        var body: some View {
+            Rectangle()
+                .frame(width: handleWidth)
+                .opacity(0)
+                .contentShape(Rectangle())
+                .pointerStyle(visible ? .columnResize : .default)
+                .gesture(DragGesture()
+                    .onChanged { gestureValue in
+                        let translationWidth =
                         gestureValue.translation.width *
                         (layoutDirection == .rightToLeft ? -1 : 1)
-                    
-                    guard visible else { return }
-                    guard width < maximum || translationWidth < 0 else { return }
-                    guard width >= minimum  || translationWidth > 0 else { return }
-                    
-                    // dragged off the edge of the window, collapse the column
-                    if width + translationWidth < 0 {
-                        withAnimation(.interactiveSpring(duration: 0.4)) { visible = false }
+                        
+                        guard visible else { return }
+                        guard width < sidebarMaxWidth || translationWidth < 0 else { return }
+                        guard width >= sidebarMinWidth || translationWidth > 0 else { return }
+                        
+                        // dragged off the edge of the window, collapse the column
+                        if width + translationWidth < 0 {
+                            withAnimation(.interactiveSpring(duration: 0.4)) { visible = false }
+                        }
+                        
+                        width = max(width + translationWidth, sidebarMinWidth)
                     }
-                    
-                    width = max(width + translationWidth, minimum)
-                }
-            )
-            .ignoresSafeArea()
-            .offset(x: -handleWidth / 2)
+                )
+                .ignoresSafeArea()
+                .offset(x: -handleWidth / 2)
+        }
     }
 }
-
 #endif
