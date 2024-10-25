@@ -40,9 +40,10 @@ struct TaskView: View {
                     AddSubtaskButton(task: self.task)
                         .foregroundStyle(.gray)
                         .buttonStyle(KillerInlineButtonStyle())
-                        .transition(.opacity)
+                        .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }
+            .animation(.easeInOut(duration: 0.2), value: selection.chosen)
             
             Spacer()
             
@@ -52,7 +53,6 @@ struct TaskView: View {
             }
         }
         .fixedSize(horizontal: false, vertical: true)
-        .animation(.easeInOut(duration: 0.2), value: selection.chosen)
         .containerPadding()
         .background {
             if selection.ids.contains(task.id) {
