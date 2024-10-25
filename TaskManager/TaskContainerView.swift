@@ -67,7 +67,12 @@ struct TaskContainerView: View {
                 .containerPadding(axis: .horizontal)
                 .environment(\.taskListMonitor, self.taskListMonitor)
                 .onChange(of: focusedTaskID) {
-                    taskSelection.choose(id: focusedTaskID)
+                    Task {
+                        try? await Task.sleep(for: .seconds(0.1))
+                        Task { @MainActor in
+                            taskSelection.choose(id: focusedTaskID)
+                        }
+                    }
                 }
         }
         .safeAreaInset(edge: .bottom) {
