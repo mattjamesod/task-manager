@@ -98,14 +98,18 @@ struct CompleteButton: View {
         Toggle(isOn: $isOn) {
             ZStack {
                 RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
-                    .strokeBorder(isOn ? .blue : .gray, lineWidth: self.checkboxBorderWidth)
+                    .strokeBorder(.gray, lineWidth: isOn ? 0  : self.checkboxBorderWidth)
+                
+                RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
+                    .foregroundStyle(isOn ? Color.accentColor : .clear)
                 
                 if isOn {
                     Image(systemName: "checkmark")
                         .resizable()
                         .fontWeight(.bold)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(isOn ? .white : .accentColor)
                         .padding(4)
+                        .transition(.scale)
                 }
             }
             .aspectRatio(1, contentMode: .fit)
