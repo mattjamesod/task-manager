@@ -3,7 +3,7 @@ import Foundation
 import KillerModels
 
 extension Database {
-    public struct Scope: KillerScopeProtocol, Sendable {
+    public struct Scope: Identifiable, Sendable {
         public let id: Int
         public let name: String
         public let apply: @Sendable (SQLite.Table) -> SQLite.Table
