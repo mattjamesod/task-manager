@@ -57,20 +57,6 @@ extension Database {
             }
         }
     }
-    
-//    public enum Conditionals: ModelSchema {
-//        public static let tableExpression: SQLite.Table = Table("conditionals")
-//        public static let id = SQLite.Expression<Int>("id")
-//        public static let createdAt = SQLite.Expression<Date>("createdAt")
-//        public static let updatedAt = SQLite.Expression<Date>("updatedAt")
-//        public static let deletedAt = SQLite.Expression<Date?>("deletedAt")
-//        
-//        static let taskID = SQLite.Expression<Int?>("parentID")
-//        
-//        static let property: KeyPath<ModelType, PropertyType>
-//        static let comparator: Comparator
-//        static let comparatorValue: PropertyType
-//    }
 }
 
 extension KillerTask: SchemaBacked {
@@ -113,47 +99,4 @@ extension KillerTask: SchemaBacked {
         default: throw DatabaseError.propertyDoesNotExist
         }
     }
-}
-
-extension KillerConditional {
-//    public typealias SchemaType = Database.Schema.Tasks
-//    
-//    public static var messageHandler: KillerTaskMessageHandler { .instance }
-//    
-//    public static func create(from databaseRecord: SQLite.Row) throws -> KillerTask {
-//        do {
-//            return KillerTask(
-//                id: try databaseRecord.get(Database.Schema.Tasks.id),
-//                body: try databaseRecord.get(Database.Schema.Tasks.body),
-//                createdAt: try databaseRecord.get(Database.Schema.Tasks.createdAt),
-//                updatedAt: try databaseRecord.get(Database.Schema.Tasks.updatedAt),
-//                completedAt: try databaseRecord.get(Database.Schema.Tasks.completedAt),
-//                deletedAt: try databaseRecord.get(Database.Schema.Tasks.deletedAt),
-//                parentID: try databaseRecord.get(Database.Schema.Tasks.parentID)
-//            )
-//        }
-//        catch {
-//            // TODO: log property error
-//            throw DatabaseError.propertyDoesNotExist
-//        }
-//    }
-//    
-//    public static func getSchemaExpression<T>(for keyPath: KeyPath<Self, T>) throws -> SQLite.Expression<T> where T: SQLite.Value {
-//        switch keyPath {
-//        case \.id: SchemaType.id as! SQLite.Expression<T>
-//        case \.body: SchemaType.body as! SQLite.Expression<T>
-//        case \.createdAt: SchemaType.createdAt as! SQLite.Expression<T>
-//        case \.updatedAt: SchemaType.updatedAt as! SQLite.Expression<T>
-//        default: throw DatabaseError.propertyDoesNotExist
-//        }
-//    }
-//    
-//    public static func getSchemaExpression<T>(optional keyPath: KeyPath<Self, T?>) throws -> SQLite.Expression<T?> where T: SQLite.Value {
-//        switch keyPath {
-//        case \.completedAt: SchemaType.completedAt as! SQLite.Expression<T?>
-//        case \.deletedAt: SchemaType.deletedAt as! SQLite.Expression<T?>
-//        case \.parentID: SchemaType.parentID as! SQLite.Expression<T?>
-//        default: throw DatabaseError.propertyDoesNotExist
-//        }
-//    }
 }
