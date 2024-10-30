@@ -50,8 +50,8 @@ struct TaskContainerView: View {
     @Environment(\.navigationSizeClass) var navigationSizeClass
     @FocusState var focusedTaskID: KillerTask.ID?
         
-    let taskListMonitor: QueryMonitor<TaskListViewModel> = .init()
-    let orphanMonitor: QueryMonitor<TaskListViewModel> = .init()
+    let taskListMonitor: QueryMonitor<TaskProvider> = .init()
+    let orphanMonitor: QueryMonitor<TaskProvider> = .init()
     
     let scope: Database.Scope
     
@@ -125,7 +125,7 @@ struct TaskContainerView: View {
 
 
 extension EnvironmentValues {
-    @Entry var taskListMonitor: QueryMonitor<TaskListViewModel>? = nil
+    @Entry var taskListMonitor: QueryMonitor<TaskProvider>? = nil
     @Entry var contextQuery: Database.Scope? = nil
 }
 

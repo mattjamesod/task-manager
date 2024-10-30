@@ -3,10 +3,10 @@ import KillerModels
 import KillerData
 import UtilAlgorithms
 
-// TODO: Mutating observable property \TaskListViewModel.tasks after view is torn down has no effect
+// TODO: Mutating observable property \TaskProvider.tasks after view is torn down has no effect
 
 @Observable @MainActor
-final class TaskListViewModel: SynchronisedStateContainer {
+final class TaskProvider: SynchronisedStateContainer {
     
     var tasks: [KillerTask] = []
     let filter: (KillerTask) -> Bool
@@ -60,19 +60,19 @@ struct TaskListView: View {
     @Environment(\.focusedTaskID) var focusedTaskID
     @Environment(Selection<KillerTask>.self) var selection
         
-    @State var viewModel: TaskListViewModel
+    @State var viewModel: TaskProvider
     
-    let monitor: QueryMonitor<TaskListViewModel>?
+    let monitor: QueryMonitor<TaskProvider>?
     let detailQuery: Database.Scope?
     
-    init(_ detailQuery: Database.Scope? = nil, monitor: QueryMonitor<TaskListViewModel>) {
-        self.viewModel = TaskListViewModel()
+    init(_ detailQuery: Database.Scope? = nil, monitor: QueryMonitor<TaskProvider>) {
+        self.viewModel = TaskProvider()
         self.monitor = monitor
         self.detailQuery = detailQuery
     }
     
     init(parentID: Int?) {
-        self.viewModel = TaskListViewModel(filter: { $0.parentID == parentID })
+        self.viewModel = TaskProvider(filter: { $0.parentID == parentID })
         self.monitor = nil
         self.detailQuery = .children(of: parentID)
     }
@@ -107,7 +107,7 @@ struct TaskListView: View {
         }
     }
     
-    private var activeMonitor: QueryMonitor<TaskListViewModel>? {
+    private var activeMonitor: QueryMonitor<TaskProvider>? {
         self.monitor ?? taskListMonitor
     }
 }

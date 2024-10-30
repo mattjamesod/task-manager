@@ -70,9 +70,6 @@ struct TaskView: View {
             }) {
                 Label("Delete", systemImage: "trash")
             }
-            Button.async(action: { await database?.update(task, \.body <- "I've been updated 🎉") }) {
-                Label("Update", systemImage: "arrow.right")
-            }
         })
         .fadeOutScrollTransition()
     }
