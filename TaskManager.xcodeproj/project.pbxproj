@@ -28,6 +28,7 @@
 		A06A95F92C4E3DB8004302DF /* TaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A06A95F82C4E3DB4004302DF /* TaskListView.swift */; };
 		A079C6BD2C8AEE020053BC4F /* TaskBodyField.swift in Sources */ = {isa = PBXBuildFile; fileRef = A079C6BC2C8AEDFC0053BC4F /* TaskBodyField.swift */; };
 		A09B7A6E2C3B0DA500C01586 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = A09B7A6D2C3B0DA500C01586 /* AsyncAlgorithms */; };
+		A09BB03D2CD165FE00740468 /* TaskCompleteCheckbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = A09BB03C2CD165F800740468 /* TaskCompleteCheckbox.swift */; };
 		A0D1EBED2C26C5C7008636CB /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = A0D1EBEC2C26C5C7008636CB /* SQLite */; };
 		A0DB377C2C2DD02A00D17C00 /* KillerModels in Frameworks */ = {isa = PBXBuildFile; productRef = A0DB377B2C2DD02A00D17C00 /* KillerModels */; };
 		A0DB37812C2E0ED200D17C00 /* KillerModels in Frameworks */ = {isa = PBXBuildFile; productRef = A0DB37802C2E0ED200D17C00 /* KillerModels */; };
@@ -67,6 +68,7 @@
 		A055B5D52C25E52300BCB5C2 /* TaskManagerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TaskManagerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A06A95F82C4E3DB4004302DF /* TaskListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskListView.swift; sourceTree = "<group>"; };
 		A079C6BC2C8AEDFC0053BC4F /* TaskBodyField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskBodyField.swift; sourceTree = "<group>"; };
+		A09BB03C2CD165F800740468 /* TaskCompleteCheckbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskCompleteCheckbox.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -138,6 +140,7 @@
 				A055B5BF2C25E52200BCB5C2 /* TaskContainerView.swift */,
 				A06A95F82C4E3DB4004302DF /* TaskListView.swift */,
 				A03581DF2C5771650078F59E /* TaskView.swift */,
+				A09BB03C2CD165F800740468 /* TaskCompleteCheckbox.swift */,
 				A079C6BC2C8AEDFC0053BC4F /* TaskBodyField.swift */,
 				A055B5C12C25E52300BCB5C2 /* Assets.xcassets */,
 				A055B5C32C25E52300BCB5C2 /* TaskManager.entitlements */,
@@ -324,6 +327,7 @@
 			files = (
 				A055B5C02C25E52200BCB5C2 /* TaskContainerView.swift in Sources */,
 				A031618C2CA53E450031B2E6 /* AboutView.swift in Sources */,
+				A09BB03D2CD165FE00740468 /* TaskCompleteCheckbox.swift in Sources */,
 				A079C6BD2C8AEE020053BC4F /* TaskBodyField.swift in Sources */,
 				A031618E2CA93F0A0031B2E6 /* KillerSettings.swift in Sources */,
 				A055B5BE2C25E52200BCB5C2 /* TaskManagerApp.swift in Sources */,

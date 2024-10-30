@@ -9,11 +9,17 @@ public struct KillerTask: Sendable, Identifiable, Equatable, Clonable, Timestamp
         self.completedAt = completedAt
         self.deletedAt = deletedAt
         self.parentID = parentID
+        
+        self.instanceID = UUID()
     }
+    
+    public let instanceID: UUID
     
     public let id: Int
     public var body: String
     public var completedAt: Date?
+    
+    public var isComplete: Bool { self.completedAt != nil }
     
     public var parentID: Int?
     

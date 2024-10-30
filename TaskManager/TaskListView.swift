@@ -86,7 +86,7 @@ struct TaskListView: View {
                     .padding(.leading, 24)
             }
         }
-        .animation(.bouncy, value: viewModel.tasks)
+        .animation(.bouncy(duration: 0.4), value: viewModel.tasks)
         .task {
             guard let database else { return }
             

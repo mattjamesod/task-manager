@@ -29,8 +29,9 @@ struct TaskView: View {
     var body: some View {
         HStack {
             if completeButtonPosition == .leading {
-                CompleteButton(task: self.task)
+                TaskCompleteCheckbox(task: self.task)
                     .buttonStyle(KillerInlineButtonStyle())
+                    .id(task.instanceID)
             }
             
             VStack(alignment: .leading) {
@@ -48,8 +49,9 @@ struct TaskView: View {
             Spacer()
             
             if completeButtonPosition == .trailing {
-                CompleteButton(task: self.task)
+                TaskCompleteCheckbox(task: self.task)
                     .buttonStyle(KillerInlineButtonStyle())
+                    .id(task.instanceID)
             }
         }
         .fixedSize(horizontal: false, vertical: true)
@@ -73,63 +75,6 @@ struct TaskView: View {
             }
         })
         .fadeOutScrollTransition()
-    }
-}
-
-struct CompleteButton: View {
-    @Environment(\.database) var database
-    @Environment(\.contextQuery) var query
-    
-    @ScaledMetric private var checkboxWidth: Double = 16
-    @ScaledMetric private var checkboxBorderWidth: Double = 1.5
-    
-    @State private var isOn: Bool
-    
-    private let delay: Duration = .seconds(0.3)
-    
-    let task: KillerTask
-    
-    init(task: KillerTask) {
-        self.task = task
-        self._isOn = State(initialValue: task.completedAt != nil)
-    }
-    
-    var body: some View {
-        Toggle(isOn: $isOn) {
-            ZStack {
-                RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
-                    .strokeBorder(.gray, lineWidth: isOn ? 0  : self.checkboxBorderWidth)
-                
-                RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
-                    .foregroundStyle(isOn ? Color.accentColor : .clear)
-                
-                if isOn {
-                    Image(systemName: "checkmark")
-                        .resizable()
-                        .fontWeight(.bold)
-                        .foregroundStyle(isOn ? .white : .accentColor)
-                        .padding(4)
-                        .transition(.scale)
-                }
-            }
-            .aspectRatio(1, contentMode: .fit)
-            .frame(width: self.checkboxWidth)
-            .contentShape(Rectangle())
-        }
-        .toggleStyle(.button)
-        .onChange(of: isOn) {
-            let isOn = self.isOn
-            Task.detached {
-                try? await Task.sleep(for: self.delay)
-                
-                if isOn {
-                    await database?.update(task, recursive: true, context: self.query, \.completedAt <- Date.now)
-                }
-                else {
-                    await database?.update(task, recursive: true, context: self.query, \.completedAt <- nil)
-                }
-            }
-        }
     }
 }
 
