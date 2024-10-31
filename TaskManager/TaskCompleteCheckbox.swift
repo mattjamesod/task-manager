@@ -51,7 +51,7 @@ struct TaskCompleteCheckbox: View {
             }
         }
         .toggleStyle(.button)
-        .onChange(of: isOn) {
+        .onLocalChange(of: $isOn, source: task.isComplete, setupFromSource: true) {
             let isOn = self.isOn
             Task.detached {
                 try? await Task.sleep(for: self.delay)

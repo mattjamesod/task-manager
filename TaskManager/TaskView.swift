@@ -66,7 +66,10 @@ struct TaskView: View {
                 }
             }
         }
-        .transition(.scale(scale: 0.95).combined(with: .opacity))
+        .transition(.asymmetric(
+            insertion: .scale(scale: 0.95).combined(with: .opacity),
+            removal: .move(edge: .leading).combined(with: .opacity)
+        ))
         .contextMenu(menuItems: {
             Button.async {
                 await database?.duplicate(task)
