@@ -213,4 +213,11 @@ extension Button {
     ) -> Button<Label> {
         Button(action: { Task.detached { await action() }}, label: label)
     }
+    static func async(
+        role: ButtonRole,
+        action: @Sendable @escaping () async -> Void,
+        @ViewBuilder label: () -> Label
+    ) -> Button<Label> {
+        Button(role: role, action: { Task.detached { await action() }}, label: label)
+    }
 }

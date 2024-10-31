@@ -57,25 +57,31 @@ struct TaskView: View {
         .fixedSize(horizontal: false, vertical: true)
         .containerPadding()
         .background {
-            if selection.ids.contains(task.id) {
-                RoundedRectangle(cornerRadius: 12)
-                    .foregroundStyle(.ultraThinMaterial)
+            ZStack {
+                Rectangle()
+                    .foregroundStyle(Color.clear)
+                if selection.ids.contains(task.id) {
+                    RoundedRectangle(cornerRadius: 12)
+                        .foregroundStyle(.ultraThinMaterial)
+                }
             }
         }
         .transition(.scale(scale: 0.95).combined(with: .opacity))
         .contextMenu(menuItems: {
             Button.async {
+                await database?.duplicate(task)
+            } label: {
+                Label("Duplicate", systemImage: "square.on.square")
+            }
+            Divider()
+            Button.async(role: .destructive) {
                 let query = await self.contextQuery
                 await database?.update(task, recursive: true, context: query, \.deletedAt <- Date.now)
             } label: {
                 Label("Delete", systemImage: "trash")
             }
-            Button.async {
-                await database?.duplicate(task)
-            } label: {
-                Label("Duplicate", systemImage: "square.on.square")
-            }
         })
+        .contentShape(Rectangle())
         .fadeOutScrollTransition()
     }
 }
