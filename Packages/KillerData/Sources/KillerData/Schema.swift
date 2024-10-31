@@ -18,6 +18,8 @@ public protocol SchemaBacked: Sendable {
     static func getSchemaExpression<T>(for keyPath: KeyPath<Self, T>) throws -> SQLite.Expression<T> where T: SQLite.Value
     static func getSchemaExpression<T>(optional keyPath: KeyPath<Self, T?>) throws -> SQLite.Expression<T?> where T: SQLite.Value
     
+    func duplicationProperties() -> [Setter]
+    
     var id: Int { get }
     var createdAt: Date { get }
     var updatedAt: Date { get }
@@ -98,5 +100,14 @@ extension KillerTask: SchemaBacked {
         case \.parentID: SchemaType.parentID as! SQLite.Expression<T?>
         default: throw DatabaseError.propertyDoesNotExist
         }
+    }
+    
+    public func duplicationProperties() -> [Setter] {
+        [
+            SchemaType.body <- self.body,
+            SchemaType.completedAt <- self.completedAt,
+            SchemaType.deletedAt <- self.deletedAt,
+            SchemaType.parentID <- self.parentID
+        ]
     }
 }

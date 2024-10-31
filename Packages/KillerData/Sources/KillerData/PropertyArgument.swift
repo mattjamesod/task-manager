@@ -10,7 +10,7 @@ public func <-<ModelType: SchemaBacked, T: SQLite.Value>(keyPath: WritableKeyPat
     PropertyArgument(keyPath, value)
 }
 
-// Sendable conformance must be unchecked because we wnat to use this type in parameter packs, and as of writing,
+// Sendable conformance must be unchecked because we want to use this type in parameter packs, and as of writing,
 // parameter packs themselves complain about concurrency even if their underlying types are sendable, UNLESS it is
 // @unchecked...
 public struct PropertyArgument<ModelType: SchemaBacked, T: SQLite.Value>: @unchecked Sendable {

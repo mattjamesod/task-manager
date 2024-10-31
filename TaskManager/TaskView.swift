@@ -64,11 +64,16 @@ struct TaskView: View {
         }
         .transition(.scale(scale: 0.95).combined(with: .opacity))
         .contextMenu(menuItems: {
-            Button.async(action: {
+            Button.async {
                 let query = await self.contextQuery
                 await database?.update(task, recursive: true, context: query, \.deletedAt <- Date.now)
-            }) {
+            } label: {
                 Label("Delete", systemImage: "trash")
+            }
+            Button.async {
+                await database?.duplicate(task)
+            } label: {
+                Label("Duplicate", systemImage: "square.on.square")
             }
         })
         .fadeOutScrollTransition()

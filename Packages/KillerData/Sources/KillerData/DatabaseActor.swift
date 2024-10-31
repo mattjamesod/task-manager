@@ -166,7 +166,7 @@ public actor Database {
         
         await history.record(Bijection(
             goForward: { await self.insert(type, finalSetters) },
-            goBackward: { await self.delete(ModelType.self, id) }
+            goBackward: { await self.delete(type, id) }
         ))
     }
     
@@ -195,6 +195,26 @@ public actor Database {
         
         await history.record(Bijection(
             goForward: { await self.insert(type, finalSetters) },
+            goBackward: { await self.delete(type, id) }
+        ))
+    }
+    
+    public func duplicate<ModelType: SchemaBacked>(_ model: ModelType) async {
+        var setters = model.duplicationProperties()
+        
+        setters.append(contentsOf: [
+            ModelType.SchemaType.createdAt <- Date.now,
+            ModelType.SchemaType.updatedAt <- Date.now
+        ])
+        
+        guard let id = self.insert(ModelType.self, setters) else { return }
+        
+        setters.append(ModelType.SchemaType.id <- id)
+        
+        let finalSetters = setters
+        
+        await history.record(Bijection(
+            goForward: { await self.insert(ModelType.self, finalSetters) },
             goBackward: { await self.delete(ModelType.self, id) }
         ))
     }
