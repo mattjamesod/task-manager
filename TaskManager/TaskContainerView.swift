@@ -175,6 +175,7 @@ struct DoneButton: View {
         Button("Done") {
             focusedTaskID?.wrappedValue = nil
         }
+        .keyboardShortcut(.escape, modifiers: [])
     }
 }
 
