@@ -46,11 +46,9 @@ public extension KillerNavigation {
                     }
                 }
                 .frame(minWidth: KillerNavigation.sidebarContentMinWidth)
-                .safeAreaPadding(.top, 12)
-                .safeAreaInset(edge: .top) {
+                .toolbar {
                     self.toggle
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.leading, 16)
                         .buttonStyle(KillerInlineButtonStyle())
                 }
             }

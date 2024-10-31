@@ -84,7 +84,6 @@ struct TaskView: View {
                 Label("Delete", systemImage: "trash")
             }
         })
-        .contentShape(Rectangle())
         .fadeOutScrollTransition()
     }
 }

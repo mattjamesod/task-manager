@@ -47,6 +47,10 @@ public extension View {
         self.modifier(ContainerPaddingViewModifier(axis: axis))
     }
     
+    func windowPadding() -> some View {
+        self.padding(.horizontal, DeviceKind.current == .other ? 36 : 24)
+    }
+    
     func backgroundFill() -> some View {
         self.modifier(DefaultBackgroundFillViewModifier())
     }

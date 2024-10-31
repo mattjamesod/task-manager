@@ -63,8 +63,15 @@ struct TaskContainerView: View {
     
     var body: some View {
         CenteredScrollView {
-            TaskListView(.orphaned, monitor: orphanMonitor)
+            Text(scope.name)
+                .lineLimit(1)
+                .font(.title)
+                .fontWeight(.semibold)
+                .fadeOutScrollTransition()
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .containerPadding(axis: .horizontal)
+            
+            TaskListView(.orphaned, monitor: orphanMonitor)
                 .environment(\.taskListMonitor, self.taskListMonitor)
                 .onChange(of: focusedTaskID) {
                     Task {
@@ -75,6 +82,7 @@ struct TaskContainerView: View {
                     }
                 }
         }
+        .containerPadding(axis: .horizontal)
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
                 HStack {

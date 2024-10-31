@@ -28,6 +28,7 @@ struct TaskManagerApp: App {
 extension EnvironmentValues {
     @Entry var canUndo: Bool = false
     @Entry var canRedo: Bool = false
+    
 }
 
 struct ScopeNavigationWindow: Scene {
@@ -101,7 +102,6 @@ struct ScopeNavigationWindow: Scene {
                 .disabled(!canRedo)
                 .keyboardShortcut(.init("z", modifiers: [.command, .shift]))
             }
-//            CommandGroup(replacing: .sidebar, addition: <#T##() -> View#>)
         }
 #endif
     }
