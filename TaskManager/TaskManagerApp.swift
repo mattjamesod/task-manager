@@ -101,6 +101,7 @@ struct ScopeNavigationWindow: Scene {
                 .disabled(!canRedo)
                 .keyboardShortcut(.init("z", modifiers: [.command, .shift]))
             }
+//            CommandGroup(replacing: .sidebar, addition: <#T##() -> View#>)
         }
 #endif
     }
@@ -158,6 +159,7 @@ struct MainWindowContentViewModifier: ViewModifier {
 #if os(macOS)
             .toolbarBackground(.hidden, for: .windowToolbar)
             .containerBackground(colorScheme.backgroundColor, for: .window)
+            .onAppear { NSWindow.allowsAutomaticWindowTabbing = false }
 #endif
     }
 }
