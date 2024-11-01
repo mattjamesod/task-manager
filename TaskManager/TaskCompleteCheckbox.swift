@@ -50,6 +50,8 @@ struct TaskCompleteCheckbox: View {
                 .contentShape(Rectangle())
             }
         }
+        .sensoryFeedback(.success, trigger: isOn)
+        .animation(.snappy(duration: 0.1), value: isOn)
         .toggleStyle(.button)
         .onLocalChange(of: $isOn, source: task.isComplete, setupFromSource: true) {
             let isOn = self.isOn

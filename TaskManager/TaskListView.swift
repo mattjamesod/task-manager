@@ -60,48 +60,48 @@ struct TaskListView: View {
     @Environment(\.focusedTaskID) var focusedTaskID
     @Environment(Selection<KillerTask>.self) var selection
         
-    @State var viewModel: TaskProvider
+    @State var taskProvider: TaskProvider
     
     let monitor: QueryMonitor<TaskProvider>?
     let detailQuery: Database.Scope?
     
     init(_ detailQuery: Database.Scope? = nil, monitor: QueryMonitor<TaskProvider>) {
-        self.viewModel = TaskProvider()
+        self.taskProvider = TaskProvider()
         self.monitor = monitor
         self.detailQuery = detailQuery
     }
     
     init(parentID: Int?) {
-        self.viewModel = TaskProvider(filter: { $0.parentID == parentID })
+        self.taskProvider = TaskProvider(filter: { $0.parentID == parentID })
         self.monitor = nil
         self.detailQuery = .children(of: parentID)
     }
     
     var body: some View {
         TaskList {
-            ForEach(viewModel.tasks) { task in
+            ForEach(taskProvider.tasks) { task in
                 TaskView(task: task)
                     .focused(focusedTaskID!, equals: task.id)
                 TaskListView(parentID: task.id)
                     .padding(.leading, 24)
             }
         }
-        .animation(.bouncy(duration: 0.4), value: viewModel.tasks)
+        .animation(.bouncy(duration: 0.4), value: taskProvider.tasks)
         .task {
             guard let database else { return }
             
-            viewModel.tasks = await database.fetch(
+            taskProvider.tasks = await database.fetch(
                 KillerTask.self,
                 context: contextQuery?.compose(with: self.detailQuery)
             )
         }
         .task {
-            let vm = viewModel
+            let vm = taskProvider
             await activeMonitor?.keepSynchronised(state: vm)
         }
         .onDisappear {
             Task {
-                let vm = viewModel
+                let vm = taskProvider
                 await activeMonitor?.deregister(state: vm)
             }
         }
