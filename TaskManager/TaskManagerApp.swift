@@ -28,7 +28,6 @@ struct TaskManagerApp: App {
 extension EnvironmentValues {
     @Entry var canUndo: Bool = false
     @Entry var canRedo: Bool = false
-    
 }
 
 struct ScopeNavigationWindow: Scene {

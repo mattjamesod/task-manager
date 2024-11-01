@@ -49,6 +49,8 @@ struct TaskContainerView: View {
     @Environment(\.database) var database
     @Environment(\.navigationSizeClass) var navigationSizeClass
     @FocusState var focusedTaskID: KillerTask.ID?
+    
+    @State var containsTasks: Bool = false
         
     let taskListMonitor: QueryMonitor<TaskProvider> = .init()
     let orphanMonitor: QueryMonitor<TaskProvider> = .init()
@@ -70,6 +72,8 @@ struct TaskContainerView: View {
                 .fadeOutScrollTransition()
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .containerPadding(axis: .horizontal)
+                .opacity(containsTasks ? 1 : 0)
+//                .animation(.easeInOut(duration: 0.1), value: containsTasks)
             
             TaskListView(.orphaned, monitor: orphanMonitor)
                 .environment(\.taskListMonitor, self.taskListMonitor)
@@ -110,6 +114,12 @@ struct TaskContainerView: View {
             guard let database else { return }
             
             Task.detached {
+                let rootItems = await database.count(KillerTask.self, query: scope.compose(with: .orphaned))
+                
+                Task { @MainActor in
+                    self.containsTasks = rootItems > 0
+                }
+                
                 await taskListMonitor.beginMonitoring(
                     scope,
                     on: database

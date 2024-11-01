@@ -32,22 +32,29 @@ struct ScopeListView: View {
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(self.hardCodedScopes) { scope in
-                    Button {
-                        selectedScope = scope
-                    } label: {
-                        Label(scope.name, systemImage: scope.name == "Completed" ? "pencil" : "list.bullet.indent")
-                            .labelStyle(ScopeListLabelStyle(
-                                selected: scope == selectedScope,
-                                animationNamespace: namespace
-                            ))
+            VStack(alignment: .leading) {
+                Text("Scopes")
+                    .font(.title)
+                    .fontWeight(.semibold)
+                    .fadeOutScrollTransition()
+                    .containerPadding()
+                
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(self.hardCodedScopes) { scope in
+                        Button {
+                            selectedScope = scope
+                        } label: {
+                            Label(scope.name, systemImage: scope.name == "Completed" ? "pencil" : "list.bullet.indent")
+                                .labelStyle(ScopeListLabelStyle(
+                                    selected: scope == selectedScope,
+                                    animationNamespace: namespace
+                                ))
+                        }
                     }
                 }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         }
-        .safeAreaPadding(.top, 24)
     }
 }
 
