@@ -13,8 +13,8 @@ import SwiftUI
 struct EdgeSwipeViewModifier: ViewModifier {
     @State private var dragAmount: Double = 0
     
-    // need a starting threshold and a success threshold in future...
-    private let threshold: Double = 80
+    // TODO: need a starting threshold and a success threshold in future...
+    private let threshold: Double = 16
     private let onSuccess: () -> ()
     
     init(onSuccess: @escaping () -> ()) {
@@ -31,6 +31,7 @@ struct EdgeSwipeViewModifier: ViewModifier {
                         dragAmount = max(0, gesture.translation.width)
                     }
                     .onEnded { gesture in
+                        guard gesture.startLocation.x < threshold else { return }
                         if gesture.translation.width > threshold { onSuccess() }
                         withAnimation(.interactiveSpring(duration: 0.4)) { dragAmount = 0 }
                     }
