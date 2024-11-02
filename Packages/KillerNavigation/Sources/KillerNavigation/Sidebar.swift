@@ -46,11 +46,12 @@ public extension KillerNavigation {
                     }
                 }
                 .frame(minWidth: KillerNavigation.sidebarContentMinWidth)
-                .toolbar {
-                    self.toggle
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .buttonStyle(KillerInlineButtonStyle())
-                }
+            }
+            .overlay(alignment: .bottomLeading) {
+                self.toggle
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .buttonStyle(KillerInlineButtonStyle())
+                    .containerPadding()
             }
 #if os(macOS)
             .overlay(alignment: .leading) {

@@ -87,7 +87,7 @@ struct ContainerPaddingViewModifier: ViewModifier {
     
     func body(content: Content) -> some View {
         content
-            .padding(self.padding)
+            .safeAreaPadding(self.padding)
     }
 }
 
