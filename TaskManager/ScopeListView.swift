@@ -34,8 +34,7 @@ struct ScopeListView: View {
         ScrollView {
             VStack(alignment: .leading) {
                 Text("Scopes")
-                    .font(.title3)
-                    .fontWeight(.regular)
+                    .fontWeight(.bold)
                     .foregroundStyle(.gray)
                     .fadeOutScrollTransition()
                     .containerPadding(axis: .horizontal)

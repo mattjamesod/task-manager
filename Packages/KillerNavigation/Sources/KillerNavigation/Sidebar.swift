@@ -46,16 +46,15 @@ public extension KillerNavigation {
                     }
                 }
                 .frame(minWidth: KillerNavigation.sidebarContentMinWidth)
-            }
-            .overlay(alignment: .bottomLeading) {
-                self.toggle
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .buttonStyle(KillerInlineButtonStyle())
-                    .containerPadding()
+                .overlay(alignment: .leading) {
+#if os(macOS)
+                    ColumnResizeHandleHead(isVisible: $sidebarVisibile, width: $sidebarWidth)
+#endif
+                }
             }
 #if os(macOS)
             .overlay(alignment: .leading) {
-                ColumnResizeHandle(visible: $sidebarVisibile, width: $sidebarWidth)
+                ColumnResizeHandle(isVisible: $sidebarVisibile, width: $sidebarWidth)
                     .offset(x: self.sidebarWidth)
             }
 #endif
