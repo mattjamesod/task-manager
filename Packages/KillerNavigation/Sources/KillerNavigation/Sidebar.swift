@@ -14,7 +14,7 @@ public extension KillerNavigation {
         let selectorView: (Binding<Selection?>) -> SelectorView
         let contentView: (Selection) -> ContentView
         
-        @SceneStorage("sidebarVisibile") var sidebarVisibile: Bool = true
+        @SceneStorage("sidebarVisible") var sidebarVisible: Bool = true
         @SceneStorage("sidebarWidth") var sidebarWidth: Double = KillerNavigation.sidebarDefaultWidth
         
         public init(
@@ -29,7 +29,7 @@ public extension KillerNavigation {
         
         public var body: some View {
             HStack(spacing: 0) {
-                if sidebarVisibile {
+                if sidebarVisible {
                     SidebarContainerView {
                         selectorView($selection)
                     }
@@ -49,24 +49,14 @@ public extension KillerNavigation {
             }
 #if os(macOS)
             .overlay(alignment: .leading) {
-                ColumnResizeHandle(isVisible: $sidebarVisibile, width: $sidebarWidth)
+                ColumnResizeHandle(isVisible: $sidebarVisible, width: $sidebarWidth)
                     .offset(x: self.sidebarWidth)
             }
             .toolbar {
-                SidebarToolbarToggle(isVisible: $sidebarVisibile, width: $sidebarWidth)
+                SidebarToggle(isVisible: $sidebarVisible)
             }
 #endif
-            .animation(.interactiveSpring(duration: 0.4), value: sidebarVisibile)
-        }
-        
-        private var toggle: some View {
-            Toggle(isOn: $sidebarVisibile) {
-                Label("Toggle Sidebar", systemImage: "sidebar.leading")
-                    .labelStyle(.iconOnly)
-                    .font(.title3)
-                    .fontWeight(.semibold)
-            }
-            .toggleStyle(.button)
+            .animation(.interactiveSpring(duration: 0.4), value: sidebarVisible)
         }
     }
 }
