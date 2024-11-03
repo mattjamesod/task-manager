@@ -46,16 +46,14 @@ public extension KillerNavigation {
                     }
                 }
                 .frame(minWidth: KillerNavigation.sidebarContentMinWidth)
-                .overlay(alignment: .leading) {
-#if os(macOS)
-                    ColumnResizeHandleHead(isVisible: $sidebarVisibile, width: $sidebarWidth)
-#endif
-                }
             }
 #if os(macOS)
             .overlay(alignment: .leading) {
                 ColumnResizeHandle(isVisible: $sidebarVisibile, width: $sidebarWidth)
                     .offset(x: self.sidebarWidth)
+            }
+            .toolbar {
+                SidebarToolbarToggle(isVisible: $sidebarVisibile, width: $sidebarWidth)
             }
 #endif
             .animation(.interactiveSpring(duration: 0.4), value: sidebarVisibile)

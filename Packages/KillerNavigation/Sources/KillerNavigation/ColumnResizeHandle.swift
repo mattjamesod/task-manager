@@ -22,34 +22,6 @@ extension KillerNavigation {
     }
 }
 
-extension KillerNavigation {
-    struct ColumnResizeHandleHead: View {
-        @State var isHovering: Bool = false
-        
-        @Binding var isVisible: Bool
-        @Binding var width: Double
-        
-        var body: some View {
-            RoundedRectangle(cornerRadius: 4)
-                .frame(width: 8, height: 40)
-                .foregroundStyle(.ultraThickMaterial)
-                .brightness(isHovering ? 0.05 : 0)
-                .padding(4)
-                .contentShape(Rectangle())
-                .pointerStyle(.columnResize)
-                .gesture(SidebarResizeDragGesture(isVisible: $isVisible, width: $width))
-                .onTapGesture {
-                    isVisible.toggle()
-                }
-                .onHover { isHovering in
-                    self.isHovering = isHovering
-                }
-        }
-    }
-}
-
-#endif
-
 struct SidebarResizeDragGesture: Gesture {
     @Environment(\.layoutDirection) var layoutDirection
     
@@ -79,3 +51,36 @@ struct SidebarResizeDragGesture: Gesture {
             }
     }
 }
+
+extension KillerNavigation {
+    struct SidebarToolbarToggle: View {
+        @State var isHovering: Bool = false
+        @Binding var isVisible: Bool
+        
+        var body: some View {
+            Toggle(isOn: $isVisible) {
+                Label("Toggle Sidebar", systemImage: "sidebar.left")
+                    .foregroundStyle(.gray)
+                    .fontWeight(.semibold)
+                    .padding(.vertical, 4)
+                    .padding(.horizontal, 6)
+                    .background {
+                        RoundedRectangle(cornerRadius: 4)
+                            .foregroundStyle(.ultraThickMaterial)
+                            .brightness(isHovering ? -0.05 : 0)
+                            .opacity(isVisible && !isHovering ? 0 : 1)
+                    }
+            }
+            .labelStyle(.iconOnly)
+            .toggleStyle(.button)
+            .buttonStyle(.plain)
+            .contentShape(Rectangle())
+            .keyboardShortcut(.init("0", modifiers: .command))
+            .onHover { isHovering in
+                self.isHovering = isHovering
+            }
+        }
+    }
+}
+
+#endif
