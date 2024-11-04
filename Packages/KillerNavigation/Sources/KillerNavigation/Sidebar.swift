@@ -9,6 +9,10 @@ public extension KillerNavigation {
     static let sidebarContentMinWidth: Double = 220
     
     struct Sidebar<Selection: Hashable, SelectorView: View, ContentView: View>: View {
+#if os(macOS)
+        @Environment(\.controlActiveState) var controlActiveState
+#endif
+        
         @Binding var selection: Selection?
         
         let selectorView: (Binding<Selection?>) -> SelectorView
@@ -55,8 +59,18 @@ public extension KillerNavigation {
             .toolbar {
                 SidebarToggle(isVisible: $sidebarVisible)
             }
+            .onReceive(NotificationCenter.default.publisher(for: .toggleSidebar)) { _ in
+                guard controlActiveState == .key else { return }
+                sidebarVisible.toggle()
+            }
 #endif
             .animation(.interactiveSpring(duration: 0.4), value: sidebarVisible)
         }
     }
+}
+
+
+
+public extension Notification.Name {
+    static let toggleSidebar = Notification.Name("toggleSidebar")
 }

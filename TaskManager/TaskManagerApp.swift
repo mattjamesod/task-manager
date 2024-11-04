@@ -1,5 +1,6 @@
 import SwiftUI
 import KillerData
+import KillerNavigation
 import UtilViews
 
 @main
@@ -29,6 +30,12 @@ extension EnvironmentValues {
     @Entry var canUndo: Bool = false
     @Entry var canRedo: Bool = false
 }
+
+
+//enum SidebarStateMessage: Sendable {
+//    case isVisible(Bool)
+//    static let messenger: AsyncMessageHandler<Self> = .init()
+//}
 
 struct ScopeNavigationWindow: Scene {
     @Environment(\.openWindow) var openWindow
@@ -100,6 +107,12 @@ struct ScopeNavigationWindow: Scene {
                 }
                 .disabled(!canRedo)
                 .keyboardShortcut(.init("z", modifiers: [.command, .shift]))
+            }
+            CommandGroup(replacing: .sidebar) {
+                Button("Show Sidebar") {
+                    NotificationCenter.default.post(name: .toggleSidebar, object: nil)
+                }
+                .keyboardShortcut(.init("0"))
             }
         }
 #endif

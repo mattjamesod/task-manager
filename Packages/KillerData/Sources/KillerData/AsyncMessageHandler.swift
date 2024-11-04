@@ -20,6 +20,8 @@ public actor AsyncMessageHandler<T: Sendable>: CustomConsoleLogger {
         }
     }
     
+    public init() { }
+    
     // TODO: make this logging useful when this class has many use cases
     nonisolated public let logToConsole: Bool = false
     

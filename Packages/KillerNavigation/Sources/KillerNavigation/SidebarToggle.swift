@@ -23,7 +23,6 @@ extension KillerNavigation {
             .toggleStyle(.button)
             .buttonStyle(.plain)
             .contentShape(Rectangle())
-            .keyboardShortcut(.init("0", modifiers: .command))
             .onHover { isHovering in
                 self.isHovering = isHovering
             }
