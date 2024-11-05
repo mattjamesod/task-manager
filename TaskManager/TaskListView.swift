@@ -96,13 +96,13 @@ struct TaskListView: View {
             )
         }
         .task {
-            let vm = taskProvider
-            await activeMonitor?.keepSynchronised(state: vm)
+            let provider = taskProvider
+            await activeMonitor?.keepSynchronised(state: provider)
         }
         .onDisappear {
             Task {
-                let vm = taskProvider
-                await activeMonitor?.deregister(state: vm)
+                let provider = taskProvider
+                await activeMonitor?.deregister(state: provider)
             }
         }
     }

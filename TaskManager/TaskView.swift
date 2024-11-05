@@ -56,6 +56,7 @@ struct TaskView: View {
         }
         .fixedSize(horizontal: false, vertical: true)
         .containerPadding()
+        .contentShape(Rectangle())
         .background {
             ZStack {
                 Rectangle()
@@ -70,7 +71,7 @@ struct TaskView: View {
             insertion: .scale(scale: 0.95).combined(with: .opacity),
             removal: .move(edge: .leading).combined(with: .opacity)
         ))
-        .contextMenu(menuItems: {
+        .contextMenu {
             Button.async {
                 await database?.duplicate(task)
             } label: {
@@ -83,9 +84,25 @@ struct TaskView: View {
             } label: {
                 Label("Delete", systemImage: "trash")
             }
-        })
+        }
         .fadeOutScrollTransition()
     }
+    
+//    SomeView()
+//        .padding()
+//        .background {
+//            ZStack {
+//                Rectangle()
+//                    .foregroundStyle(Color.clear)
+//                if isSelected {
+//                    RoundedRectangle(cornerRadius: 12)
+//                        .foregroundStyle(.ultraThinMaterial)
+//                }
+//            }
+//        }
+//        .contextMenu {
+//            // some items
+//        }
 }
 
 struct AddSubtaskButton: View {

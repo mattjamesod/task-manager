@@ -52,6 +52,12 @@ struct ScopeNavigationWindow: Scene {
                     ScopeNavigation(selection: .allActiveTasks)
                         .environment(\.database, database)
                         .mainWindowContent()
+//                        .onKillerEvent(MutationHisoryMessage.self) { message in
+//                            switch message {
+//                            case .canUndo(let canUndo): self.canUndo = canUndo
+//                            case .canRedo(let canRedo): self.canRedo = canRedo
+//                            }
+//                        }
                         .task {
                             let thread = await MutationHistory.messageHandler.subscribe()
                             
