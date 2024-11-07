@@ -17,6 +17,9 @@ struct ScopeNavigation: View {
             contentView: TaskContainerView.init
         )
         .taskCompleteButton(position: DeviceKind.current == .other ? .leading : .trailing)
+#if os(iOS)
+        .shakeToUndo(on: database)
+#endif
     }
 }
 

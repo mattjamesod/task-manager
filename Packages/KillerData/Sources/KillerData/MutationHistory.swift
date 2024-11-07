@@ -19,6 +19,11 @@ public enum MutationHistoryMessage: Sendable {
     case canRedo(Bool)
 }
 
+public extension EnvironmentValues {
+    @Entry var canUndo: Bool = false
+    @Entry var canRedo: Bool = false
+}
+
 public actor MutationHistory: CustomConsoleLogger {
     public nonisolated let logToConsole: Bool = true
     
