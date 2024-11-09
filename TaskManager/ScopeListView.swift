@@ -8,6 +8,7 @@ extension EnvironmentValues {
 }
 
 struct ScopeNavigation: View {
+    @Environment(\.database) var database
     @State var selection: Database.Scope?
     
     var body: some View {
@@ -17,9 +18,6 @@ struct ScopeNavigation: View {
             contentView: TaskContainerView.init
         )
         .taskCompleteButton(position: DeviceKind.current == .other ? .leading : .trailing)
-#if os(iOS)
-        .shakeToUndo(on: database)
-#endif
     }
 }
 

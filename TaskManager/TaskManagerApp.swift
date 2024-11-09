@@ -26,6 +26,27 @@ struct TaskManagerApp: App {
     }
 }
 
+struct BijectionContainerViewModifier: ViewModifier {
+    let database: Database?
+    
+    init(database: Database?) {
+        self.database = database
+    }
+    
+    func body(content: Content) -> some View {
+        content
+            #if canImport(UIKit)
+            .shakeToUndo(on: database)
+            #endif
+    }
+}
+
+public extension View {
+    func recordsBijections(on database: Database?) -> some View {
+        self.modifier(BijectionContainerViewModifier(database: database))
+    }
+}
+
 struct ScopeNavigationWindow: Scene {
     @Environment(\.openWindow) var openWindow
     
@@ -39,14 +60,9 @@ struct ScopeNavigationWindow: Scene {
             Group {
                 if let database {
                     ScopeNavigation(selection: .allActiveTasks)
-                        .environment(\.database, database)
                         .mainWindowContent()
-//                        .onKillerEvent(MutationHisoryMessage.self) { message in
-//                            switch message {
-//                            case .canUndo(let canUndo): self.canUndo = canUndo
-//                            case .canRedo(let canRedo): self.canRedo = canRedo
-//                            }
-//                        }
+                        .recordsBijections(on: database)
+                    // TODO: move this into recordsBijections, commands are hard
                         .task {
                             let thread = await MutationHistory.messageHandler.subscribe()
                             
@@ -59,6 +75,7 @@ struct ScopeNavigationWindow: Scene {
                         }
                         .environment(\.canUndo, self.canUndo)
                         .environment(\.canRedo, self.canRedo)
+                        .environment(\.database, database)
                 }
                 else {
                     CatastrophicErrorView()
