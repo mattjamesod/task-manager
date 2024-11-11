@@ -34,6 +34,8 @@ struct TaskView: View {
                     .id(task.instanceID)
             }
             
+            Text("\(task.id)")
+            
             VStack(alignment: .leading) {
                 TaskBodyField(task: self.task)
                 

@@ -6,24 +6,25 @@ import KillerModels
 public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomConsoleLogger {
     public init() { }
     
-    public let logToConsole: Bool = false
+    public let logToConsole: Bool = true
     
     private var monitorTask: Task<Void, Never>? = nil
     private var dbMessageThread: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
     private var registeredStateContainers: [StateContainer] = []
     
-    public func keepSynchronised(state: StateContainer) {
-        self.log("QM subscription started")
-        registeredStateContainers.append(state)
+    public func register(container: StateContainer) {
+        self.log("QM registered new container")
+        registeredStateContainers.append(container)
     }
     
-    public func deregister(state: StateContainer) {
-        self.log("QM subscription ended")
-        guard let index = registeredStateContainers.firstIndex(where: { $0.id == state.id }) else { return }
+    public func deregister(container: StateContainer) {
+        self.log("QM tried to deregister container...")
+        guard let index = registeredStateContainers.firstIndex(where: { $0.id == container.id }) else { return }
+        self.log("...and succeeded")
         registeredStateContainers.remove(at: index)
     }
     
-    public func beginMonitoring(_ query: Database.Scope, on database: Database) async {
+    public func waitForChanges(_ query: Database.Scope, on database: Database) async {
         self.log("started monitoring")
         dbMessageThread = await StateContainer.ModelType.messageHandler.subscribe()
         let syncEngine = SyncEngine<StateContainer.ModelType>(for: database, context: query)
@@ -46,7 +47,7 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
         }
     }
     
-    public func beginMonitoring(_ query: Database.Scope, recursive: Bool, on database: Database) async where StateContainer.ModelType: RecursiveData {
+    public func waitForChanges(_ query: Database.Scope, recursive: Bool, on database: Database) async where StateContainer.ModelType: RecursiveData {
         self.log("started monitoring")
         dbMessageThread = await StateContainer.ModelType.messageHandler.subscribe()
         let syncEngine = SyncEngine<StateContainer.ModelType>(for: database, context: query)
@@ -83,12 +84,16 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
         for container in registeredStateContainers {
             switch syncResult {
                 case .addOrUpdate(let model):
+                    self.log("addOrUpdate (single)")
                     await container.addOrUpdate(model: model)
                 case .addOrUpdateMany(let models):
+                    self.log("addOrUpdate (many)")
                     await container.addOrUpdate(models: models)
                 case .remove(let id):
+                self.log("remove (single))")
                     await container.remove(with: id)
                 case .removeMany(let ids):
+                    self.log("remove (many)")
                     await container.remove(with: ids)
             }
         }

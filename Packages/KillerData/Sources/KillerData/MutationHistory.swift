@@ -25,7 +25,7 @@ public extension EnvironmentValues {
 }
 
 public actor MutationHistory: CustomConsoleLogger {
-    public nonisolated let logToConsole: Bool = true
+    public nonisolated let logToConsole: Bool = false
     
     public static let messageHandler: AsyncMessageHandler<MutationHistoryMessage> = .init()
     

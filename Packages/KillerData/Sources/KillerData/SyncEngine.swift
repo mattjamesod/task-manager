@@ -50,7 +50,7 @@ actor SyncEngine<ModelType: SchemaBacked> {
             .fetchRecursive(ModelType.self, ids: ids)
             .compactMap(\.id)
         
-        // all models which are relevant to this event, and which should be shown in any view displaing the context query
+        // all models which are relevant to this event, and which should be shown in any view displaying the context query
         let applicableModels = await database
             .fetch(ModelType.self, context: query)
             .filter { $0.id != nil && relevantIDs.contains($0.id) }

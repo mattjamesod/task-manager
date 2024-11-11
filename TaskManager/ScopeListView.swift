@@ -12,6 +12,15 @@ struct ScopeNavigation: View {
     @State var selection: Database.Scope?
     
     var body: some View {
+//        VStack {
+//            if let selection {
+//                TaskContainerView(scope: selection)
+//            }
+//            else {
+//                EmptyView()
+//            }
+//        }
+        
         KillerNavigation.Flexible(
             selection: $selection,
             selectorView: ScopeListView.init,
