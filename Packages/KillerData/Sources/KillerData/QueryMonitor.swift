@@ -30,7 +30,8 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
         let syncEngine = SyncEngine<StateContainer.ModelType>(for: database, context: query)
         
         self.monitorTask = Task {
-            for await event in dbMessageThread!.events {
+            guard let thread = self.dbMessageThread else { return }
+            for await event in thread.events {
                 self.log("received event: \(event)")
                 
                 switch event {
@@ -53,7 +54,8 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
         let syncEngine = SyncEngine<StateContainer.ModelType>(for: database, context: query)
         
         self.monitorTask = Task {
-            for await event in dbMessageThread!.events {
+            guard let thread = self.dbMessageThread else { return }
+            for await event in thread.events {
                 self.log("received event: \(event)")
                 switch event {
                 case .recordChange(let id):

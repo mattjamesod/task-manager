@@ -34,8 +34,6 @@ struct TaskView: View {
                     .id(task.instanceID)
             }
             
-            Text("\(task.id)")
-            
             VStack(alignment: .leading) {
                 TaskBodyField(task: self.task)
                 
@@ -89,22 +87,6 @@ struct TaskView: View {
         }
         .fadeOutScrollTransition()
     }
-    
-//    SomeView()
-//        .padding()
-//        .background {
-//            ZStack {
-//                Rectangle()
-//                    .foregroundStyle(Color.clear)
-//                if isSelected {
-//                    RoundedRectangle(cornerRadius: 12)
-//                        .foregroundStyle(.ultraThinMaterial)
-//                }
-//            }
-//        }
-//        .contextMenu {
-//            // some items
-//        }
 }
 
 struct AddSubtaskButton: View {

@@ -50,7 +50,43 @@ class TaskContainerViewModel {
     let taskListMonitor: QueryMonitor<TaskProvider> = .init()
     let orphanMonitor: QueryMonitor<TaskProvider> = .init()
     
-//    func
+    let query: Database.Scope
+    
+    init(query: Database.Scope) {
+        self.query = query
+    }
+    
+    var title: String {
+        query.name
+    }
+    
+    nonisolated func startMonitoring(_ database: Database) async {
+        await taskListMonitor.waitForChanges(
+            query, on: database
+        )
+        
+        await orphanMonitor.waitForChanges(
+            query.compose(with: .orphaned), recursive: true, on: database
+        )
+    }
+    
+    nonisolated func stopMonitoring() async {
+        await taskListMonitor.stopMonitoring()
+        await orphanMonitor.stopMonitoring()
+    }
+}
+
+struct TaskContainerEmptyView: View {
+    var body: some View {
+        VStack(spacing: 8) {
+            Text("No Tasks")
+                .font(.title)
+                .fontWeight(.bold)
+            Text(String("¯\u{005C}_(ツ)_/¯"))
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .foregroundStyle(.gray)
+    }
 }
 
 struct TaskContainerView: View {
@@ -58,37 +94,47 @@ struct TaskContainerView: View {
     @Environment(\.navigationSizeClass) var navigationSizeClass
     @FocusState var focusedTaskID: KillerTask.ID?
     
-    @State var viewModel: TaskContainerViewModel = .init()
-    
-    let scope: Database.Scope
+    @State var viewModel: TaskContainerViewModel
     
     init(scope: Database.Scope) {
-        self.scope = scope
+        self.viewModel = .init(query: scope)
     }
     
     @State var taskSelection = Selection<KillerTask>()
+    @State var taskCount: Int = 0
     
     var body: some View {
-        CenteredScrollView {
-            Text(scope.name)
-                .lineLimit(1)
-                .font(.title)
-                .fontWeight(.semibold)
+        ZStack {
+            CenteredScrollView {
+                HStack {
+                    Text(viewModel.title)
+                        .lineLimit(1)
+                        .font(.title)
+                        .fontWeight(.semibold)
+            
+                    Text(String(self.taskCount))
+                }
                 .fadeOutScrollTransition()
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .containerPadding(axis: .horizontal)
             
-            TaskListView(.orphaned, monitor: viewModel.orphanMonitor)
-                .environment(\.taskListMonitor, viewModel.taskListMonitor)
-                .onChange(of: focusedTaskID) {
-                    Task {
-                        try? await Task.sleep(for: .seconds(0.1))
-                        Task { @MainActor in
-                            taskSelection.choose(id: focusedTaskID)
+                TaskListView(.orphaned, monitor: viewModel.orphanMonitor)
+                    .environment(\.taskListMonitor, viewModel.taskListMonitor)
+                    .onChange(of: focusedTaskID) {
+                        Task {
+                            try? await Task.sleep(for: .seconds(0.1))
+                            Task { @MainActor in
+                                taskSelection.choose(id: focusedTaskID)
+                            }
                         }
                     }
-                }
+            }
+            .opacity(taskCount > 0 ? 1 : 0)
+            
+            TaskContainerEmptyView()
+                .opacity(taskCount > 0 ? 0 : 1)
         }
+        .animation(.bouncy(duration: 0.4), value: taskCount)
         .containerPadding(axis: .horizontal)
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
@@ -110,31 +156,21 @@ struct TaskContainerView: View {
             .containerPadding(axis: .horizontal)
             .padding(.bottom, 8)
         }
+        .onPreferenceChange(TaskContainerCountKey.self) { taskCount in
+            self.taskCount = taskCount
+        }
         .environment(\.focusedTaskID, $focusedTaskID)
-        .environment(\.contextQuery, self.scope)
+        .environment(\.contextQuery, viewModel.query)
         .environment(taskSelection)
-        .onAppear {
+        .task {
             guard let database else { return }
-            
-            Task.detached {
-                await viewModel.taskListMonitor.waitForChanges(
-                    scope,
-                    on: database
-                )
-                
-                await viewModel.orphanMonitor.waitForChanges(
-                    scope.compose(with: .orphaned), recursive: true,
-                    on: database
-                )
-            }
+            await viewModel.startMonitoring(database)
         }
         .onDisappear {
-            Task.detached {
-                await viewModel.taskListMonitor.stopMonitoring()
-                await viewModel.orphanMonitor.stopMonitoring()
+            Task {
+                await viewModel.stopMonitoring()
             }
         }
-        .id(scope.id)
     }
 }
 

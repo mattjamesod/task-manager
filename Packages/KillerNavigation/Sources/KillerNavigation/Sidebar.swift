@@ -9,9 +9,9 @@ public extension KillerNavigation {
     static let sidebarContentMinWidth: Double = 220
     
     struct Sidebar<Selection: Hashable, SelectorView: View, ContentView: View>: View {
-//#if os(macOS)
-//        @Environment(\.appearsActive) var appearsActive
-//#endif
+#if os(macOS)
+        @Environment(\.appearsActive) var appearsActive
+#endif
         
         @Binding var selection: Selection?
         
@@ -44,6 +44,7 @@ public extension KillerNavigation {
                 ZStack {
                     if let selection {
                         contentView(selection)
+                            .id(selection)
                     }
                     else {
                         NoContentView()
@@ -60,7 +61,7 @@ public extension KillerNavigation {
                 SidebarToggle(isVisible: $sidebarVisible)
             }
             .onReceive(NotificationCenter.default.publisher(for: .toggleSidebar)) { _ in
-//                guard appearsActive else { return }
+                guard appearsActive else { return }
                 sidebarVisible.toggle()
             }
 #endif

@@ -37,6 +37,7 @@ public extension KillerNavigation {
                                     .buttonStyle(KillerInlineButtonStyle())
                             }
                             .geometryGroup()
+                            .id(selection)
                             .transition(.move(edge: .trailing))
                     }
                 }

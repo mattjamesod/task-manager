@@ -44,6 +44,7 @@ struct TaskListView: View {
                 context: contextQuery?.compose(with: self.detailQuery)
             )
         }
+        .taskContainerCount(taskProvider.tasks.count)
         .task {
             await activeMonitor?.register(container: taskProvider)
         }

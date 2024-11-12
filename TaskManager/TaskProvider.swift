@@ -3,7 +3,19 @@ import UtilAlgorithms
 import KillerModels
 import KillerData
 
-// TODO: Mutating observable property \TaskProvider.tasks after view is torn down has no effect
+struct TaskContainerCountKey: PreferenceKey {
+    static let defaultValue: Int = 0
+
+    static func reduce(value: inout Int, nextValue: () -> Int) {
+        value = value + nextValue()
+    }
+}
+
+extension View {
+    func taskContainerCount(_ count: Int) -> some View {
+        self.preference(key: TaskContainerCountKey.self, value: count)
+    }
+}
 
 @Observable @MainActor
 final class TaskProvider: SynchronisedStateContainer {
