@@ -15,13 +15,13 @@ struct TaskListView: View {
     let detailQuery: Database.Scope?
     
     init(_ detailQuery: Database.Scope? = nil, monitor: QueryMonitor<TaskProvider>) {
-        self.taskProvider = TaskProvider(isOrphan: true)
+        self.taskProvider = TaskProvider()
         self.monitor = monitor
         self.detailQuery = detailQuery
     }
     
     init(parentID: Int?) {
-        self.taskProvider = TaskProvider(filter: { $0.parentID == parentID }, isOrphan: false)
+        self.taskProvider = TaskProvider(filter: { $0.parentID == parentID })
         self.monitor = nil
         self.detailQuery = .children(of: parentID)
     }
@@ -45,14 +45,11 @@ struct TaskListView: View {
             )
         }
         .task {
-            let provider = taskProvider
-            print("\(taskProvider.isOrphan) - \(self.monitor != nil)")
-            await activeMonitor?.register(container: provider)
+            await activeMonitor?.register(container: taskProvider)
         }
         .onDisappear {
             Task {
-                let provider = taskProvider
-                await activeMonitor?.deregister(container: provider)
+                await activeMonitor?.deregister(container: taskProvider)
             }
         }
     }

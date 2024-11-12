@@ -7,19 +7,16 @@ import KillerData
 
 @Observable @MainActor
 final class TaskProvider: SynchronisedStateContainer {
-    let isOrphan: Bool
-    
     var tasks: [KillerTask] = []
     let filter: (KillerTask) -> Bool
     let sortOrder: (KillerTask, KillerTask) -> Bool
     
     init(
         filter: @escaping (KillerTask) -> Bool = { _ in true },
-        sortOrder: @escaping (KillerTask, KillerTask) -> Bool = { $0.createdAt < $1.createdAt }, isOrphan: Bool
+        sortOrder: @escaping (KillerTask, KillerTask) -> Bool = { $0.createdAt < $1.createdAt }
     ) {
         self.filter = filter
         self.sortOrder = sortOrder
-        self.isOrphan = isOrphan
     }
         
     func addOrUpdate(model: KillerTask) {
@@ -40,9 +37,7 @@ final class TaskProvider: SynchronisedStateContainer {
     }
     
     func remove(with id: Int) {
-        print("\(isOrphan) - removing \(id) from \(tasks.map(\.id))")
         guard let index = tasks.firstIndex(where: { $0.id == id }) else { return }
-        print(index)
         tasks.remove(at: index)
     }
     

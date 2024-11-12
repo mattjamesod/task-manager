@@ -45,13 +45,20 @@ extension EnvironmentValues {
     @Entry var focusedTaskID: FocusState<KillerTask.ID?>.Binding?
 }
 
+@Observable @MainActor
+class TaskContainerViewModel {
+    let taskListMonitor: QueryMonitor<TaskProvider> = .init()
+    let orphanMonitor: QueryMonitor<TaskProvider> = .init()
+    
+//    func
+}
+
 struct TaskContainerView: View {
     @Environment(\.database) var database
     @Environment(\.navigationSizeClass) var navigationSizeClass
     @FocusState var focusedTaskID: KillerTask.ID?
-            
-    let taskListMonitor: QueryMonitor<TaskProvider> = .init()
-    let orphanMonitor: QueryMonitor<TaskProvider> = .init()
+    
+    @State var viewModel: TaskContainerViewModel = .init()
     
     let scope: Database.Scope
     
@@ -71,8 +78,8 @@ struct TaskContainerView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .containerPadding(axis: .horizontal)
             
-            TaskListView(.orphaned, monitor: orphanMonitor)
-                .environment(\.taskListMonitor, self.taskListMonitor)
+            TaskListView(.orphaned, monitor: viewModel.orphanMonitor)
+                .environment(\.taskListMonitor, viewModel.taskListMonitor)
                 .onChange(of: focusedTaskID) {
                     Task {
                         try? await Task.sleep(for: .seconds(0.1))
@@ -110,12 +117,12 @@ struct TaskContainerView: View {
             guard let database else { return }
             
             Task.detached {
-                await taskListMonitor.waitForChanges(
+                await viewModel.taskListMonitor.waitForChanges(
                     scope,
                     on: database
                 )
                 
-                await orphanMonitor.waitForChanges(
+                await viewModel.orphanMonitor.waitForChanges(
                     scope.compose(with: .orphaned), recursive: true,
                     on: database
                 )
@@ -123,8 +130,8 @@ struct TaskContainerView: View {
         }
         .onDisappear {
             Task.detached {
-                await taskListMonitor.stopMonitoring()
-                await orphanMonitor.stopMonitoring()
+                await viewModel.taskListMonitor.stopMonitoring()
+                await viewModel.orphanMonitor.stopMonitoring()
             }
         }
         .id(scope.id)

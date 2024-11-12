@@ -4,9 +4,9 @@ import Logging
 import KillerModels
 
 public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomConsoleLogger {
-    public init() { }
-    
-    public let logToConsole: Bool = true
+    public init() {  }
+
+    public let logToConsole: Bool = false
     
     private var monitorTask: Task<Void, Never>? = nil
     private var dbMessageThread: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
@@ -84,16 +84,12 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
         for container in registeredStateContainers {
             switch syncResult {
                 case .addOrUpdate(let model):
-                    self.log("addOrUpdate (single)")
                     await container.addOrUpdate(model: model)
                 case .addOrUpdateMany(let models):
-                    self.log("addOrUpdate (many)")
                     await container.addOrUpdate(models: models)
                 case .remove(let id):
-                self.log("remove (single))")
                     await container.remove(with: id)
                 case .removeMany(let ids):
-                    self.log("remove (many)")
                     await container.remove(with: ids)
             }
         }
