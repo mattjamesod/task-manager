@@ -22,6 +22,7 @@
 		A055B5D02C25E52300BCB5C2 /* DatabaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5CF2C25E52300BCB5C2 /* DatabaseTests.swift */; };
 		A05D96822CC6E97000CEDFB0 /* KillerNavigation in Frameworks */ = {isa = PBXBuildFile; productRef = A05D96812CC6E97000CEDFB0 /* KillerNavigation */; };
 		A06244A12CE20B1E00F86255 /* TaskProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A06244A02CE20B1A00F86255 /* TaskProvider.swift */; };
+		A06244A32CE4A5C100F86255 /* TaskContainerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A06244A22CE4A5BD00F86255 /* TaskContainerState.swift */; };
 		A06498722C7B4D4C005C545B /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = A06498712C7B4D4C005C545B /* Logging */; };
 		A06498742C7B4D4C005C545B /* UtilAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = A06498732C7B4D4C005C545B /* UtilAlgorithms */; };
 		A06498762C7B4D4C005C545B /* UtilExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = A06498752C7B4D4C005C545B /* UtilExtensions */; };
@@ -68,6 +69,7 @@
 		A055B5CF2C25E52300BCB5C2 /* DatabaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseTests.swift; sourceTree = "<group>"; };
 		A055B5D52C25E52300BCB5C2 /* TaskManagerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TaskManagerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A06244A02CE20B1A00F86255 /* TaskProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskProvider.swift; sourceTree = "<group>"; };
+		A06244A22CE4A5BD00F86255 /* TaskContainerState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskContainerState.swift; sourceTree = "<group>"; };
 		A06A95F82C4E3DB4004302DF /* TaskListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskListView.swift; sourceTree = "<group>"; };
 		A079C6BC2C8AEDFC0053BC4F /* TaskBodyField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskBodyField.swift; sourceTree = "<group>"; };
 		A09BB03C2CD165F800740468 /* TaskCompleteCheckbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskCompleteCheckbox.swift; sourceTree = "<group>"; };
@@ -139,6 +141,7 @@
 				A031618D2CA93F070031B2E6 /* KillerSettings.swift */,
 				A031618B2CA53E410031B2E6 /* AboutView.swift */,
 				A003DE8A2C957116005057A9 /* ScopeListView.swift */,
+				A06244A22CE4A5BD00F86255 /* TaskContainerState.swift */,
 				A055B5BF2C25E52200BCB5C2 /* TaskContainerView.swift */,
 				A06A95F82C4E3DB4004302DF /* TaskListView.swift */,
 				A06244A02CE20B1A00F86255 /* TaskProvider.swift */,
@@ -338,6 +341,7 @@
 				A06A95F92C4E3DB8004302DF /* TaskListView.swift in Sources */,
 				A03581E02C5771690078F59E /* TaskView.swift in Sources */,
 				A003DE8B2C95711A005057A9 /* ScopeListView.swift in Sources */,
+				A06244A32CE4A5C100F86255 /* TaskContainerState.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -79,10 +79,10 @@ class TaskContainerViewModel {
 struct TaskContainerEmptyView: View {
     var body: some View {
         VStack(spacing: 8) {
-            Text("No Tasks")
+            Text("Nothing Here")
                 .font(.title)
                 .fontWeight(.bold)
-            Text(String("¯\u{005C}_(ツ)_/¯"))
+            Text("Add a new task or edit this scope")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .foregroundStyle(.gray)
@@ -101,7 +101,7 @@ struct TaskContainerView: View {
     }
     
     @State var taskSelection = Selection<KillerTask>()
-    @State var taskCount: Int = 0
+    @State var state: TaskContainerState = .loading
     
     var body: some View {
         ZStack {
@@ -111,13 +111,11 @@ struct TaskContainerView: View {
                         .lineLimit(1)
                         .font(.title)
                         .fontWeight(.semibold)
-            
-                    Text(String(self.taskCount))
                 }
                 .fadeOutScrollTransition()
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .containerPadding(axis: .horizontal)
-            
+                
                 TaskListView(.orphaned, monitor: viewModel.orphanMonitor)
                     .environment(\.taskListMonitor, viewModel.taskListMonitor)
                     .onChange(of: focusedTaskID) {
@@ -129,12 +127,20 @@ struct TaskContainerView: View {
                         }
                     }
             }
-            .opacity(taskCount > 0 ? 1 : 0)
+            .opacity(state.isDone ? 1 : 0)
+                
+            if state == .empty {
+                TaskContainerEmptyView()
+                    .transition(.scale(scale: 0.8).combined(with: .opacity))
+            }
             
-            TaskContainerEmptyView()
-                .opacity(taskCount > 0 ? 0 : 1)
+            if state == .loading {
+                // TODO: loading view that shows spinner after a bit
+                EmptyView()
+                    .transition(.scale(scale: 0.8).combined(with: .opacity))
+            }
         }
-        .animation(.bouncy(duration: 0.4), value: taskCount)
+        .animation(.bouncy(duration: 0.4), value: state)
         .containerPadding(axis: .horizontal)
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
@@ -156,8 +162,8 @@ struct TaskContainerView: View {
             .containerPadding(axis: .horizontal)
             .padding(.bottom, 8)
         }
-        .onPreferenceChange(TaskContainerCountKey.self) { taskCount in
-            self.taskCount = taskCount
+        .onPreferenceChange(TaskContainerStateKey.self) { state in
+            self.state = state
         }
         .environment(\.focusedTaskID, $focusedTaskID)
         .environment(\.contextQuery, viewModel.query)

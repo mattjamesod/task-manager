@@ -10,6 +10,7 @@ struct TaskListView: View {
     @Environment(Selection<KillerTask>.self) var selection
         
     @State var taskProvider: TaskProvider
+    @State var loadState: TaskContainerState = .loading
     
     let monitor: QueryMonitor<TaskProvider>?
     let detailQuery: Database.Scope?
@@ -37,17 +38,26 @@ struct TaskListView: View {
         }
         .animation(.bouncy(duration: 0.4), value: taskProvider.tasks)
         .task {
+            await activeMonitor?.register(container: taskProvider)
+        }
+        .task {
             guard let database else { return }
             
-            taskProvider.tasks = await database.fetch(
+            self.taskProvider.tasks = await database.fetch(
                 KillerTask.self,
                 context: contextQuery?.compose(with: self.detailQuery)
             )
+            
+            // onChange will not do anything if an empty array is reassigned to empty array
+            if self.taskProvider.tasks.count == 0 {
+                self.loadState = .empty
+            }
         }
-        .taskContainerCount(taskProvider.tasks.count)
-        .task {
-            await activeMonitor?.register(container: taskProvider)
+        .onChange(of: taskProvider.tasks) {
+            let count = taskProvider.tasks.count
+            self.loadState = count == 0 ? .empty : .done(itemCount: count)
         }
+        .taskListState(self.loadState)
         .onDisappear {
             Task {
                 await activeMonitor?.deregister(container: taskProvider)
