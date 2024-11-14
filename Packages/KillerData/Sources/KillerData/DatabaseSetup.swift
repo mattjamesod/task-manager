@@ -28,9 +28,9 @@ public class DatabaseSetupHelper {
 
 extension Database {
     public nonisolated func enableCloudkitSync() -> Database.CloudKitMonitor {
-        let cloudKitMonitor = Database.CloudKitMonitor(schemaDescription: self.schema)
+        let cloudKitMonitor = Database.CloudKitMonitor(database: self)
         
-        Task { await cloudKitMonitor.waitForChanges(on: self) }
+        Task { await cloudKitMonitor.waitForChanges() }
         
         return cloudKitMonitor
     }

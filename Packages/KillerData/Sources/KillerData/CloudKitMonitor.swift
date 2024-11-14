@@ -4,16 +4,18 @@ import CloudKit
 
 extension Database {
     public actor CloudKitMonitor {
-        init(schemaDescription: SchemaDescription) {
-            self.schema = schemaDescription
+        init(database: Database) {
+            self.localDatabase = database
         }
         
-        private let schema: SchemaDescription
+        private let localDatabase: Database
         private var monitorTasks: [Task<Void, Never>] = []
         private var dbMessageThreads: [AsyncMessageHandler<DatabaseMessage>.Thread] = []
         
-        func waitForChanges(on database: Database) async {
-            dbMessageThreads = await schema.subscribeToAll()
+        private let cloudDatabase = CKContainer(identifier: "iCloud.com.missingapostrophe.scopes").privateCloudDatabase
+        
+        func waitForChanges() async {
+            dbMessageThreads = await localDatabase.schema.subscribeToAll()
             
             for thread in dbMessageThreads {
                 self.monitorTasks.append(Task {
@@ -33,6 +35,27 @@ extension Database {
         
         private func handleRecordChanged(_ id: KillerTask.ID) async {
             print("CK handleRecordChanged: \(id)")
+            
+            guard let localRecord = await fetch(id) else { return }
+            
+            let cloudRecord = CKRecord(recordType: "KillerTask")
+            
+            cloudRecord.setValuesForKeys([
+                "id": localRecord.id,
+                "body": localRecord.body,
+                "completedAt": localRecord.completedAt,
+                "parentID": localRecord.parentID,
+                "createdAt": localRecord.createdAt,
+                "updatedAt": localRecord.updatedAt,
+                "deletedAt": localRecord.deletedAt,
+            ])
+            
+            do {
+                try await cloudDatabase.save(cloudRecord)
+            }
+            catch {
+                print(error.localizedDescription)
+            }
         }
         
         private func handleRecordsChanged(_ ids: Set<KillerTask.ID>) async {
@@ -41,6 +64,17 @@ extension Database {
         
         private func handleRecordDeleted(_ id: KillerTask.ID) async {
             print("CK handleRecordDeleted: \(id)")
+        }
+        
+        // MARK: - fetch methods
+        // to erase knowledge of the Query from the fetch method
+        
+        private func fetch(_ id: Int) async -> KillerTask? {
+            await localDatabase.pluck(KillerTask.self, id: id)
+        }
+        
+        private func fetch(_ ids: Set<Int>) async -> [KillerTask] {
+            await localDatabase.fetch(KillerTask.self, ids: ids)
         }
     }
 }
