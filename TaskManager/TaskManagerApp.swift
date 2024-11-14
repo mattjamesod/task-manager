@@ -7,13 +7,22 @@ import UtilViews
 struct TaskManagerApp: App {
     let database: Database?
     
+    // we store a reference to this monitor so it can receive CK-related events
+    let cloudKitMonitor: Database.CloudKitMonitor?
+    
     init() {
+        let helper = DatabaseSetupHelper(schema: .userData)
+        
         do {
-            self.database = try DatabaseSetupHelper(schema: .userData).setup()
+            let database = try helper.setupDatabase()
+            
+            self.database = database
+            self.cloudKitMonitor = database.enableCloudkitSync()
         }
         catch {
             // TODO: log database setup error
             self.database = nil
+            self.cloudKitMonitor = nil
         }
     }
         

@@ -3,7 +3,7 @@ import Foundation
 import CloudKit
 
 extension Database {
-    actor CloudKitMonitor {
+    public actor CloudKitMonitor {
         init(schemaDescription: SchemaDescription) {
             self.schema = schemaDescription
         }

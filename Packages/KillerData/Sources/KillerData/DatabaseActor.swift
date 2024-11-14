@@ -17,12 +17,9 @@ public enum DatabaseError: Error {
 /// Actor to perform methods on a given SQLite Database, from a list of pre-defined database structures
 /// Methods catch lower-level errors and log to analytiocs, then throw higher-level errors
 public actor Database {
-    private let schema: SchemaDescription
+    let schema: SchemaDescription
     private let connection: Connection
     private let history: MutationHistory = .init()
-    
-    // DB does not have to own this 🤔
-    private var cloudKitMonitor: CloudKitMonitor? = nil
     
     public func undo() async { await history.undo() }
     public func redo() async { await history.redo() }
@@ -42,11 +39,6 @@ public actor Database {
     
     internal static func inMemory() -> Database {
         try! Database(schema: .testing, connection: Connection())
-    }
-    
-    public func enableCloudKit(containerID: String) async {
-        cloudKitMonitor = CloudKitMonitor(schemaDescription: self.schema)
-        await cloudKitMonitor?.waitForChanges(on: self)
     }
     
     public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, context: Database.Scope?) -> [ModelType] {

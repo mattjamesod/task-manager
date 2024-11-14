@@ -8,7 +8,7 @@ public class DatabaseSetupHelper {
         self.schema = schema
     }
     
-    public func setup() throws(DatabaseError) -> Database {
+    public func setupDatabase() throws(DatabaseError) -> Database {
         let schema = Database.SchemaDescription.userData
         let connectionManager = DatabaseConnectionManager(databaseName: schema.fileName)
         let connection: SQLite.Connection
@@ -21,13 +21,17 @@ public class DatabaseSetupHelper {
             throw DatabaseError.couldNotEstablishConnection
         }
         
-        let db = try Database(schema: schema, connection: connection)
+        return try Database(schema: schema, connection: connection)
+    }
+}
+
+extension Database {
+    public nonisolated func enableCloudkitSync() -> Database.CloudKitMonitor {
+        let cloudKitMonitor = Database.CloudKitMonitor(schemaDescription: self.schema)
         
-        Task {
-            await db.enableCloudKit(containerID: "")
-        }
+        Task { await cloudKitMonitor.waitForChanges(on: self) }
         
-        return db
+        return cloudKitMonitor
     }
 }
 
