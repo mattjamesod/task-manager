@@ -75,7 +75,7 @@ struct TaskView: View {
             Button.async {
                 await database?.duplicate(task)
             } label: {
-                Label("Duplicate", systemImage: "square.on.square")
+                Label("Duplicate", systemImage: "plus.square.on.square")
             }
             Divider()
             Button.async(role: .destructive) {

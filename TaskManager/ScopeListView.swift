@@ -12,15 +12,6 @@ struct ScopeNavigation: View {
     @State var selection: Database.Scope?
     
     var body: some View {
-//        VStack {
-//            if let selection {
-//                TaskContainerView(scope: selection)
-//            }
-//            else {
-//                EmptyView()
-//            }
-//        }
-        
         KillerNavigation.Flexible(
             selection: $selection,
             selectorView: ScopeListView.init,
@@ -91,7 +82,7 @@ struct ScopeListLabelStyle: LabelStyle {
         .background {
             if selected {
                 RoundedRectangle(cornerRadius: 8)
-                    .foregroundStyle(.thickMaterial)
+                    .foregroundStyle(.ultraThickMaterial)
                     .matchedGeometryEffect(id: "ScopeListViewSelected", in: animationNamespace)
             }
         }

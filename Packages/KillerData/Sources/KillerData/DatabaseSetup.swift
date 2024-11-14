@@ -21,12 +21,18 @@ public class DatabaseSetupHelper {
             throw DatabaseError.couldNotEstablishConnection
         }
         
-        return try Database(schema: schema, connection: connection)
+        let db = try Database(schema: schema, connection: connection)
+        
+        Task {
+            await db.enableCloudKit(containerID: "")
+        }
+        
+        return db
     }
 }
 
 extension Database {
-    public enum SchemaDescription {
+    public enum SchemaDescription: Sendable {
         case userData
         case testing
         
