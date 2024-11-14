@@ -1,5 +1,6 @@
 import Foundation
 import SQLite
+import KillerModels
 
 public class DatabaseSetupHelper {
     private let schema: Database.SchemaDescription
@@ -62,6 +63,13 @@ extension Database {
                 try connection.run(Schema.Tasks.drop)
             case .testing:
                 try connection.run(Schema.Tasks.drop)
+            }
+        }
+        
+        func subscribeToAll() async -> [AsyncMessageHandler<DatabaseMessage>.Thread] {
+            switch self {
+            case .userData: [ await KillerTask.messageHandler.subscribe() ]
+            case .testing: [ await KillerTask.messageHandler.subscribe() ]
             }
         }
     }

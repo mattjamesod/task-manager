@@ -9,25 +9,25 @@ extension Database {
         }
         
         private let schema: SchemaDescription
-        private var monitorTask: Task<Void, Never>? = nil
-        private var dbMessageThread: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
+        private var monitorTasks: [Task<Void, Never>] = []
+        private var dbMessageThreads: [AsyncMessageHandler<DatabaseMessage>.Thread] = []
         
         func waitForChanges(on database: Database) async {
-            // get these from schema description
-            dbMessageThread = await KillerTask.messageHandler.subscribe()
+            dbMessageThreads = await schema.subscribeToAll()
             
-            self.monitorTask = Task {
-                guard let thread = self.dbMessageThread else { return }
-                for await event in thread.events {
-                    switch event {
-                    case .recordChange(let id):
-                        await self.handleRecordChanged(id)
-                    case .recordsChanged(let ids):
-                        await self.handleRecordsChanged(ids)
-                    case .recordDeleted(let id):
-                        await self.handleRecordDeleted(id)
+            for thread in dbMessageThreads {
+                self.monitorTasks.append(Task {
+                    for await event in thread.events {
+                        switch event {
+                        case .recordChange(let id):
+                            await self.handleRecordChanged(id)
+                        case .recordsChanged(let ids):
+                            await self.handleRecordsChanged(ids)
+                        case .recordDeleted(let id):
+                            await self.handleRecordDeleted(id)
+                        }
                     }
-                }
+                })
             }
         }
         

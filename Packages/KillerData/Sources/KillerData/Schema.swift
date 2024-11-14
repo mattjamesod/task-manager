@@ -24,6 +24,8 @@ public protocol SchemaBacked: Sendable {
     var createdAt: Date { get }
     var updatedAt: Date { get }
     var deletedAt: Date? { get }
+    
+    // TODO: move me to SchemaType?
     static var messageHandler: AsyncMessageHandler<DatabaseMessage> { get }
 }
 
