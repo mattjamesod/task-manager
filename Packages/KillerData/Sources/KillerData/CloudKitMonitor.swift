@@ -25,13 +25,18 @@ extension Database {
             for thread in dbMessageThreads {
                 self.monitorTasks.append(Task {
                     for await event in thread.events {
-                        switch event {
-                        case .recordChange(let id):
-                            await client.handleRecordChanged(id)
-                        case .recordsChanged(let ids):
-                            await client.handleRecordsChanged(ids)
-                        case .recordDeleted(let id):
-                            await client.handleRecordDeleted(id)
+                        do {
+                            switch event {
+                            case .recordChange(let id):
+                                try? await client.handleRecordChanged(id)
+                            case .recordsChanged(let ids):
+                                await client.handleRecordsChanged(ids)
+                            case .recordDeleted(let id):
+                                await client.handleRecordDeleted(id)
+                            }
+                        }
+                        catch {
+                            // TODO: mark the local record as requiring a CK update
                         }
                     }
                 })
