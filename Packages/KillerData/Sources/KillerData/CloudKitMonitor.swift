@@ -17,10 +17,7 @@ extension Database {
         func waitForChanges() async {
             dbMessageThreads = await localDatabase.schema.subscribeToAll()
             
-            let client = CloudKitClient(
-                localDatabase: self.localDatabase,
-                cloudDatabase: self.cloudDatabase
-            )
+            let client = CloudKitClient(cloudDatabase: self.cloudDatabase)
             
             for thread in dbMessageThreads {
                 self.monitorTasks.append(Task {
@@ -28,19 +25,33 @@ extension Database {
                         do {
                             switch event {
                             case .recordChange(let id):
-                                try? await client.handleRecordChanged(id)
+                                guard let record = await fetch(id) else { continue }
+                                try? await client.handleRecordChanged(record)
                             case .recordsChanged(let ids):
-                                await client.handleRecordsChanged(ids)
+                                let records = await fetch(ids)
+                                await client.handleRecordsChanged(records)
                             case .recordDeleted(let id):
-                                await client.handleRecordDeleted(id)
+                                guard let record = await fetch(id) else { continue }
+                                await client.handleRecordDeleted(record)
                             }
                         }
                         catch {
+                            // TODO: log response error
                             // TODO: mark the local record as requiring a CK update
                         }
                     }
                 })
             }
+        }
+        
+        // MARK: - local fetch methods
+        
+        private func fetch(_ id: Int) async -> KillerTask? {
+            await localDatabase.pluck(KillerTask.self, id: id)
+        }
+        
+        private func fetch(_ ids: Set<Int>) async -> [KillerTask] {
+            await localDatabase.fetch(KillerTask.self, ids: ids)
         }
     }
 }

@@ -2,6 +2,36 @@ import Foundation
 import KillerModels
 import CloudKit
 
+protocol CloudKitBacked {
+    var cloudID: CKRecord.ID { get }
+    var cloudBackedProperties: [String : Any] { get }
+}
+
+extension KillerTask: CloudKitBacked {
+    var cloudID: CKRecord.ID {
+        CKRecord.ID(recordName: String(self.id))
+    }
+    
+    var cloudBackedProperties: [String : Any] { [
+        "id": self.id,
+        "body": self.body,
+        "completedAt": self.completedAt,
+        "parentID": self.parentID,
+        "createdAt": self.createdAt,
+        "updatedAt": self.updatedAt,
+        "deletedAt": self.deletedAt,
+    ] }
+}
+
+extension CKRecord {
+    func updateValues<ModelType: CloudKitBacked>(from model: ModelType) {
+        self.setValuesForKeys(model.cloudBackedProperties)
+    }
+}
+
+// TODO: implement other sync methods
+// TODO: move error handling and fetching code elsewhere
+
 actor CloudKitClient {
     enum ResponseError: Error {
         case notLoggedIn
@@ -9,71 +39,48 @@ actor CloudKitClient {
         case other(Error)
     }
     
-    private let localDatabase: Database
     private let cloudDatabase: CKDatabase
     
-    init(localDatabase: Database, cloudDatabase: CKDatabase) {
-        self.localDatabase = localDatabase
+    init(cloudDatabase: CKDatabase) {
         self.cloudDatabase = cloudDatabase
     }
 
-    func handleRecordChanged(_ id: KillerTask.ID) async throws(ResponseError) {
-        print("CK handleRecordChanged: \(id)")
+    func handleRecordChanged<ModelType: CloudKitBacked>(_ localRecord: ModelType) async throws(ResponseError) {
+        print("CK handleRecordChanged: \(localRecord.cloudID.recordName)")
         
-        guard let localRecord = await fetch(id) else { return }
+        let cloudRecord = try await findOrCreateCloudRecord(ModelType.self, id: localRecord.cloudID)
         
-        let cloudRecord = try await findOrCreateCloudRecord(with: id)
-        
-        cloudRecord.setValuesForKeys([
-            "id": localRecord.id,
-            "body": localRecord.body,
-            "completedAt": localRecord.completedAt,
-            "parentID": localRecord.parentID,
-            "createdAt": localRecord.createdAt,
-            "updatedAt": localRecord.updatedAt,
-            "deletedAt": localRecord.deletedAt,
-        ])
+        cloudRecord.updateValues(from: localRecord)
         
         try await cloudSave(cloudRecord)
     }
     
-    func handleRecordsChanged(_ ids: Set<KillerTask.ID>) async {
-        print("CK handleRecordsChanged: \(ids)")
+    func handleRecordsChanged<ModelType: CloudKitBacked>(_ localRecords: [ModelType]) async {
+        print("CK handleRecordsChanged: \(localRecords.map(\.cloudID).map(\.recordName))")
     }
     
-    func handleRecordDeleted(_ id: KillerTask.ID) async {
-        print("CK handleRecordDeleted: \(id)")
-    }
-    
-    // MARK: - local fetch methods
-    
-    private func fetch(_ id: Int) async -> KillerTask? {
-        await localDatabase.pluck(KillerTask.self, id: id)
-    }
-    
-    private func fetch(_ ids: Set<Int>) async -> [KillerTask] {
-        await localDatabase.fetch(KillerTask.self, ids: ids)
+    func handleRecordDeleted<ModelType: CloudKitBacked>(_ localRecord: ModelType) async {
+        print("CK handleRecordDeleted: \(localRecord.cloudID.recordName)")
     }
     
     // MARK: - cloud fetch methods
     
-    private func cloudID(for localID: Int) -> CKRecord.ID {
-        CKRecord.ID(recordName: String(localID))
-    }
-    
-    private func findOrCreateCloudRecord(with id: Int) async throws(ResponseError) -> CKRecord {
+    private func findOrCreateCloudRecord<ModelType: CloudKitBacked>(
+        _ type: ModelType.Type,
+        id: CKRecord.ID
+    ) async throws(ResponseError) -> CKRecord {
         if let record = try await cloudFetch(id) {
             record
         }
         else {
-            CKRecord(recordType: "KillerTask", recordID:  self.cloudID(for: id))
+            CKRecord(recordType: String(describing: type), recordID: id)
         }
         
     }
     
-    private func cloudFetch(_ localID: Int) async throws(ResponseError) -> CKRecord? {
+    private func cloudFetch(_ id: CKRecord.ID) async throws(ResponseError) -> CKRecord? {
         do {
-            return try await cloudDatabase.record(for: self.cloudID(for: localID))
+            return try await cloudDatabase.record(for: id)
         }
         catch {
             guard let cloudError = error as? CKError else {
