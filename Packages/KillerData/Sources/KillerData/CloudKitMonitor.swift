@@ -10,48 +10,45 @@ extension Database {
         
         private let localDatabase: Database
         private var monitorTasks: [Task<Void, Never>] = []
-        private var dbMessageThreads: [AsyncMessageHandler<DatabaseMessage>.Thread] = []
         
-        private let cloudDatabase = CKContainer(identifier: "iCloud.com.missingapostrophe.scopes").privateCloudDatabase
+        private var killerTaskMessages: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
+        
+        private let client = CloudKitClient(
+            cloudDatabase: CKContainer(identifier: "iCloud.com.missingapostrophe.scopes").privateCloudDatabase
+        )
         
         func waitForChanges() async {
-            dbMessageThreads = await localDatabase.schema.subscribeToAll()
+            killerTaskMessages = await KillerTask.messageHandler.subscribe()
             
-            let client = CloudKitClient(cloudDatabase: self.cloudDatabase)
-            
-            for thread in dbMessageThreads {
-                self.monitorTasks.append(Task {
-                    for await event in thread.events {
-                        do {
-                            switch event {
-                            case .recordChange(let id):
-                                guard let record = await fetch(id) else { continue }
-                                try? await client.handleRecordChanged(record)
-                            case .recordsChanged(let ids):
-                                let records = await fetch(ids)
-                                await client.handleRecordsChanged(records)
-                            case .recordDeleted(let id):
-                                guard let record = await fetch(id) else { continue }
-                                await client.handleRecordDeleted(record)
-                            }
-                        }
-                        catch {
-                            // TODO: log response error
-                            // TODO: mark the local record as requiring a CK update
-                        }
-                    }
-                })
+            self.monitorTasks.append(Task {
+                guard let thread = self.killerTaskMessages else { return }
+                for await event in thread.events {
+                    await handle(message: event, recordType: KillerTask.self)
+                }
+            })
+        }
+        
+        private func handle<ModelType: SchemaBacked & CloudKitBacked>(
+            message: DatabaseMessage,
+            recordType: ModelType.Type
+        ) async {
+            do {
+                switch message {
+                case .recordChange(let id):
+                    guard let record = await localDatabase.pluck(ModelType.self, id: id) else { return }
+                    try? await client.handleRecordChanged(record)
+                case .recordsChanged(let ids):
+                    let records = await localDatabase.fetch(ModelType.self, ids: ids)
+                    await client.handleRecordsChanged(records)
+                case .recordDeleted(let id):
+                    guard let record = await localDatabase.pluck(ModelType.self, id: id) else { return }
+                    await client.handleRecordDeleted(record)
+                }
             }
-        }
-        
-        // MARK: - local fetch methods
-        
-        private func fetch(_ id: Int) async -> KillerTask? {
-            await localDatabase.pluck(KillerTask.self, id: id)
-        }
-        
-        private func fetch(_ ids: Set<Int>) async -> [KillerTask] {
-            await localDatabase.fetch(KillerTask.self, ids: ids)
+            catch {
+                // TODO: log response error
+                // TODO: mark the local record as requiring a CK update
+            }
         }
     }
 }
