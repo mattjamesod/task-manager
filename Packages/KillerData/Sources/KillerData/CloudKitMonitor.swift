@@ -36,13 +36,13 @@ extension Database {
                 switch message {
                 case .recordChange(let id):
                     guard let record = await localDatabase.pluck(ModelType.self, id: id) else { return }
-                    try? await client.handleRecordChanged(record)
+                    try await client.handleRecordChanged(record)
                 case .recordsChanged(let ids):
                     let records = await localDatabase.fetch(ModelType.self, ids: ids)
-                    await client.handleRecordsChanged(records)
+                    try await client.handleRecordsChanged(records)
                 case .recordDeleted(let id):
                     guard let record = await localDatabase.pluck(ModelType.self, id: id) else { return }
-                    await client.handleRecordDeleted(record)
+                    try await client.handleRecordDeleted(record)
                 }
             }
             catch {

@@ -1,6 +1,7 @@
 import Foundation
 import KillerModels
 import CloudKit
+import Logging
 
 protocol CloudKitBacked {
     var cloudID: CKRecord.ID { get }
@@ -32,7 +33,9 @@ extension CKRecord {
 // TODO: implement other sync methods
 // TODO: move error handling and fetching code elsewhere
 
-actor CloudKitClient {
+actor CloudKitClient: CustomConsoleLogger {
+    let logToConsole: Bool = true
+    
     enum ResponseError: Error {
         case notLoggedIn
         case cloud(CKError)
@@ -46,7 +49,7 @@ actor CloudKitClient {
     }
 
     func handleRecordChanged<ModelType: CloudKitBacked>(_ localRecord: ModelType) async throws(ResponseError) {
-        print("CK handleRecordChanged: \(localRecord.cloudID.recordName)")
+        log("CK handleRecordChanged: \(localRecord.cloudID.recordName)")
         
         let cloudRecord = try await findOrCreateCloudRecord(ModelType.self, id: localRecord.cloudID)
         
@@ -55,12 +58,30 @@ actor CloudKitClient {
         try await cloudSave(cloudRecord)
     }
     
-    func handleRecordsChanged<ModelType: CloudKitBacked>(_ localRecords: [ModelType]) async {
-        print("CK handleRecordsChanged: \(localRecords.map(\.cloudID).map(\.recordName))")
+    func handleRecordsChanged<ModelType: CloudKitBacked>(_ localRecords: [ModelType]) async throws(ResponseError) {
+        log("CK handleRecordsChanged: \(localRecords.map(\.cloudID).map(\.recordName))")
+        
+        let recordsDict = try await findOrCreateCloudRecords(ModelType.self, ids: localRecords.map(\.cloudID))
+        
+        let updatedRecords = recordsDict.map { keyValuePair in
+            let id = keyValuePair.key
+            let cloudRecord = keyValuePair.value
+            
+            if let localRecord = localRecords.first(where: { $0.cloudID == id }) {
+                cloudRecord.updateValues(from: localRecord)
+            }
+            
+            return cloudRecord
+        }
+        
+        try await cloudSave(updatedRecords)
     }
     
-    func handleRecordDeleted<ModelType: CloudKitBacked>(_ localRecord: ModelType) async {
-        print("CK handleRecordDeleted: \(localRecord.cloudID.recordName)")
+    func handleRecordDeleted<ModelType: CloudKitBacked>(_ localRecord: ModelType) async throws(ResponseError) {
+        log("CK handleRecordDeleted: \(localRecord.cloudID.recordName)")
+        
+        // TODO: does this throw if record not exists?
+        try await cloudDelete(localRecord.cloudID)
     }
     
     // MARK: - cloud fetch methods
@@ -75,7 +96,32 @@ actor CloudKitClient {
         else {
             CKRecord(recordType: String(describing: type), recordID: id)
         }
-        
+    }
+    
+    private func findOrCreateCloudRecords<ModelType: CloudKitBacked>(
+        _ type: ModelType.Type,
+        ids: [CKRecord.ID]
+    ) async throws(ResponseError) -> [CKRecord.ID : CKRecord] {
+        do {
+            let fetchResults = try await cloudDatabase.records(for: ids)
+            
+            return try Dictionary(uniqueKeysWithValues: fetchResults.map { keyValuePair in
+                do {
+                    return (keyValuePair.key, try keyValuePair.value.get())
+                }
+                catch {
+                    if let cloudError = error as? CKError, cloudError.code == .unknownItem {
+                        let newRecord = CKRecord(recordType: String(describing: type), recordID: keyValuePair.key)
+                        return (keyValuePair.key, newRecord)
+                    }
+                    
+                    throw asResponseError(error)
+                }
+            })
+        }
+        catch {
+            throw asResponseError(error)
+        }
     }
     
     private func cloudFetch(_ id: CKRecord.ID) async throws(ResponseError) -> CKRecord? {
@@ -83,23 +129,11 @@ actor CloudKitClient {
             return try await cloudDatabase.record(for: id)
         }
         catch {
-            guard let cloudError = error as? CKError else {
-                throw ResponseError.other(error)
-            }
-            
-            if cloudError.code == .unknownItem {
-                // this is fine - there's no way to fetch a record if it exists and return
-                // nil otherwise, so we're using this error as behaviour logic smh
+            if let cloudError = error as? CKError, cloudError.code == .unknownItem {
                 return nil
             }
             
-            if cloudError.code == .accountTemporarilyUnavailable {
-                // the user is not logged in to an iCloud account. We should have caught this
-                // earlier, but if we didn't, the caller knows what to do
-                throw ResponseError.notLoggedIn
-            }
-            
-            throw ResponseError.cloud(cloudError)
+            throw asResponseError(error)
         }
     }
     
@@ -108,17 +142,39 @@ actor CloudKitClient {
             try await cloudDatabase.save(record)
         }
         catch {
-            guard let cloudError = error as? CKError else {
-                throw ResponseError.other(error)
-            }
-            
-            if cloudError.code == .accountTemporarilyUnavailable {
-                // the user is not logged in to an iCloud account. We should have caught this
-                // earlier, but if we didn't, the caller knows what to do
-                throw ResponseError.notLoggedIn
-            }
-            
-            throw ResponseError.cloud(cloudError)
+            throw asResponseError(error)
         }
+    }
+    
+    private func cloudSave(_ records: [CKRecord]) async throws(ResponseError) {
+        do {
+            try await cloudDatabase.modifyRecords(saving: records, deleting: [])
+        }
+        catch {
+            throw asResponseError(error)
+        }
+    }
+    
+    private func cloudDelete(_ id: CKRecord.ID) async throws(ResponseError) {
+        do {
+            try await cloudDatabase.deleteRecord(withID: id)
+        }
+        catch {
+            throw asResponseError(error)
+        }
+    }
+    
+    private func asResponseError(_ error: Error) -> ResponseError {
+        guard let cloudError = error as? CKError else {
+            return ResponseError.other(error)
+        }
+        
+        if cloudError.code == .accountTemporarilyUnavailable {
+            // the user is not logged in to an iCloud account. We should have caught this
+            // earlier, but if we didn't, the caller knows what to do
+            return ResponseError.notLoggedIn
+        }
+        
+        return ResponseError.cloud(cloudError)
     }
 }
