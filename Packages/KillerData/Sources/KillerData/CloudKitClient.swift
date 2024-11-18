@@ -3,6 +3,22 @@ import KillerModels
 import CloudKit
 import Logging
 
+class CloudKitUpdateRecordPair<LocalRecord: CloudKitBacked>: Identifiable {
+    let id: CKRecord.ID
+    let localRecord: LocalRecord
+    let cloudRecord: CKRecord
+    
+    init(id: CKRecord.ID, localRecord: LocalRecord, cloudRecord: CKRecord?) {
+        self.id = id
+        self.localRecord = localRecord
+        self.cloudRecord = cloudRecord ?? CKRecord(recordType: String(describing: LocalRecord.self), recordID: id)
+    }
+    
+    func updateCloudValues() {
+        self.cloudRecord.updateValues(from: self.localRecord)
+    }
+}
+
 protocol CloudKitBacked {
     var cloudID: CKRecord.ID { get }
     var cloudBackedProperties: [String : Any] { get }
@@ -61,20 +77,11 @@ actor CloudKitClient: CustomConsoleLogger {
     func handleRecordsChanged<ModelType: CloudKitBacked>(_ localRecords: [ModelType]) async throws(ResponseError) {
         log("CK handleRecordsChanged: \(localRecords.map(\.cloudID).map(\.recordName))")
         
-        let recordsDict = try await findOrCreateCloudRecords(ModelType.self, ids: localRecords.map(\.cloudID))
+        let recordPairs = try await findOrCreateCloudRecords(for: localRecords)
         
-        let updatedRecords = recordsDict.map { keyValuePair in
-            let id = keyValuePair.key
-            let cloudRecord = keyValuePair.value
-            
-            if let localRecord = localRecords.first(where: { $0.cloudID == id }) {
-                cloudRecord.updateValues(from: localRecord)
-            }
-            
-            return cloudRecord
-        }
+        recordPairs.forEach { $0.updateCloudValues() }
         
-        try await cloudSave(updatedRecords)
+        try await cloudSave(recordPairs.map(\.cloudRecord))
     }
     
     func handleRecordDeleted<ModelType: CloudKitBacked>(_ localRecord: ModelType) async throws(ResponseError) {
@@ -99,25 +106,32 @@ actor CloudKitClient: CustomConsoleLogger {
     }
     
     private func findOrCreateCloudRecords<ModelType: CloudKitBacked>(
-        _ type: ModelType.Type,
-        ids: [CKRecord.ID]
-    ) async throws(ResponseError) -> [CKRecord.ID : CKRecord] {
+        for localRecords: [ModelType]
+    ) async throws(ResponseError) -> [CloudKitUpdateRecordPair<ModelType>] {
         do {
-            let fetchResults = try await cloudDatabase.records(for: ids)
+            let fetchResults = try await cloudDatabase.records(for: localRecords.map(\.cloudID))
+            let indexedRecords = Dictionary(uniqueKeysWithValues: localRecords.map { ($0.cloudID, $0) })
             
-            return try Dictionary(uniqueKeysWithValues: fetchResults.map { keyValuePair in
+            let cloudRecords = try fetchResults.compactMapValues { result in
                 do {
-                    return (keyValuePair.key, try keyValuePair.value.get())
+                    return try result.get() as CKRecord?
                 }
                 catch {
                     if let cloudError = error as? CKError, cloudError.code == .unknownItem {
-                        let newRecord = CKRecord(recordType: String(describing: type), recordID: keyValuePair.key)
-                        return (keyValuePair.key, newRecord)
+                        return nil
                     }
                     
                     throw asResponseError(error)
                 }
-            })
+            }
+            
+            return indexedRecords.map { kvp in
+                CloudKitUpdateRecordPair(
+                    id: kvp.key,
+                    localRecord: kvp.value,
+                    cloudRecord: cloudRecords[kvp.key]
+                )
+            }
         }
         catch {
             throw asResponseError(error)
