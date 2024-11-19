@@ -13,8 +13,10 @@ extension Database {
         
         private var killerTaskMessages: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
         
-        private let client = CloudKitClient(
-            cloudDatabase: CKContainer(identifier: "iCloud.com.missingapostrophe.scopes").privateCloudDatabase
+        private let syncEngine = CloudKitSyncEngine(
+            client: CloudKitClient(
+                database: CKContainer(identifier: "iCloud.com.missingapostrophe.scopes").privateCloudDatabase
+            )
         )
         
         func waitForChanges() async {
@@ -36,13 +38,13 @@ extension Database {
                 switch message {
                 case .recordChange(let id):
                     guard let record = await localDatabase.pluck(ModelType.self, id: id) else { return }
-                    try await client.handleRecordChanged(record)
+                    try await syncEngine.handleRecordChanged(record)
                 case .recordsChanged(let ids):
                     let records = await localDatabase.fetch(ModelType.self, ids: ids)
-                    try await client.handleRecordsChanged(records)
+                    try await syncEngine.handleRecordsChanged(records)
                 case .recordDeleted(let id):
                     guard let record = await localDatabase.pluck(ModelType.self, id: id) else { return }
-                    try await client.handleRecordDeleted(record)
+                    try await syncEngine.handleRecordDeleted(record)
                 }
             }
             catch {
