@@ -42,33 +42,15 @@ actor CloudKitClient {
     func findOrCreateRecords<ModelType: CloudKitBacked>(
         for localRecords: [ModelType]
     ) async throws(ResponseError) -> [CloudKitUpdateRecordPair<ModelType>] {
-        do {
-            let fetchResults = try await database.records(for: localRecords.map(\.cloudID))
-            let indexedRecords = Dictionary(uniqueKeysWithValues: localRecords.map { ($0.cloudID, $0) })
-            
-            let cloudRecords = try fetchResults.compactMapValues { result in
-                do {
-                    return try result.get() as CKRecord?
-                }
-                catch {
-                    if let cloudError = error as? CKError, cloudError.code == .unknownItem {
-                        return nil
-                    }
-                    
-                    throw ResponseError.wrapping(error)
-                }
-            }
-            
-            return indexedRecords.map { kvp in
-                CloudKitUpdateRecordPair(
-                    id: kvp.key,
-                    localRecord: kvp.value,
-                    cloudRecord: cloudRecords[kvp.key]
-                )
-            }
-        }
-        catch {
-            throw ResponseError.wrapping(error)
+        let cloudRecords = try await fetch(ids: localRecords.map(\.cloudID))
+        let indexedLocalRecords = Dictionary(uniqueKeysWithValues: localRecords.map { ($0.cloudID, $0) })
+        
+        return indexedLocalRecords.map { kvp in
+            CloudKitUpdateRecordPair(
+                id: kvp.key,
+                localRecord: kvp.value,
+                cloudRecord: cloudRecords[kvp.key]
+            )
         }
     }
     
@@ -81,6 +63,27 @@ actor CloudKitClient {
                 return nil
             }
             
+            throw ResponseError.wrapping(error)
+        }
+    }
+    
+    private func fetch(ids: [CKRecord.ID]) async throws(ResponseError) -> [CKRecord.ID : CKRecord] {
+        do {
+            return try await database.records(for: ids)
+                .compactMapValues { result in
+                    do {
+                        return try result.get() as CKRecord?
+                    }
+                    catch {
+                        if let cloudError = error as? CKError, cloudError.code == .unknownItem {
+                            return nil
+                        }
+                        
+                        throw ResponseError.wrapping(error)
+                    }
+                }
+        }
+        catch {
             throw ResponseError.wrapping(error)
         }
     }
