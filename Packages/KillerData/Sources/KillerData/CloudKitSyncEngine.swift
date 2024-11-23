@@ -60,7 +60,7 @@ actor CloudKitSyncEngine: CustomConsoleLogger {
 
     func handleRecordChanged<ModelType: CloudKitBacked>(
         _ localRecord: ModelType
-    ) async throws(CloudKitClient.ResponseError) {
+    ) async throws(CloudKitResponseError) {
         log("CK handleRecordChanged: \(localRecord.cloudID.recordName)")
         
         let cloudRecord = try await client.findOrCreateRecord(ModelType.self, id: localRecord.cloudID)
@@ -72,7 +72,7 @@ actor CloudKitSyncEngine: CustomConsoleLogger {
     
     func handleRecordsChanged<ModelType: CloudKitBacked>(
         _ localRecords: [ModelType]
-    ) async throws(CloudKitClient.ResponseError) {
+    ) async throws(CloudKitResponseError) {
         log("CK handleRecordsChanged: \(localRecords.map(\.cloudID).map(\.recordName))")
         
         let recordPairs = try await client.findOrCreateRecords(for: localRecords)
@@ -84,7 +84,7 @@ actor CloudKitSyncEngine: CustomConsoleLogger {
     
     func handleRecordDeleted<ModelType: CloudKitBacked>(
         _ localRecord: ModelType
-    ) async throws(CloudKitClient.ResponseError) {
+    ) async throws(CloudKitResponseError) {
         log("CK handleRecordDeleted: \(localRecord.cloudID.recordName)")
         
         // TODO: does this throw if record not exists?

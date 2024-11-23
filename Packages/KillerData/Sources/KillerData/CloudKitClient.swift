@@ -1,26 +1,6 @@
 import CloudKit
 
 actor CloudKitClient {
-    enum ResponseError: Error {
-        case notLoggedIn
-        case cloud(CKError)
-        case other(Error)
-        
-        static func wrapping(_ error: Error) -> ResponseError {
-            guard let cloudError = error as? CKError else {
-                return .other(error)
-            }
-            
-            if cloudError.code == .accountTemporarilyUnavailable {
-                // the user is not logged in to an iCloud account. We should have caught this
-                // earlier, but if we didn't, the caller knows what to do
-                return .notLoggedIn
-            }
-            
-            return .cloud(cloudError)
-        }
-    }
-    
     private let database: CKDatabase
     
     init(database: CKDatabase) {
@@ -30,7 +10,7 @@ actor CloudKitClient {
     func findOrCreateRecord<ModelType: CloudKitBacked>(
         _ type: ModelType.Type,
         id: CKRecord.ID
-    ) async throws(ResponseError) -> CKRecord {
+    ) async throws(CloudKitResponseError) -> CKRecord {
         if let record = try await fetch(id) {
             record
         }
@@ -41,7 +21,7 @@ actor CloudKitClient {
     
     func findOrCreateRecords<ModelType: CloudKitBacked>(
         for localRecords: [ModelType]
-    ) async throws(ResponseError) -> [CloudKitUpdateRecordPair<ModelType>] {
+    ) async throws(CloudKitResponseError) -> [CloudKitUpdateRecordPair<ModelType>] {
         let cloudRecords = try await fetch(ids: localRecords.map(\.cloudID))
         let indexedLocalRecords = Dictionary(uniqueKeysWithValues: localRecords.map { ($0.cloudID, $0) })
         
@@ -54,20 +34,17 @@ actor CloudKitClient {
         }
     }
     
-    func fetch(_ id: CKRecord.ID) async throws(ResponseError) -> CKRecord? {
+    func fetch(_ id: CKRecord.ID) async throws(CloudKitResponseError) -> CKRecord? {
         do {
             return try await database.record(for: id)
         }
         catch {
-            if let cloudError = error as? CKError, cloudError.code == .unknownItem {
-                return nil
-            }
-            
-            throw ResponseError.wrapping(error)
+            try CloudKitResponseError.ignoreUnknownItem(error)
+            return nil
         }
     }
     
-    private func fetch(ids: [CKRecord.ID]) async throws(ResponseError) -> [CKRecord.ID : CKRecord] {
+    private func fetch(ids: [CKRecord.ID]) async throws(CloudKitResponseError) -> [CKRecord.ID : CKRecord] {
         do {
             return try await database.records(for: ids)
                 .compactMapValues { result in
@@ -75,43 +52,40 @@ actor CloudKitClient {
                         return try result.get() as CKRecord?
                     }
                     catch {
-                        if let cloudError = error as? CKError, cloudError.code == .unknownItem {
-                            return nil
-                        }
-                        
-                        throw ResponseError.wrapping(error)
+                        try CloudKitResponseError.ignoreUnknownItem(error)
+                        return nil
                     }
                 }
         }
         catch {
-            throw ResponseError.wrapping(error)
+            throw CloudKitResponseError.wrapping(error)
         }
     }
     
-    func save(_ record: CKRecord) async throws(ResponseError) {
+    func save(_ record: CKRecord) async throws(CloudKitResponseError) {
         do {
             try await database.save(record)
         }
         catch {
-            throw ResponseError.wrapping(error)
+            throw CloudKitResponseError.wrapping(error)
         }
     }
     
-    func save(_ records: [CKRecord]) async throws(ResponseError) {
+    func save(_ records: [CKRecord]) async throws(CloudKitResponseError) {
         do {
             try await database.modifyRecords(saving: records, deleting: [])
         }
         catch {
-            throw ResponseError.wrapping(error)
+            throw CloudKitResponseError.wrapping(error)
         }
     }
     
-    func delete(_ id: CKRecord.ID) async throws(ResponseError) {
+    func delete(_ id: CKRecord.ID) async throws(CloudKitResponseError) {
         do {
             try await database.deleteRecord(withID: id)
         }
         catch {
-            throw ResponseError.wrapping(error)
+            throw CloudKitResponseError.wrapping(error)
         }
     }
 }
