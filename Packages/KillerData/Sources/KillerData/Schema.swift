@@ -18,6 +18,7 @@ public protocol SchemaBacked: Sendable {
     static func getSchemaExpression<T>(for keyPath: KeyPath<Self, T>) throws -> SQLite.Expression<T> where T: SQLite.Value
     static func getSchemaExpression<T>(optional keyPath: KeyPath<Self, T?>) throws -> SQLite.Expression<T?> where T: SQLite.Value
     
+    static func creationProperties() -> [Setter]
     func duplicationProperties() -> [Setter]
     
     var id: Int { get }
@@ -34,6 +35,7 @@ extension Database {
         public enum Tasks: ModelSchema {
             public static let tableExpression: SQLite.Table = Table("tasks")
             public static let id = SQLite.Expression<Int>("id")
+            public static let cloudID = SQLite.Expression<UUID>("cloudID")
             public static let createdAt = SQLite.Expression<Date>("createdAt")
             public static let updatedAt = SQLite.Expression<Date>("updatedAt")
             public static let deletedAt = SQLite.Expression<Date?>("deletedAt")
@@ -46,6 +48,7 @@ extension Database {
             static var create: String {
                 self.tableExpression.create(ifNotExists: true) {
                     $0.column(id, primaryKey: .autoincrement)
+                    $0.column(cloudID)
                     $0.column(body, defaultValue: "")
                     $0.column(createdAt)
                     $0.column(updatedAt)
@@ -71,6 +74,7 @@ extension KillerTask: SchemaBacked {
         do {
             return KillerTask(
                 id: try databaseRecord.get(Database.Schema.Tasks.id),
+                cloudID: try databaseRecord.get(Database.Schema.Tasks.cloudID),
                 body: try databaseRecord.get(Database.Schema.Tasks.body),
                 createdAt: try databaseRecord.get(Database.Schema.Tasks.createdAt),
                 updatedAt: try databaseRecord.get(Database.Schema.Tasks.updatedAt),
@@ -88,6 +92,7 @@ extension KillerTask: SchemaBacked {
     public static func getSchemaExpression<T>(for keyPath: KeyPath<Self, T>) throws -> SQLite.Expression<T> where T: SQLite.Value {
         switch keyPath {
         case \.id: SchemaType.id as! SQLite.Expression<T>
+        case \.cloudID: SchemaType.cloudID as! SQLite.Expression<T>
         case \.body: SchemaType.body as! SQLite.Expression<T>
         case \.createdAt: SchemaType.createdAt as! SQLite.Expression<T>
         case \.updatedAt: SchemaType.updatedAt as! SQLite.Expression<T>
@@ -102,6 +107,14 @@ extension KillerTask: SchemaBacked {
         case \.parentID: SchemaType.parentID as! SQLite.Expression<T?>
         default: throw DatabaseError.propertyDoesNotExist
         }
+    }
+    
+    static public func creationProperties() -> [Setter] {
+        [
+            SchemaType.createdAt <- Date.now,
+            SchemaType.updatedAt <- Date.now,
+            SchemaType.cloudID <- UUID()
+        ]
     }
     
     public func duplicationProperties() -> [Setter] {

@@ -1,8 +1,19 @@
 import Foundation
+import CloudKit
 
 public struct KillerTask: Sendable, Identifiable, Equatable, Clonable, Timestamped {
-    public init(id: Int, body: String, createdAt: Date, updatedAt: Date, completedAt: Date? = nil, deletedAt: Date? = nil, parentID: Int? = nil) {
+    public init(
+        id: Int,
+        cloudID: UUID,
+        body: String,
+        createdAt: Date,
+        updatedAt: Date,
+        completedAt: Date? = nil,
+        deletedAt: Date? = nil,
+        parentID: Int? = nil
+    ) {
         self.id = id
+        self.internalCloudID = cloudID
         self.body = body
         self.createdAt = createdAt
         self.updatedAt = updatedAt
@@ -13,9 +24,21 @@ public struct KillerTask: Sendable, Identifiable, Equatable, Clonable, Timestamp
         self.instanceID = UUID()
     }
     
+    /// the (auto-incrementing, sequantial) ID of the task in the local database
+    /// used as the model's ID for SwiftUI rendering purposes
+    public let id: Int
+    
+    /// the ID of the task used in the CloudKit database, used to identify it
+    /// between devices
+    private let internalCloudID: UUID
+    public var cloudID: CKRecord.ID { CKRecord.ID(recordName: self.internalCloudID.uuidString) }
+    
+    /// the ID of the instance of the task. used by SwiftUI's .id method sometimes
+    /// when a view should re-render after a DB update
+    ///
+    /// yes, I know this breaks the SwiftUI model. See comment in TaskCompleteCheckbox.swift
     public let instanceID: UUID
     
-    public let id: Int
     public var body: String
     public var completedAt: Date?
     

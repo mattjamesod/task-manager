@@ -29,7 +29,7 @@ public actor Database {
         self.connection = connection
         
         do {
-//            try schema.destroy(connection: connection)
+            try schema.destroy(connection: connection)
             try schema.create(connection: connection)
         }
         catch {
@@ -148,15 +148,11 @@ public actor Database {
         _ property1: PropertyArgument<ModelType, PropertyType1>,
         context: Database.Scope? = nil
     ) async {
-        var setters = [
-            try? property1.getSetter(),
-            ModelType.SchemaType.createdAt <- Date.now,
-            ModelType.SchemaType.updatedAt <- Date.now
-        ].compact()
+        let creation = ModelType.creationProperties()
+        let context = context?.insertProperties ?? []
+        let manuallyRequested = [ try? property1.getSetter() ].compact()
         
-        for setter in context?.insertArguments ?? [] {
-            setters.append(setter)
-        }
+        var setters = creation + context + manuallyRequested
         
         guard let id = self.insert(type, setters) else { return }
         
@@ -176,16 +172,15 @@ public actor Database {
         _ property2: PropertyArgument<ModelType, PropertyType2>,
         context: Database.Scope? = nil
     ) async {
-        var setters = [
+        let creation = ModelType.creationProperties()
+        let context = context?.insertProperties ?? []
+        
+        let manuallyRequested = [
             try? property1.getSetter(),
-            try? property2.getSetter(),
-            ModelType.SchemaType.createdAt <- Date.now,
-            ModelType.SchemaType.updatedAt <- Date.now
+            try? property2.getSetter()
         ].compact()
         
-        for setter in context?.insertArguments ?? [] {
-            setters.append(setter)
-        }
+        var setters = creation + context + manuallyRequested
         
         guard let id = self.insert(type, setters) else { return }
         

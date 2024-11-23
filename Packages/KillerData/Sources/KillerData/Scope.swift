@@ -12,12 +12,12 @@ extension Database {
         public var updatedAt: Date
         public var deletedAt: Date?
         
-        let insertArguments: [SQLite.Setter]
+        let insertProperties: [SQLite.Setter]
         
         public func compose(with other: Scope?) -> Scope {
             guard let other else { return self }
             
-            return Scope(name: self.name, insertArguments: self.insertArguments + other.insertArguments) {
+            return Scope(name: self.name, insertArguments: self.insertProperties + other.insertProperties) {
                 other.apply(self.apply($0))
             }
         }
@@ -28,7 +28,7 @@ extension Database {
             tableExpression: @escaping @Sendable (SQLite.Table) -> (SQLite.Table)
         ) {
             self.name = name
-            self.insertArguments = insertArguments
+            self.insertProperties = insertArguments
             self.apply = tableExpression
             
             // TODO: make me come from the DB

@@ -4,7 +4,7 @@ import KillerData
 
 /// When checking the box, the view state is not updated. We simply make an async request to the DB
 /// As a result of this request, we get a message to remove this task from the view, which we start to do
-/// Then, hitting undo, we get anpther message telling us to add this task
+/// Then, hitting undo, we get another message telling us to add this task
 ///
 /// Since in both instances of the view, completed\_at is nil, the view is not re-rendered... even though
 /// the checkbox should now be unchecked

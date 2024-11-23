@@ -25,12 +25,7 @@ protocol CloudKitBacked: Sendable {
 }
 
 extension KillerTask: CloudKitBacked {
-    var cloudID: CKRecord.ID {
-        CKRecord.ID(recordName: String(self.id))
-    }
-    
     var cloudBackedProperties: [String : Any] { [
-        "id": self.id,
         "body": self.body,
         "completedAt": self.completedAt,
         "parentID": self.parentID,
@@ -45,9 +40,6 @@ extension CKRecord {
         self.setValuesForKeys(model.cloudBackedProperties)
     }
 }
-
-// TODO: implement other sync methods
-// TODO: move error handling and fetching code elsewhere
 
 actor CloudKitSyncEngine: CustomConsoleLogger {
     let logToConsole: Bool = true
