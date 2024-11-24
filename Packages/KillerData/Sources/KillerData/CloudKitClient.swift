@@ -1,10 +1,41 @@
+import Foundation
 import CloudKit
+
+extension UserDefaults {
+    func date(forKey key: String) -> Date {
+        Date(timeIntervalSince1970: UserDefaults.standard.double(forKey: key))
+    }
+}
 
 actor CloudKitClient {
     private let database: CKDatabase
     
     init(database: CKDatabase) {
         self.database = database
+    }
+    
+    func ensureZoneExists(_ zone: CloudKitZone) async throws(CloudKitResponseError) {
+        guard !zone.alreadySetup else { return }
+        
+        // check in cloud DB that zone has not been setup by another client
+        let foundZone: CKRecordZone?
+        
+        do {
+            foundZone = try await database.recordZone(for: zone.id)
+        }
+        catch {
+            try CloudKitResponseError.ignoreMissingZone(error)
+            foundZone = nil
+        }
+        
+        guard foundZone == nil else {
+            zone.registerSetup()
+            return
+        }
+        
+        try await save(CKRecordZone(zoneID: zone.id))
+        
+        zone.registerSetup()
     }
     
     func findOrCreateRecord<ModelType: CloudKitBacked>(
@@ -65,6 +96,15 @@ actor CloudKitClient {
     func save(_ record: CKRecord) async throws(CloudKitResponseError) {
         do {
             try await database.save(record)
+        }
+        catch {
+            throw CloudKitResponseError.wrapping(error)
+        }
+    }
+    
+    func save(_ zone: CKRecordZone) async throws(CloudKitResponseError) {
+        do {
+            try await database.save(zone)
         }
         catch {
             throw CloudKitResponseError.wrapping(error)

@@ -30,4 +30,12 @@ enum CloudKitResponseError: Error {
         
         throw wrapping(error)
     }
+    
+    static func ignoreMissingZone(_ error: Error) throws(CloudKitResponseError) {
+        if let cloudError = error as? CKError, cloudError.code == .zoneNotFound {
+            return
+        }
+        
+        throw wrapping(error)
+    }
 }

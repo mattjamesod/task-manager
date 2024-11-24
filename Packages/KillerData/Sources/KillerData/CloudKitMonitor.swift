@@ -20,6 +20,16 @@ extension Database {
         )
         
         func waitForChanges() async {
+            do {
+                try await syncEngine.ensureRemoteSchemaSetup()
+            }
+            catch {
+                // TODO: log response error
+                // TODO: propagate to user?
+                print(error.localizedDescription)
+                return
+            }
+            
             killerTaskMessages = await KillerTask.messageHandler.subscribe()
             
             self.monitorTasks.append(Task {
@@ -48,6 +58,7 @@ extension Database {
                 }
             }
             catch {
+                print(error.localizedDescription)
                 // TODO: log response error
                 // TODO: mark the local record as requiring a CK update
             }

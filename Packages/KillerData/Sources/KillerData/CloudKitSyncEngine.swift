@@ -25,6 +25,10 @@ protocol CloudKitBacked: Sendable {
 }
 
 extension KillerTask: CloudKitBacked {
+    public var cloudID: CKRecord.ID {
+        CKRecord.ID(recordName: self.internalCloudID.uuidString, zoneID: CloudKitZone.userData.id)
+    }
+    
     var cloudBackedProperties: [String : Any] { [
         "body": self.body,
         "completedAt": self.completedAt,
@@ -48,6 +52,10 @@ actor CloudKitSyncEngine: CustomConsoleLogger {
     
     init(client: CloudKitClient) {
         self.client = client
+    }
+    
+    func ensureRemoteSchemaSetup() async throws(CloudKitResponseError) {
+        try await client.ensureZoneExists(.userData)
     }
 
     func handleRecordChanged<ModelType: CloudKitBacked>(

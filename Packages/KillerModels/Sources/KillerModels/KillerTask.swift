@@ -30,8 +30,7 @@ public struct KillerTask: Sendable, Identifiable, Equatable, Clonable, Timestamp
     
     /// the ID of the task used in the CloudKit database, used to identify it
     /// between devices
-    private let internalCloudID: UUID
-    public var cloudID: CKRecord.ID { CKRecord.ID(recordName: self.internalCloudID.uuidString) }
+    public let internalCloudID: UUID
     
     /// the ID of the instance of the task. used by SwiftUI's .id method sometimes
     /// when a view should re-render after a DB update
