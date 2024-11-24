@@ -56,6 +56,7 @@ actor CloudKitSyncEngine: CustomConsoleLogger {
     
     func ensureRemoteSchemaSetup() async throws(CloudKitResponseError) {
         try await client.ensureZoneExists(.userData)
+        try await client.ensureSubscriptionExists()
     }
 
     func handleRecordChanged<ModelType: CloudKitBacked>(

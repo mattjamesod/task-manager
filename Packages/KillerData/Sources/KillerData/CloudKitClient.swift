@@ -38,6 +38,30 @@ actor CloudKitClient {
         zone.registerSetup()
     }
     
+    func ensureSubscriptionExists() async throws(CloudKitResponseError) {
+        guard !CloudKitSubscription.alreadySetup else { return }
+        
+        // check in cloud DB that subscription has not been setup by another client
+        let foundSubscription: CKSubscription?
+        
+        do {
+            foundSubscription = try await database.subscription(for: CloudKitSubscription.id)
+        }
+        catch {
+            try CloudKitResponseError.ignoreUnknownItem(error)
+            foundSubscription = nil
+        }
+        
+        guard foundSubscription == nil else {
+            CloudKitSubscription.registerSetup()
+            return
+        }
+        
+        try await save(CloudKitSubscription.build())
+        
+        CloudKitSubscription.registerSetup()
+    }
+    
     func findOrCreateRecord<ModelType: CloudKitBacked>(
         _ type: ModelType.Type,
         id: CKRecord.ID
@@ -105,6 +129,15 @@ actor CloudKitClient {
     func save(_ zone: CKRecordZone) async throws(CloudKitResponseError) {
         do {
             try await database.save(zone)
+        }
+        catch {
+            throw CloudKitResponseError.wrapping(error)
+        }
+    }
+    
+    func save(_ subscription: CKSubscription) async throws(CloudKitResponseError) {
+        do {
+            try await database.modifySubscriptions(saving: [subscription], deleting: [])
         }
         catch {
             throw CloudKitResponseError.wrapping(error)

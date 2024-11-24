@@ -38,4 +38,12 @@ enum CloudKitResponseError: Error {
         
         throw wrapping(error)
     }
+    
+//    static func ignoreMissingSubscription(_ error: Error) throws(CloudKitResponseError) {
+//        if let cloudError = error as? CKError, cloudError.code == .not {
+//            return
+//        }
+//        
+//        throw wrapping(error)
+//    }
 }
