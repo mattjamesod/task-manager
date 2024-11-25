@@ -23,6 +23,7 @@
 		A05D96822CC6E97000CEDFB0 /* KillerNavigation in Frameworks */ = {isa = PBXBuildFile; productRef = A05D96812CC6E97000CEDFB0 /* KillerNavigation */; };
 		A06244A12CE20B1E00F86255 /* TaskProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A06244A02CE20B1A00F86255 /* TaskProvider.swift */; };
 		A06244A32CE4A5C100F86255 /* TaskContainerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A06244A22CE4A5BD00F86255 /* TaskContainerState.swift */; };
+		A06244A52CF46EAD00F86255 /* KillerAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A06244A42CF46EA900F86255 /* KillerAppDelegate.swift */; };
 		A06498722C7B4D4C005C545B /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = A06498712C7B4D4C005C545B /* Logging */; };
 		A06498742C7B4D4C005C545B /* UtilAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = A06498732C7B4D4C005C545B /* UtilAlgorithms */; };
 		A06498762C7B4D4C005C545B /* UtilExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = A06498752C7B4D4C005C545B /* UtilExtensions */; };
@@ -70,6 +71,7 @@
 		A055B5D52C25E52300BCB5C2 /* TaskManagerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TaskManagerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A06244A02CE20B1A00F86255 /* TaskProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskProvider.swift; sourceTree = "<group>"; };
 		A06244A22CE4A5BD00F86255 /* TaskContainerState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskContainerState.swift; sourceTree = "<group>"; };
+		A06244A42CF46EA900F86255 /* KillerAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KillerAppDelegate.swift; sourceTree = "<group>"; };
 		A06A95F82C4E3DB4004302DF /* TaskListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskListView.swift; sourceTree = "<group>"; };
 		A079C6BC2C8AEDFC0053BC4F /* TaskBodyField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskBodyField.swift; sourceTree = "<group>"; };
 		A09BB03C2CD165F800740468 /* TaskCompleteCheckbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskCompleteCheckbox.swift; sourceTree = "<group>"; };
@@ -136,6 +138,7 @@
 		A055B5BC2C25E52200BCB5C2 /* TaskManager */ = {
 			isa = PBXGroup;
 			children = (
+				A06244A42CF46EA900F86255 /* KillerAppDelegate.swift */,
 				A0456FE52C2FEAE900DC2879 /* Info.plist */,
 				A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */,
 				A031618D2CA93F070031B2E6 /* KillerSettings.swift */,
@@ -336,6 +339,7 @@
 				A09BB03D2CD165FE00740468 /* TaskCompleteCheckbox.swift in Sources */,
 				A079C6BD2C8AEE020053BC4F /* TaskBodyField.swift in Sources */,
 				A031618E2CA93F0A0031B2E6 /* KillerSettings.swift in Sources */,
+				A06244A52CF46EAD00F86255 /* KillerAppDelegate.swift in Sources */,
 				A06244A12CE20B1E00F86255 /* TaskProvider.swift in Sources */,
 				A055B5BE2C25E52200BCB5C2 /* TaskManagerApp.swift in Sources */,
 				A06A95F92C4E3DB8004302DF /* TaskListView.swift in Sources */,

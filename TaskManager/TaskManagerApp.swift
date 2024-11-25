@@ -5,6 +5,10 @@ import UtilViews
 
 @main
 struct TaskManagerApp: App {
+    #if canImport(UIKit)
+    @UIApplicationDelegateAdaptor(KillerAppDelegate.self) var appDelegate
+    #endif
+    
     let database: Database?
     
     // we store a reference to this monitor so it can receive CK-related events
