@@ -6,6 +6,8 @@ import CloudKit
 import KillerData
 
 class KillerAppDelegate: NSObject, UIApplicationDelegate {
+    var localDatabase: Database?
+    
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
@@ -19,11 +21,9 @@ class KillerAppDelegate: NSObject, UIApplicationDelegate {
         didReceiveRemoteNotification userInfo: [AnyHashable : Any],
         fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
     ) {
-        print("ping!")
-//        let notification = CKNotification(fromRemoteNotificationDictionary: userInfo)
+        guard let localDatabase else { return }
         
         let cloudDatabase = CKContainer(identifier: "iCloud.com.missingapostrophe.scopes").privateCloudDatabase
-        let localDatabase = try! DatabaseSetupHelper(schema: .userData).setupDatabase()
         
         Task {
             do {

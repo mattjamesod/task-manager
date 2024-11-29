@@ -62,7 +62,7 @@ extension CKRecord {
 /// Updates the state of athe remote DB from the local DB, given a list of Models with IDs which are new  / changed
 
 actor CloudKitUploadEngine: CustomConsoleLogger {
-    let logToConsole: Bool = true
+    let logToConsole: Bool = false
     
     private let client: CloudKitClient
     

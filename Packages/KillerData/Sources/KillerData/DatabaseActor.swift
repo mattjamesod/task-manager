@@ -29,7 +29,7 @@ public actor Database {
         self.connection = connection
         
         do {
-//            try schema.destroy(connection: connection)
+            try schema.destroy(connection: connection)
             try schema.create(connection: connection)
         }
         catch {

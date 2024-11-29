@@ -21,6 +21,10 @@ struct TaskManagerApp: App {
             
             self.database = database
             self.cloudKitMonitor = database.enableCloudkitUpload()
+            
+#if canImport(UIKit)
+            appDelegate.localDatabase = database
+#endif
         }
         catch {
             // TODO: log database setup error
