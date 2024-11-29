@@ -2,6 +2,7 @@ import Foundation
 import KillerModels
 import CloudKit
 import Logging
+@preconcurrency import SQLite
 
 struct CloudKitUpdateRecordPair<LocalRecord: CloudKitBacked>: Identifiable, Sendable {
     let id: CKRecord.ID
@@ -36,6 +37,18 @@ extension KillerTask: CloudKitBacked {
         "createdAt": self.createdAt,
         "updatedAt": self.updatedAt,
         "deletedAt": self.deletedAt,
+    ] }
+    
+    // TODO: encode these defaults and key names somewhere sensible
+    // KillerTask.MetaData.defaultCreatedAt a sensible API?
+    static func databaseSetters(from cloudRecord: CKRecord) -> [Setter] { [
+        KillerTask.SchemaType.cloudID <- UUID(uuidString: cloudRecord.recordID.recordName)!,
+        KillerTask.SchemaType.body <- cloudRecord.value(forKey: "body") as? String ?? "",
+        KillerTask.SchemaType.completedAt <- cloudRecord.value(forKey: "completedAt") as? Date,
+        KillerTask.SchemaType.parentID <- cloudRecord.value(forKey: "parentID") as? Int,
+        KillerTask.SchemaType.createdAt <- cloudRecord.value(forKey: "createdAt") as? Date ?? Date.now,
+        KillerTask.SchemaType.updatedAt <- cloudRecord.value(forKey: "updatedAt") as? Date ?? Date.now,
+        KillerTask.SchemaType.deletedAt <- cloudRecord.value(forKey: "deletedAt") as? Date,
     ] }
 }
 

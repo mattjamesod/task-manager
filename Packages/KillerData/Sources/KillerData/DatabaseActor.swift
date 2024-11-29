@@ -215,7 +215,7 @@ public actor Database {
     }
     
     @discardableResult
-    private func insert<ModelType: SchemaBacked>(_ type: ModelType.Type, _ setters: [Setter]) -> Int? {
+    internal func insert<ModelType: SchemaBacked>(_ type: ModelType.Type, _ setters: [Setter]) -> Int? {
         do {
             let newId = try connection.run(
                 ModelType.SchemaType.tableExpression.insert(setters)
@@ -310,7 +310,7 @@ public actor Database {
     }
     
     // TODO:  If the model has no matching record in the database, it is created with the updated value.
-    private func update<ModelType: SchemaBacked>(_ model: ModelType, _ setters: [Setter]) {
+    internal func update<ModelType: SchemaBacked>(_ model: ModelType, _ setters: [Setter]) {
         do {
             update(ModelType.self, ids: [model.id], setters)
         }
@@ -321,7 +321,7 @@ public actor Database {
         }
     }
     
-    private func update<ModelType: SchemaBacked>(
+    internal func update<ModelType: SchemaBacked>(
         _ type: ModelType.Type,
         ids: [Int],
         _ setters: [Setter]

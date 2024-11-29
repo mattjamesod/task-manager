@@ -38,6 +38,20 @@ extension Database {
             self.deletedAt = nil
         }
         
+        public init(
+            tableExpression: @escaping @Sendable (SQLite.Table) -> (SQLite.Table)
+        ) {
+            self.name = "Custom Scope"
+            self.insertProperties = []
+            self.apply = tableExpression
+            
+            // TODO: make me come from the DB
+            self.id = Int.random(in: 1..<99999)
+            self.createdAt = Date.now
+            self.updatedAt = Date.now
+            self.deletedAt = nil
+        }
+        
         public static let allActiveTasks: Scope = .init(
             name: "Active",
             tableExpression: { base in
