@@ -16,7 +16,10 @@ public enum SyncResult<ModelType: Sendable>: Sendable {
     case removeMany(_ ids: Set<Int>)
 }
 
-actor SyncEngine<ModelType: SchemaBacked> {
+/// Updates the state of a view from the database, given a list of Models with IDs which should
+/// be recalculated
+
+actor ViewSyncEngine<ModelType: SchemaBacked> {
     let database: Database
     let query: Database.Scope
     

@@ -27,7 +27,7 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
     public func waitForChanges(_ query: Database.Scope, on database: Database) async {
         self.log("started monitoring")
         dbMessageThread = await StateContainer.ModelType.messageHandler.subscribe()
-        let syncEngine = SyncEngine<StateContainer.ModelType>(for: database, context: query)
+        let syncEngine = ViewSyncEngine<StateContainer.ModelType>(for: database, context: query)
         
         self.monitorTask = Task {
             guard let thread = self.dbMessageThread else { return }
@@ -51,7 +51,7 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
     public func waitForChanges(_ query: Database.Scope, recursive: Bool, on database: Database) async where StateContainer.ModelType: RecursiveData {
         self.log("started monitoring")
         dbMessageThread = await StateContainer.ModelType.messageHandler.subscribe()
-        let syncEngine = SyncEngine<StateContainer.ModelType>(for: database, context: query)
+        let syncEngine = ViewSyncEngine<StateContainer.ModelType>(for: database, context: query)
         
         self.monitorTask = Task {
             guard let thread = self.dbMessageThread else { return }

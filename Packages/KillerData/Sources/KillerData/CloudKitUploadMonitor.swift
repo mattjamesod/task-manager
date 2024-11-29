@@ -3,25 +3,23 @@ import Foundation
 import CloudKit
 
 extension Database {
-    public actor CloudKitMonitor {
+    public actor CloudKitUploadMonitor {
         init(database: Database) {
             self.localDatabase = database
+            self.cloudDatabase = CKContainer(identifier: "iCloud.com.missingapostrophe.scopes").privateCloudDatabase
+            self.engine = .init(client: CloudKitClient(database: cloudDatabase))
         }
         
         private let localDatabase: Database
-        private var monitorTasks: [Task<Void, Never>] = []
+        private let cloudDatabase: CKDatabase
+        private let engine: CloudKitUploadEngine
         
+        private var monitorTasks: [Task<Void, Never>] = []
         private var killerTaskMessages: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
         
-        private let syncEngine = CloudKitSyncEngine(
-            client: CloudKitClient(
-                database: CKContainer(identifier: "iCloud.com.missingapostrophe.scopes").privateCloudDatabase
-            )
-        )
-        
-        func waitForChanges() async {
+        func waitForLocalChanges() async {
             do {
-                try await syncEngine.ensureRemoteSchemaSetup()
+                try await engine.ensureRemoteSchemaSetup()
             }
             catch {
                 // TODO: log response error
@@ -48,13 +46,13 @@ extension Database {
                 switch message {
                 case .recordChange(let id):
                     guard let record = await localDatabase.pluck(ModelType.self, id: id) else { return }
-                    try await syncEngine.handleRecordChanged(record)
+                    try await engine.handleRecordChanged(record)
                 case .recordsChanged(let ids):
                     let records = await localDatabase.fetch(ModelType.self, ids: ids)
-                    try await syncEngine.handleRecordsChanged(records)
+                    try await engine.handleRecordsChanged(records)
                 case .recordDeleted(let id):
                     guard let record = await localDatabase.pluck(ModelType.self, id: id) else { return }
-                    try await syncEngine.handleRecordDeleted(record)
+                    try await engine.handleRecordDeleted(record)
                 }
             }
             catch {

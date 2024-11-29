@@ -138,9 +138,9 @@
 		A055B5BC2C25E52200BCB5C2 /* TaskManager */ = {
 			isa = PBXGroup;
 			children = (
-				A06244A42CF46EA900F86255 /* KillerAppDelegate.swift */,
 				A0456FE52C2FEAE900DC2879 /* Info.plist */,
 				A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */,
+				A06244A42CF46EA900F86255 /* KillerAppDelegate.swift */,
 				A031618D2CA93F070031B2E6 /* KillerSettings.swift */,
 				A031618B2CA53E410031B2E6 /* AboutView.swift */,
 				A003DE8A2C957116005057A9 /* ScopeListView.swift */,

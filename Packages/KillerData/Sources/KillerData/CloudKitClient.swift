@@ -1,5 +1,6 @@
 import Foundation
 import CloudKit
+import KillerModels
 
 extension UserDefaults {
     func date(forKey key: String) -> Date {
@@ -7,7 +8,34 @@ extension UserDefaults {
     }
 }
 
+typealias RecordZoneChangesResponse = (
+    modificationResultsByID: [CKRecord.ID : Result<CKDatabase.RecordZoneChange.Modification, any Error>],
+    deletions: [CKDatabase.RecordZoneChange.Deletion],
+    changeToken: CKServerChangeToken,
+    moreComing: Bool
+)
+
+struct CloudKitChanges {
+    let modified: [CKDatabase.RecordZoneChange.Modification]
+    let deleted: [CKDatabase.RecordZoneChange.Deletion]
+    let moreComing: Bool
+    let newToken: CKServerChangeToken
+    
+    init(
+        _ modified: [CKDatabase.RecordZoneChange.Modification],
+        _ deleted: [CKDatabase.RecordZoneChange.Deletion],
+        _ newToken: CKServerChangeToken,
+        _ moreComing: Bool
+    ) {
+        self.modified = modified
+        self.deleted = deleted
+        self.newToken = newToken
+        self.moreComing = moreComing
+    }
+}
+
 actor CloudKitClient {
+    
     private let database: CKDatabase
     
     init(database: CKDatabase) {
@@ -60,6 +88,32 @@ actor CloudKitClient {
         try await save(CloudKitSubscription.build())
         
         CloudKitSubscription.registerSetup()
+    }
+    
+    func fetchLatestChanges(since changeToken: CKServerChangeToken?) async throws(CloudKitResponseError) -> CloudKitChanges {
+        let changes: RecordZoneChangesResponse
+        
+        do {
+            changes = try await database.recordZoneChanges(
+                inZoneWith: CloudKitZone.userData.id,
+                since: changeToken
+            )
+        }
+        catch {
+            throw CloudKitResponseError.wrapping(error)
+        }
+        
+        let modifications = try changes.modificationResultsByID.values.compactMap { change in
+            do {
+                return try change.get()
+            }
+            catch {
+                // TODO: log this somewhere for yourself, user maybe?
+                return nil
+            }
+        }
+        
+        return CloudKitChanges(modifications, changes.deletions, changes.changeToken, changes.moreComing)
     }
     
     func findOrCreateRecord<ModelType: CloudKitBacked>(

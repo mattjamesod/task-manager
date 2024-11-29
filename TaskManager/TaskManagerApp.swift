@@ -10,9 +10,8 @@ struct TaskManagerApp: App {
     #endif
     
     let database: Database?
-    
     // we store a reference to this monitor so it can receive CK-related events
-    let cloudKitMonitor: Database.CloudKitMonitor?
+    let cloudKitMonitor: Database.CloudKitUploadMonitor?
     
     init() {
         let helper = DatabaseSetupHelper(schema: .userData)
@@ -21,7 +20,7 @@ struct TaskManagerApp: App {
             let database = try helper.setupDatabase()
             
             self.database = database
-            self.cloudKitMonitor = database.enableCloudkitSync()
+            self.cloudKitMonitor = database.enableCloudkitUpload()
         }
         catch {
             // TODO: log database setup error

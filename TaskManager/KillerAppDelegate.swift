@@ -2,14 +2,15 @@
 import ObjectiveC
 import UIKit
 import UserNotifications
+import CloudKit
+import KillerData
 
 class KillerAppDelegate: NSObject, UIApplicationDelegate {
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
     ) -> Bool {
-        application.registerForRemoteNotifications()
-        UNUserNotificationCenter.current().delegate = self
+//        application.registerForRemoteNotifications()
         return true
     }
     
@@ -19,23 +20,21 @@ class KillerAppDelegate: NSObject, UIApplicationDelegate {
         fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
     ) {
         print("ping!")
+//        let notification = CKNotification(fromRemoteNotificationDictionary: userInfo)
+        
+        let cloudDatabase = CKContainer(identifier: "iCloud.com.missingapostrophe.scopes").privateCloudDatabase
+        let localDatabase = try! DatabaseSetupHelper(schema: .userData).setupDatabase()
+        
+        Task {
+            do {
+                let engine = CloudKitDownloadEngine(cloud: cloudDatabase, local: localDatabase)
+                try await engine.downloadLatestChanges()
+                completionHandler(.newData)
+            }
+            catch {
+                completionHandler(.failed)
+            }
+        }
     }
-    
-//    func application(
-//        _ application: UIApplication,
-//        didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
-//    ) {
-//        let stringifiedToken = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
-//        print("stringifiedToken:", stringifiedToken)
-//    }
-}
-
-extension KillerAppDelegate: UNUserNotificationCenterDelegate {
-//    func userNotificationCenter(
-//        _ center: UNUserNotificationCenter,
-//        didReceive response: UNNotificationResponse
-//    ) async {
-//        print("Got notification title: ", response.notification.request.content.title)
-//    }
 }
 #endif
