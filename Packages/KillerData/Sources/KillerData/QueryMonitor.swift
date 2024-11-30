@@ -35,7 +35,7 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
                 self.log("received event: \(event)")
                 
                 switch event {
-                case .recordChange(let id):
+                case .recordChange(let type, let id):
                     await push(syncResult: await syncEngine.sync(id))
                 case .recordsChanged(let ids):
                     for result in await syncEngine.sync(ids) {
@@ -58,7 +58,7 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
             for await event in thread.events {
                 self.log("received event: \(event)")
                 switch event {
-                case .recordChange(let id):
+                case .recordChange(let type, let id):
                     for result in await syncEngine.sync(id) {
                         await push(syncResult: result)
                     }

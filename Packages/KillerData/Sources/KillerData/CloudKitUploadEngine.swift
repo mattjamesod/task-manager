@@ -20,7 +20,7 @@ struct CloudKitUpdateRecordPair<LocalRecord: CloudKitBacked>: Identifiable, Send
     }
 }
 
-protocol CloudKitBacked: Sendable {
+public protocol CloudKitBacked: Sendable {
     var cloudID: CKRecord.ID { get }
     var cloudBackedProperties: [String : Any] { get }
 }
@@ -30,25 +30,13 @@ extension KillerTask: CloudKitBacked {
         CKRecord.ID(recordName: self.internalCloudID.uuidString, zoneID: CloudKitZone.userData.id)
     }
     
-    var cloudBackedProperties: [String : Any] { [
+    public var cloudBackedProperties: [String : Any] { [
         "body": self.body,
         "completedAt": self.completedAt,
         "parentID": self.parentID,
         "createdAt": self.createdAt,
         "updatedAt": self.updatedAt,
         "deletedAt": self.deletedAt,
-    ] }
-    
-    // TODO: encode these defaults and key names somewhere sensible
-    // KillerTask.MetaData.defaultCreatedAt a sensible API?
-    static func databaseSetters(from cloudRecord: CKRecord) -> [Setter] { [
-        KillerTask.SchemaType.cloudID <- UUID(uuidString: cloudRecord.recordID.recordName)!,
-        KillerTask.SchemaType.body <- cloudRecord.value(forKey: "body") as? String ?? "",
-        KillerTask.SchemaType.completedAt <- cloudRecord.value(forKey: "completedAt") as? Date,
-        KillerTask.SchemaType.parentID <- cloudRecord.value(forKey: "parentID") as? Int,
-        KillerTask.SchemaType.createdAt <- cloudRecord.value(forKey: "createdAt") as? Date ?? Date.now,
-        KillerTask.SchemaType.updatedAt <- cloudRecord.value(forKey: "updatedAt") as? Date ?? Date.now,
-        KillerTask.SchemaType.deletedAt <- cloudRecord.value(forKey: "deletedAt") as? Date,
     ] }
 }
 

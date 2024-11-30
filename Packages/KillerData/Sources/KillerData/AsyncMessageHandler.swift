@@ -5,7 +5,7 @@ import SQLite
 import Logging
 
 public enum DatabaseMessage: Sendable {
-    case recordChange(id: Int)
+    case recordChange(_ type: any SchemaBacked.Type, id: Int)
     case recordsChanged(ids: Set<Int>)
     case recordDeleted(id: Int)
 }

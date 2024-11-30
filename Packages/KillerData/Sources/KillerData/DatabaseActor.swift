@@ -222,7 +222,7 @@ public actor Database {
             )
             
             Task.detached {
-                await ModelType.messageHandler.send(.recordChange(id: Int(newId)))
+                await ModelType.messageHandler.send(.recordChange(type, id: Int(newId)))
             }
             
             return Int(newId)
@@ -335,7 +335,7 @@ public actor Database {
             
             if ids.count == 1 {
                 Task.detached {
-                    await ModelType.messageHandler.send(.recordChange(id: ids.first!))
+                    await ModelType.messageHandler.send(.recordChange(type, id: ids.first!))
                 }
             }
             else {
