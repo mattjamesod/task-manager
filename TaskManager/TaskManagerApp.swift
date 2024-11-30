@@ -9,6 +9,10 @@ struct TaskManagerApp: App {
     @UIApplicationDelegateAdaptor(KillerAppDelegate.self) var appDelegate
     #endif
     
+    #if canImport(AppKit)
+    @NSApplicationDelegateAdaptor(KillerAppDelegate.self) var appDelegate
+    #endif
+    
     let database: Database?
     // we store a reference to this monitor so it can receive CK-related events
     let cloudKitMonitor: Database.CloudKitUploadMonitor?
@@ -22,9 +26,7 @@ struct TaskManagerApp: App {
             self.database = database
             self.cloudKitMonitor = database.enableCloudkitUpload()
             
-#if canImport(UIKit)
             appDelegate.localDatabase = database
-#endif
         }
         catch {
             // TODO: log database setup error

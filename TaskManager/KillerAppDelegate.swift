@@ -1,9 +1,9 @@
-#if canImport(UIKit)
 import ObjectiveC
-import UIKit
-import UserNotifications
 import CloudKit
 import KillerData
+
+#if canImport(UIKit)
+import UIKit
 
 class KillerAppDelegate: NSObject, UIApplicationDelegate {
     var localDatabase: Database?
@@ -12,7 +12,7 @@ class KillerAppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
     ) -> Bool {
-//        application.registerForRemoteNotifications()
+        application.registerForRemoteNotifications()
         return true
     }
     
@@ -37,4 +37,36 @@ class KillerAppDelegate: NSObject, UIApplicationDelegate {
         }
     }
 }
+#endif
+
+#if canImport(AppKit)
+import AppKit
+
+class KillerAppDelegate: NSObject, NSApplicationDelegate {
+    var localDatabase: Database?
+    
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.registerForRemoteNotifications()
+    }
+    
+    func application(
+        _ application: NSApplication,
+        didReceiveRemoteNotification userInfo: [String : Any]
+    ) {
+        guard let localDatabase else { return }
+        
+        let cloudDatabase = CKContainer(identifier: "iCloud.com.missingapostrophe.scopes").privateCloudDatabase
+        
+        Task {
+            do {
+                let engine = CloudKitDownloadEngine(cloud: cloudDatabase, local: localDatabase)
+                try await engine.downloadLatestChanges()
+            }
+            catch {
+                
+            }
+        }
+    }
+}
+
 #endif
