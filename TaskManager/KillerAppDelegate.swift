@@ -32,6 +32,8 @@ class KillerAppDelegate: NSObject, UIApplicationDelegate {
                 completionHandler(.newData)
             }
             catch {
+                // TODO: log error
+                print("failed to download CK changes from notification")
                 completionHandler(.failed)
             }
         }
@@ -63,7 +65,8 @@ class KillerAppDelegate: NSObject, NSApplicationDelegate {
                 try await engine.downloadLatestChanges()
             }
             catch {
-                
+                // TODO: log error
+                print("failed to download CK changes from notification")
             }
         }
     }
