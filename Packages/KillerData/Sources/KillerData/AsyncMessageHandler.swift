@@ -4,19 +4,21 @@ import AsyncAlgorithms
 import SQLite
 import Logging
 
-public enum DatabaseMessage: Sendable {
-    case recordChange(_ type: any SchemaBacked.Type, id: Int)
-    case recordsChanged(_ type: any SchemaBacked.Type, ids: Set<Int>)
-    case recordDeleted(_ type: any SchemaBacked.Type, id: Int)
-}
-
 public actor AsyncMessageHandler<T: Sendable> {
     public struct Thread: Identifiable, Sendable {
         nonisolated public let id: UUID = .init()
         public var events: AsyncChannel<T>
         
-        public init() {
+        private var predicate: (@Sendable (T) -> Bool)?
+        
+        public init(_ predicate: (@Sendable (T) -> Bool)?) {
             self.events = .init()
+            self.predicate = predicate
+        }
+        
+        func send(_ message: T) async {
+            guard predicate?(message) ?? true else { return }
+            await events.send(message)
         }
     }
     
@@ -24,8 +26,8 @@ public actor AsyncMessageHandler<T: Sendable> {
     
     private var messageThreads: [Thread] = []
     
-    public func subscribe() -> Thread {
-        let newThread = Thread()
+    public func subscribe(predicate: (@Sendable (T) -> Bool)? = nil) -> Thread {
+        let newThread = Thread(predicate)
         self.messageThreads.append(newThread)
         return newThread
     }
@@ -37,7 +39,7 @@ public actor AsyncMessageHandler<T: Sendable> {
     
     public func send(_ message: T) async {
         for thread in messageThreads {
-            await thread.events.send(message)
+            await thread.send(message)
         }
     }
 }

@@ -26,15 +26,13 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
     
     public func waitForChanges(_ query: Database.Scope, on database: Database) async {
         self.log("started monitoring")
-        dbMessageThread = await StateContainer.ModelType.messageHandler.subscribe()
+        dbMessageThread = await database.subscribe(to: StateContainer.ModelType.self)
         let syncEngine = ViewSyncEngine<StateContainer.ModelType>(for: database, context: query)
         
         self.monitorTask = Task {
             guard let thread = self.dbMessageThread else { return }
             for await event in thread.events {
                 self.log("received event: \(event)")
-                
-                // TODO: consider types here?
                 
                 switch event {
                 case .recordChange(let type, let id):
@@ -52,7 +50,7 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
     
     public func waitForChanges(_ query: Database.Scope, recursive: Bool, on database: Database) async where StateContainer.ModelType: RecursiveData {
         self.log("started monitoring")
-        dbMessageThread = await StateContainer.ModelType.messageHandler.subscribe()
+        dbMessageThread = await database.subscribe(to: StateContainer.ModelType.self)
         let syncEngine = ViewSyncEngine<StateContainer.ModelType>(for: database, context: query)
         
         self.monitorTask = Task {
@@ -75,12 +73,12 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
         }
     }
     
-    public func stopMonitoring() async {
+    public func stopMonitoring(database: Database) async {
         self.log("stopped monitoring")
         guard let dbMessageThread else { return }
         self.monitorTask?.cancel()
         self.monitorTask = nil
-        await StateContainer.ModelType.messageHandler.unsubscribe(dbMessageThread)
+        await database.unsubscribe(dbMessageThread)
         self.dbMessageThread = nil
     }
     

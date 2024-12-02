@@ -70,9 +70,9 @@ class TaskContainerViewModel {
         )
     }
     
-    nonisolated func stopMonitoring() async {
-        await taskListMonitor.stopMonitoring()
-        await orphanMonitor.stopMonitoring()
+    nonisolated func stopMonitoring(database: Database) async {
+        await taskListMonitor.stopMonitoring(database: database)
+        await orphanMonitor.stopMonitoring(database: database)
     }
 }
 
@@ -173,8 +173,9 @@ struct TaskContainerView: View {
             await viewModel.startMonitoring(database)
         }
         .onDisappear {
+            guard let database else { return }
             Task {
-                await viewModel.stopMonitoring()
+                await viewModel.stopMonitoring(database: database)
             }
         }
     }

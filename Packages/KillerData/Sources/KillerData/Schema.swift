@@ -25,9 +25,6 @@ public protocol SchemaBacked: Sendable {
     var createdAt: Date { get }
     var updatedAt: Date { get }
     var deletedAt: Date? { get }
-    
-    // TODO: move me to SchemaType?
-    static var messageHandler: AsyncMessageHandler<DatabaseMessage> { get }
 }
 
 extension Database {
@@ -68,7 +65,6 @@ extension Database {
 
 extension KillerTask: SchemaBacked {
     public typealias SchemaType = Database.Schema.Tasks
-    public static let messageHandler: AsyncMessageHandler<DatabaseMessage> = .init()
     
     public static func create(from databaseRecord: SQLite.Row) throws -> KillerTask {
         do {

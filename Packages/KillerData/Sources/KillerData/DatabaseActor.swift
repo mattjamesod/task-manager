@@ -14,15 +14,52 @@ public enum DatabaseError: Error {
     case propertyDoesNotExist
 }
 
+public enum DatabaseMessage: Sendable {
+    case recordChange(_ type: any SchemaBacked.Type, id: Int)
+    case recordsChanged(_ type: any SchemaBacked.Type, ids: Set<Int>)
+    case recordDeleted(_ type: any SchemaBacked.Type, id: Int)
+    
+    var type: any SchemaBacked.Type {
+        switch self {
+        case .recordChange(let type, let _): type
+        case .recordsChanged(let type, let _): type
+        case .recordDeleted(let type, let _): type
+        }
+    }
+}
+
 /// Actor to perform methods on a given SQLite Database, from a list of pre-defined database structures
 /// Methods catch lower-level errors and log to analytiocs, then throw higher-level errors
 public actor Database {
     let schema: SchemaDescription
     private let connection: Connection
+    
     private let history: MutationHistory = .init()
     
     public func undo() async { await history.undo() }
     public func redo() async { await history.redo() }
+    
+    private let events: AsyncMessageHandler<DatabaseMessage> = .init()
+    
+    public func subscribe() async -> AsyncMessageHandler<DatabaseMessage>.Thread {
+        await self.events.subscribe()
+    }
+    
+    public func subscribe<Model: SchemaBacked>(
+        to modelType: Model.Type
+    ) async -> AsyncMessageHandler<DatabaseMessage>.Thread {
+        await self.events.subscribe(predicate: { event in
+            event.type is Model.Type
+        })
+    }
+    
+    public func unsubscribe(_ thread: AsyncMessageHandler<DatabaseMessage>.Thread) async {
+        await self.events.subscribe()
+    }
+    
+    public func send(_ message: DatabaseMessage) async {
+        await self.events.send(message)
+    }
     
     internal init(schema: Database.SchemaDescription, connection: SQLite.Connection) throws(DatabaseError) {
         self.schema = schema
@@ -222,7 +259,7 @@ public actor Database {
             )
             
             Task.detached {
-                await ModelType.messageHandler.send(.recordChange(type, id: Int(newId)))
+                await self.send(.recordChange(type, id: Int(newId)))
             }
             
             return Int(newId)
@@ -335,12 +372,12 @@ public actor Database {
             
             if ids.count == 1 {
                 Task.detached {
-                    await ModelType.messageHandler.send(.recordChange(type, id: ids.first!))
+                    await self.send(.recordChange(type, id: ids.first!))
                 }
             }
             else {
                 Task.detached {
-                    await ModelType.messageHandler.send(.recordsChanged(type, ids: Set(ids)))
+                    await self.send(.recordsChanged(type, ids: Set(ids)))
                 }
             }
         }
@@ -360,7 +397,7 @@ public actor Database {
             )
             
             Task.detached {
-                await ModelType.messageHandler.send(.recordDeleted(type, id: id))
+                await self.send(.recordDeleted(type, id: id))
             }
         }
         catch {

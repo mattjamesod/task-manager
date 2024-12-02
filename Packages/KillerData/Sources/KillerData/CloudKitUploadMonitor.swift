@@ -15,7 +15,7 @@ extension Database {
         private let engine: CloudKitUploadEngine
         
         private var monitorTasks: [Task<Void, Never>] = []
-        private var killerTaskMessages: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
+        private var recordChangeMessages: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
         
         func waitForLocalChanges() async {
             do {
@@ -28,11 +28,10 @@ extension Database {
                 return
             }
             
-            // recordChangeMessages = await localDatabase.messageHandler.subscribe() ?
-            killerTaskMessages = await KillerTask.messageHandler.subscribe()
+            recordChangeMessages = await localDatabase.subscribe()
             
             self.monitorTasks.append(Task {
-                guard let thread = self.killerTaskMessages else { return }
+                guard let thread = self.recordChangeMessages else { return }
                 for await message in thread.events {
                     print("cloudKit upload: \(message)")
                     await handle(message)
