@@ -25,6 +25,17 @@ public protocol CloudKitBacked: Sendable {
     var cloudBackedProperties: [String : Any] { get }
 }
 
+struct AnyCloudKitBacked: CloudKitBacked {
+    private let wrapped: any CloudKitBacked
+    
+    init(_ wrapped: any CloudKitBacked) {
+        self.wrapped = wrapped
+    }
+    
+    var cloudID: CKRecord.ID { wrapped.cloudID }
+    var cloudBackedProperties: [String : Any] { wrapped.cloudBackedProperties }
+}
+
 extension KillerTask: CloudKitBacked {
     public var cloudID: CKRecord.ID {
         CKRecord.ID(recordName: self.internalCloudID.uuidString, zoneID: CloudKitZone.userData.id)
@@ -38,6 +49,12 @@ extension KillerTask: CloudKitBacked {
         "updatedAt": self.updatedAt,
         "deletedAt": self.deletedAt,
     ] }
+}
+
+extension SchemaBacked {
+    static func forCloudKit() -> (any (SchemaBacked & CloudKitBacked).Type)? {
+        self as? any (SchemaBacked & CloudKitBacked).Type
+    }
 }
 
 extension CKRecord {

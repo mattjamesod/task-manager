@@ -62,14 +62,14 @@ public actor CloudKitDownloadEngine {
                 let cloudRecord = localRecord.key
                 
                 if let localRecord = localRecord.value {
+                    print("cloudKit update, id: \(localRecord.id)")
                     await database.update(localRecord, modelType.databaseSetters(from: cloudRecord))
                 }
                 else {
+                    print("cloudKit insert, id: \(cloudRecord.recordID)")
                     await database.insert(modelType, modelType.databaseSetters(from: cloudRecord))
                 }
             }
-            
-            
         }
     }
     

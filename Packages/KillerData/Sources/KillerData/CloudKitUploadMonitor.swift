@@ -34,44 +34,31 @@ extension Database {
             self.monitorTasks.append(Task {
                 guard let thread = self.killerTaskMessages else { return }
                 for await message in thread.events {
-                    do {
-                        switch message {
-                        case .recordChange(let recordType, let id):
-                            guard let conformingRecordType = recordType as? any (SchemaBacked & CloudKitBacked).Type else { return }
-                            guard let record = await localDatabase.pluck(conformingRecordType, id: id) else { continue }
-                            try await engine.handleRecordChanged(record)
-                        case .recordsChanged(let ids):
-                            let records = await localDatabase.fetch(KillerTask.self, ids: ids)
-                            try await engine.handleRecordsChanged(records)
-                        case .recordDeleted(let id):
-                            guard let record = await localDatabase.pluck(KillerTask.self, id: id) else { return }
-                            try await engine.handleRecordDeleted(record)
-                        }
-                    }
-                    catch {
-                        print(error.localizedDescription)
-                        // TODO: log response error
-                        // TODO: mark the local record as requiring a CK update
-                    }
+                    print("cloudKit upload: \(message)")
+                    await handle(message)
                 }
             })
         }
         
-        private func handle(message: DatabaseMessage) async {
+        private func handle(_ message: DatabaseMessage) async {
             do {
                 switch message {
-                case .recordChange(let type, let id):
-                    guard
-                        let conformingType = type as? any (SchemaBacked & CloudKitBacked).Type,
-                        let record = await localDatabase.pluck(conformingType, id: id)
-                    else { return }
+                case .recordChange(let localType, let id):
+                    guard let recordType = localType.forCloudKit() else { return }
+                    guard let record = await localDatabase.pluck(recordType, id: id) else { return }
                     
                     try await engine.handleRecordChanged(record)
-                case .recordsChanged(let ids):
-                    let records = await localDatabase.fetch(KillerTask.self, ids: ids)
-                    try await engine.handleRecordsChanged(records)
-                case .recordDeleted(let id):
-                    guard let record = await localDatabase.pluck(KillerTask.self, id: id) else { return }
+                case .recordsChanged(let localType, let ids):
+                    guard let recordType = localType.forCloudKit() else { return }
+                    let records = await localDatabase.fetch(recordType, ids: ids)
+                    
+                    let castRecords = records.map(AnyCloudKitBacked.init)
+                    
+                    try await engine.handleRecordsChanged(castRecords)
+                case .recordDeleted(let localType, let id):
+                    guard let recordType = localType.forCloudKit() else { return }
+                    guard let record = await localDatabase.pluck(recordType, id: id) else { return }
+                    
                     try await engine.handleRecordDeleted(record)
                 }
             }
@@ -81,36 +68,7 @@ extension Database {
                 // TODO: mark the local record as requiring a CK update
             }
         }
+ 
     }
 }
 
-
-//protocol ProtocolA {
-//    func someMethodA()
-//}
-//
-//protocol ProtocolB {
-//    func someMethodB()
-//}
-//
-//struct MyStruct: ProtocolA, ProtocolB {
-//    let id: Int
-//    
-//    func someMethodA() { print("A") }
-//    func someMethodB() { print("B") }
-//}
-//
-//class MyClass {
-//    func doThingIfConforms(_ type: any ProtocolA.Type, id: Int) {
-//        let instance = fetch(type, id: 5)
-//        doThing(instance: instance)
-//    }
-//    
-//    private func doThing<ConcreteTypeB: ProtocolB>(instance: ConcreteTypeB) {
-//        
-//    }
-//    
-//    private func fetch<ConcreteTypeA: ProtocolA>(_ type: ConcreteTypeA.Type, id: Int) -> ConcreteTypeA {
-//        fatalError() // implementation irrelevant
-//    }
-//}

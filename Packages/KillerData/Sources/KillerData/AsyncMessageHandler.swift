@@ -6,8 +6,8 @@ import Logging
 
 public enum DatabaseMessage: Sendable {
     case recordChange(_ type: any SchemaBacked.Type, id: Int)
-    case recordsChanged(ids: Set<Int>)
-    case recordDeleted(id: Int)
+    case recordsChanged(_ type: any SchemaBacked.Type, ids: Set<Int>)
+    case recordDeleted(_ type: any SchemaBacked.Type, id: Int)
 }
 
 public actor AsyncMessageHandler<T: Sendable> {

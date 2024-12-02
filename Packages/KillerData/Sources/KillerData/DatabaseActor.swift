@@ -340,7 +340,7 @@ public actor Database {
             }
             else {
                 Task.detached {
-                    await ModelType.messageHandler.send(.recordsChanged(ids: Set(ids)))
+                    await ModelType.messageHandler.send(.recordsChanged(type, ids: Set(ids)))
                 }
             }
         }
@@ -360,7 +360,7 @@ public actor Database {
             )
             
             Task.detached {
-                await ModelType.messageHandler.send(.recordDeleted(id: id))
+                await ModelType.messageHandler.send(.recordDeleted(type, id: id))
             }
         }
         catch {
