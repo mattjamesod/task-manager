@@ -39,7 +39,7 @@ public actor Database {
     public func undo() async { await history.undo() }
     public func redo() async { await history.redo() }
     
-    private let events: AsyncMessageHandler<DatabaseMessage> = .init()
+    private let events: AsyncMessageHandler<DatabaseMessage>
     
     public func subscribe() async -> AsyncMessageHandler<DatabaseMessage>.Thread {
         await self.events.subscribe()
@@ -54,7 +54,7 @@ public actor Database {
     }
     
     public func unsubscribe(_ thread: AsyncMessageHandler<DatabaseMessage>.Thread) async {
-        await self.events.subscribe()
+        await self.events.unsubscribe(thread)
     }
     
     public func send(_ message: DatabaseMessage) async {
@@ -64,6 +64,7 @@ public actor Database {
     internal init(schema: Database.SchemaDescription, connection: SQLite.Connection) throws(DatabaseError) {
         self.schema = schema
         self.connection = connection
+        self.events = .init()
         
         do {
 //            try schema.destroy(connection: connection)
