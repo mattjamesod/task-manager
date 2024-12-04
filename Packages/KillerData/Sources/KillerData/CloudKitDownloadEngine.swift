@@ -63,11 +63,19 @@ public actor CloudKitDownloadEngine {
                 
                 if let localRecord = localRecord.value {
                     print("cloudKit update, id: \(localRecord.id)")
-                    await database.update(localRecord, modelType.databaseSetters(from: cloudRecord))
+                    await database.update(
+                        localRecord,
+                        modelType.databaseSetters(from: cloudRecord),
+                        sender: .cloudSync
+                    )
                 }
                 else {
                     print("cloudKit insert, id: \(cloudRecord.recordID)")
-                    await database.insert(modelType, modelType.databaseSetters(from: cloudRecord))
+                    await database.insert(
+                        modelType,
+                        modelType.databaseSetters(from: cloudRecord),
+                        sender: .cloudSync
+                    )
                 }
             }
         }
