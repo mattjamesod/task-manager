@@ -258,14 +258,18 @@ public actor Database {
     }
     
     @discardableResult
-    internal func insert<ModelType: SchemaBacked>(_ type: ModelType.Type, _ setters: [Setter]) -> Int? {
+    internal func insert<ModelType: SchemaBacked>(
+        _ type: ModelType.Type,
+        _ setters: [Setter],
+        sender: DatabaseMessage.Sender = .userInterface
+    ) -> Int? {
         do {
             let newId = try connection.run(
                 ModelType.SchemaType.tableExpression.insert(setters)
             )
             
             Task.detached {
-                await self.send(.recordChange(type, id: Int(newId)))
+                await self.send(.recordChange(type, id: Int(newId), sender: sender))
             }
             
             return Int(newId)
@@ -353,9 +357,13 @@ public actor Database {
     }
     
     // TODO:  If the model has no matching record in the database, it is created with the updated value.
-    internal func update<ModelType: SchemaBacked>(_ model: ModelType, _ setters: [Setter]) {
+    internal func update<ModelType: SchemaBacked>(
+        _ model: ModelType,
+        _ setters: [Setter],
+        sender: DatabaseMessage.Sender = .userInterface
+    ) {
         do {
-            update(ModelType.self, ids: [model.id], setters)
+            update(ModelType.self, ids: [model.id], setters, sender: sender)
         }
         catch {
             // do something to broad cast the error to both you and the user
@@ -367,7 +375,8 @@ public actor Database {
     internal func update<ModelType: SchemaBacked>(
         _ type: ModelType.Type,
         ids: [Int],
-        _ setters: [Setter]
+        _ setters: [Setter],
+        sender: DatabaseMessage.Sender = .userInterface
     ) {
         do {
             try connection.run(
@@ -378,12 +387,12 @@ public actor Database {
             
             if ids.count == 1 {
                 Task.detached {
-                    await self.send(.recordChange(type, id: ids.first!))
+                    await self.send(.recordChange(type, id: ids.first!, sender: sender))
                 }
             }
             else {
                 Task.detached {
-                    await self.send(.recordsChanged(type, ids: Set(ids)))
+                    await self.send(.recordsChanged(type, ids: Set(ids), sender: sender))
                 }
             }
         }
