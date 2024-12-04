@@ -42,19 +42,22 @@ extension Database {
         private func handle(_ message: DatabaseMessage) async {
             do {
                 switch message {
-                case .recordChange(let localType, let id):
+                case .recordChange(let localType, let id, let sender):
+                    guard sender != .cloudSync else { return }
                     guard let recordType = localType.forCloudKit() else { return }
                     guard let record = await localDatabase.pluck(recordType, id: id) else { return }
                     
                     try await engine.handleRecordChanged(record)
-                case .recordsChanged(let localType, let ids):
+                case .recordsChanged(let localType, let ids, let sender):
+                    guard sender != .cloudSync else { return }
                     guard let recordType = localType.forCloudKit() else { return }
                     let records = await localDatabase.fetch(recordType, ids: ids)
                     
                     let castRecords = records.map(AnyCloudKitBacked.init)
                     
                     try await engine.handleRecordsChanged(castRecords)
-                case .recordDeleted(let localType, let id):
+                case .recordDeleted(let localType, let id, let sender):
+                    guard sender != .cloudSync else { return }
                     guard let recordType = localType.forCloudKit() else { return }
                     guard let record = await localDatabase.pluck(recordType, id: id) else { return }
                     

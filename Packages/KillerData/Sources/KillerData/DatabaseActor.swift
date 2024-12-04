@@ -15,15 +15,20 @@ public enum DatabaseError: Error {
 }
 
 public enum DatabaseMessage: Sendable {
-    case recordChange(_ type: any SchemaBacked.Type, id: Int)
-    case recordsChanged(_ type: any SchemaBacked.Type, ids: Set<Int>)
-    case recordDeleted(_ type: any SchemaBacked.Type, id: Int)
+    public enum Sender: Sendable {
+        case userInterface
+        case cloudSync
+    }
+    
+    case recordChange(_ type: any SchemaBacked.Type, id: Int, sender: Sender = .userInterface)
+    case recordsChanged(_ type: any SchemaBacked.Type, ids: Set<Int>, sender: Sender = .userInterface)
+    case recordDeleted(_ type: any SchemaBacked.Type, id: Int, sender: Sender = .userInterface)
     
     var type: any SchemaBacked.Type {
         switch self {
-        case .recordChange(let type, let _): type
-        case .recordsChanged(let type, let _): type
-        case .recordDeleted(let type, let _): type
+        case .recordChange(let type, let _, let _): type
+        case .recordsChanged(let type, let _, let _): type
+        case .recordDeleted(let type, let _, let _): type
         }
     }
 }
