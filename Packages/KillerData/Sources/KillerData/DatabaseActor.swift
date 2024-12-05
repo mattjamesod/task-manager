@@ -31,6 +31,14 @@ public enum DatabaseMessage: Sendable {
         case .recordDeleted(let type, let _, let _): type
         }
     }
+    
+    var sender: Sender {
+        switch self {
+        case .recordChange(let _, let _, let sender): sender
+        case .recordsChanged(let _, let _, let sender): sender
+        case .recordDeleted(let _, let _, let sender): sender
+        }
+    }
 }
 
 /// Actor to perform methods on a given SQLite Database, from a list of pre-defined database structures
@@ -48,6 +56,12 @@ public actor Database {
     
     public func subscribe() async -> AsyncMessageHandler<DatabaseMessage>.Thread {
         await self.events.subscribe()
+    }
+    
+    public func subscribe(to sender: DatabaseMessage.Sender) async -> AsyncMessageHandler<DatabaseMessage>.Thread {
+        await self.events.subscribe(predicate: { event in
+            event.sender == sender
+        })
     }
     
     public func subscribe<Model: SchemaBacked>(

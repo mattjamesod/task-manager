@@ -28,12 +28,11 @@ extension Database {
                 return
             }
             
-            recordChangeMessages = await localDatabase.subscribe()
+            recordChangeMessages = await localDatabase.subscribe(to: .userInterface)
             
             self.monitorTasks.append(Task {
                 guard let thread = self.recordChangeMessages else { return }
                 for await message in thread.events {
-                    print("cloudKit upload: \(message)")
                     await handle(message)
                 }
             })
@@ -42,22 +41,19 @@ extension Database {
         private func handle(_ message: DatabaseMessage) async {
             do {
                 switch message {
-                case .recordChange(let localType, let id, let sender):
-                    guard sender != .cloudSync else { return }
+                case .recordChange(let localType, let id, let _):
                     guard let recordType = localType.forCloudKit() else { return }
                     guard let record = await localDatabase.pluck(recordType, id: id) else { return }
                     
                     try await engine.handleRecordChanged(record)
-                case .recordsChanged(let localType, let ids, let sender):
-                    guard sender != .cloudSync else { return }
+                case .recordsChanged(let localType, let ids, let _):
                     guard let recordType = localType.forCloudKit() else { return }
                     let records = await localDatabase.fetch(recordType, ids: ids)
                     
                     let castRecords = records.map(AnyCloudKitBacked.init)
                     
                     try await engine.handleRecordsChanged(castRecords)
-                case .recordDeleted(let localType, let id, let sender):
-                    guard sender != .cloudSync else { return }
+                case .recordDeleted(let localType, let id, let _):
                     guard let recordType = localType.forCloudKit() else { return }
                     guard let record = await localDatabase.pluck(recordType, id: id) else { return }
                     
