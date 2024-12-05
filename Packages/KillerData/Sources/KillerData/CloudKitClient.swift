@@ -2,12 +2,6 @@ import Foundation
 import CloudKit
 import KillerModels
 
-extension UserDefaults {
-    func date(forKey key: String) -> Date {
-        Date(timeIntervalSince1970: UserDefaults.standard.double(forKey: key))
-    }
-}
-
 typealias RecordZoneChangesResponse = (
     modificationResultsByID: [CKRecord.ID : Result<CKDatabase.RecordZoneChange.Modification, any Error>],
     deletions: [CKDatabase.RecordZoneChange.Deletion],
@@ -35,6 +29,22 @@ struct CloudKitChanges {
 }
 
 actor CloudKitClient {
+    struct RecordPair<LocalRecord: CloudKitBacked>: Identifiable, Sendable {
+        let id: CKRecord.ID
+        let localRecord: LocalRecord
+        let cloudRecord: CKRecord
+        
+        init(id: CKRecord.ID, localRecord: LocalRecord, cloudRecord: CKRecord?) {
+            self.id = id
+            self.localRecord = localRecord
+            self.cloudRecord = cloudRecord ?? CKRecord(recordType: String(describing: LocalRecord.self), recordID: id)
+        }
+        
+        func updateCloudValues() {
+            self.cloudRecord.updateValues(from: self.localRecord)
+        }
+    }
+    
     
     private let database: CKDatabase
     
@@ -130,12 +140,12 @@ actor CloudKitClient {
     
     func findOrCreateRecords<ModelType: CloudKitBacked>(
         for localRecords: [ModelType]
-    ) async throws(CloudKitResponseError) -> [CloudKitUpdateRecordPair<ModelType>] {
+    ) async throws(CloudKitResponseError) -> [RecordPair<ModelType>] {
         let cloudRecords = try await fetch(ids: localRecords.map(\.cloudID))
         let indexedLocalRecords = Dictionary(uniqueKeysWithValues: localRecords.map { ($0.cloudID, $0) })
         
         return indexedLocalRecords.map { kvp in
-            CloudKitUpdateRecordPair(
+            RecordPair(
                 id: kvp.key,
                 localRecord: kvp.value,
                 cloudRecord: cloudRecords[kvp.key]

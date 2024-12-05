@@ -2,24 +2,6 @@ import KillerModels
 import CloudKit
 @preconcurrency import SQLite
 
-public protocol DataBacked: SchemaBacked & CloudKitBacked {
-    static func databaseSetters(from cloudRecord: CKRecord) -> [Setter]
-}
-
-extension KillerTask: DataBacked {
-    // TODO: encode these defaults and key names somewhere sensible
-    // KillerTask.MetaData.defaultCreatedAt a sensible API?
-    public static func databaseSetters(from cloudRecord: CKRecord) -> [Setter] { [
-        KillerTask.SchemaType.cloudID <- UUID(uuidString: cloudRecord.recordID.recordName)!,
-        KillerTask.SchemaType.body <- cloudRecord.value(forKey: "body") as? String ?? "",
-        KillerTask.SchemaType.completedAt <- cloudRecord.value(forKey: "completedAt") as? Date,
-        KillerTask.SchemaType.parentID <- cloudRecord.value(forKey: "parentID") as? Int,
-        KillerTask.SchemaType.createdAt <- cloudRecord.value(forKey: "createdAt") as? Date ?? Date.now,
-        KillerTask.SchemaType.updatedAt <- cloudRecord.value(forKey: "updatedAt") as? Date ?? Date.now,
-        KillerTask.SchemaType.deletedAt <- cloudRecord.value(forKey: "deletedAt") as? Date,
-    ] }
-}
-
 public actor CloudKitDownloadEngine {
     let typeRegistry: [String: any DataBacked.Type] = [
         "KillerTask": KillerTask.self

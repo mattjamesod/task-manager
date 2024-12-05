@@ -2,67 +2,6 @@ import Foundation
 import KillerModels
 import CloudKit
 import Logging
-@preconcurrency import SQLite
-
-struct CloudKitUpdateRecordPair<LocalRecord: CloudKitBacked>: Identifiable, Sendable {
-    let id: CKRecord.ID
-    let localRecord: LocalRecord
-    let cloudRecord: CKRecord
-    
-    init(id: CKRecord.ID, localRecord: LocalRecord, cloudRecord: CKRecord?) {
-        self.id = id
-        self.localRecord = localRecord
-        self.cloudRecord = cloudRecord ?? CKRecord(recordType: String(describing: LocalRecord.self), recordID: id)
-    }
-    
-    func updateCloudValues() {
-        self.cloudRecord.updateValues(from: self.localRecord)
-    }
-}
-
-public protocol CloudKitBacked: Sendable {
-    var cloudID: CKRecord.ID { get }
-    var cloudBackedProperties: [String : Any] { get }
-}
-
-struct AnyCloudKitBacked: CloudKitBacked {
-    private let wrapped: any CloudKitBacked
-    
-    init(_ wrapped: any CloudKitBacked) {
-        self.wrapped = wrapped
-    }
-    
-    var cloudID: CKRecord.ID { wrapped.cloudID }
-    var cloudBackedProperties: [String : Any] { wrapped.cloudBackedProperties }
-}
-
-extension KillerTask: CloudKitBacked {
-    public var cloudID: CKRecord.ID {
-        CKRecord.ID(recordName: self.internalCloudID.uuidString, zoneID: CloudKitZone.userData.id)
-    }
-    
-    public var cloudBackedProperties: [String : Any] { [
-        "body": self.body,
-        "completedAt": self.completedAt,
-        "parentID": self.parentID,
-        "createdAt": self.createdAt,
-        "updatedAt": self.updatedAt,
-        "deletedAt": self.deletedAt,
-    ] }
-}
-
-extension SchemaBacked {
-    static func forCloudKit() -> (any (SchemaBacked & CloudKitBacked).Type)? {
-        self as? any (SchemaBacked & CloudKitBacked).Type
-    }
-}
-
-extension CKRecord {
-    func updateValues<ModelType: CloudKitBacked>(from model: ModelType) {
-        self.setValuesForKeys(model.cloudBackedProperties)
-    }
-}
-
 
 /// Updates the state of athe remote DB from the local DB, given a list of Models with IDs which are new  / changed
 
