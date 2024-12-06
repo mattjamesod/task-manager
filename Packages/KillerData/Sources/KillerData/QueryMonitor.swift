@@ -35,14 +35,16 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
                 self.log("received event: \(event)")
                 
                 switch event {
-                case .recordChange(let type, let id, let _):
+                case .recordChange(let _, let id, let _):
                     await push(syncResult: await syncEngine.sync(id))
-                case .recordsChanged(let type, let ids, let _):
+                case .recordsChanged(let _, let ids, let _):
                     for result in await syncEngine.sync(ids) {
                         await push(syncResult: result)
                     }
-                case .recordDeleted(let type, let id, let _):
+                case .recordDeleted(let _, let id, let _):
                     await push(syncResult: .remove(id))
+                case .recordsDeleted(let _, let ids, let _):
+                    await push(syncResult: .removeMany(ids))
                 }
             }
         }
@@ -58,16 +60,18 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
             for await event in thread.events {
                 self.log("received event: \(event)")
                 switch event {
-                case .recordChange(let type, let id, let _):
+                case .recordChange(let _, let id, let _):
                     for result in await syncEngine.sync(id) {
                         await push(syncResult: result)
                     }
-                case .recordsChanged(let type, let ids, let _):
+                case .recordsChanged(let _, let ids, let _):
                     for result in await syncEngine.sync(ids) {
                         await push(syncResult: result)
                     }
-                case .recordDeleted(let type, let id, let _):
+                case .recordDeleted(let _, let id, let _):
                     await push(syncResult: .remove(id))
+                case .recordsDeleted(let _, let ids, let _):
+                    await push(syncResult: .removeMany(ids))
                 }
             }
         }

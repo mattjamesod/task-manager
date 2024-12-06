@@ -58,6 +58,13 @@ extension Database {
                     guard let record = await localDatabase.pluck(recordType, id: id) else { return }
                     
                     try await engine.handleRecordDeleted(record)
+                case .recordsDeleted(let localType, let ids, let _):
+                    guard let recordType = localType as? any DataBacked.Type else { return }
+                    let records = await localDatabase.fetch(recordType, ids: ids)
+                    
+                    let castRecords = records.map(AnyCloudKitBacked.init)
+                    
+                    try await engine.handleRecordsDeleted(castRecords)
                 }
             }
             catch {

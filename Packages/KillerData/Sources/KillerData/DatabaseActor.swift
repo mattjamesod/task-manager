@@ -23,12 +23,14 @@ public enum DatabaseMessage: Sendable {
     case recordChange(_ type: any SchemaBacked.Type, id: Int, sender: Sender = .userInterface)
     case recordsChanged(_ type: any SchemaBacked.Type, ids: Set<Int>, sender: Sender = .userInterface)
     case recordDeleted(_ type: any SchemaBacked.Type, id: Int, sender: Sender = .userInterface)
+    case recordsDeleted(_ type: any SchemaBacked.Type, ids: Set<Int>, sender: Sender = .userInterface)
     
     var type: any SchemaBacked.Type {
         switch self {
         case .recordChange(let type, let _, let _): type
         case .recordsChanged(let type, let _, let _): type
         case .recordDeleted(let type, let _, let _): type
+        case .recordsDeleted(let type, let _, let _): type
         }
     }
     
@@ -37,6 +39,7 @@ public enum DatabaseMessage: Sendable {
         case .recordChange(let _, let _, let sender): sender
         case .recordsChanged(let _, let _, let sender): sender
         case .recordDeleted(let _, let _, let sender): sender
+        case .recordsDeleted(let _, let _, let sender): sender
         }
     }
 }
@@ -408,6 +411,40 @@ public actor Database {
                 Task.detached {
                     await self.send(.recordsChanged(type, ids: Set(ids), sender: sender))
                 }
+            }
+        }
+        catch {
+            // do something to broad cast the error to both you and the user
+            print(error)
+            print("\(#file):\(#function):\(#line)")
+        }
+    }
+    
+    internal func deleteByCloudID<Model: DataBacked>(
+        _ type: Model.Type,
+        _ cloudIDs: [UUID],
+        sender: DatabaseMessage.Sender = .cloudSync
+    ) {
+        do {
+            let idRecords = try connection.prepare(
+                // TODO: sigh
+                Model.Schema.baseExpression
+                    .filter(cloudIDs.contains(Expression<UUID>("cloudID")))
+                    .select(Model.Schema.id)
+            )
+            
+            let localIDs = try idRecords.map {
+                try $0.get(Model.Schema.id)
+            }
+            
+            try connection.run(
+                Model.Schema.baseExpression
+                    .filter(localIDs.contains(Model.Schema.id))
+                    .delete()
+            )
+            
+            Task.detached {
+                await self.send(.recordsDeleted(type, ids: Set(localIDs), sender: sender))
             }
         }
         catch {

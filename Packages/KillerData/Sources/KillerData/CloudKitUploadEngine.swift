@@ -43,12 +43,19 @@ actor CloudKitUploadEngine: CustomConsoleLogger {
         try await client.save(recordPairs.map(\.cloudRecord))
     }
     
-    func handleRecordDeleted<ModelType: CloudKitBacked>(
-        _ localRecord: ModelType
+    func handleRecordDeleted<Model: CloudKitBacked>(
+        _ localRecord: Model
     ) async throws(CloudKitResponseError) {
         log("CK handleRecordDeleted: \(localRecord.cloudID.recordName)")
         
         // TODO: does this throw if record not exists?
         try await client.delete(localRecord.cloudID)
+    }
+    
+    func handleRecordsDeleted<Model: CloudKitBacked>(
+        _ localRecords: [Model]
+    ) async throws(CloudKitResponseError) {
+        // TODO: does this throw if record not exists?
+        try await client.delete(localRecords.map(\.cloudID))
     }
 }

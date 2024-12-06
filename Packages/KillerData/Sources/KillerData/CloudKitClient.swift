@@ -225,4 +225,13 @@ actor CloudKitClient {
             throw CloudKitResponseError.wrapping(error)
         }
     }
+    
+    func delete(_ ids: [CKRecord.ID]) async throws(CloudKitResponseError) {
+        do {
+            try await database.modifyRecords(saving: [], deleting: ids)
+        }
+        catch {
+            throw CloudKitResponseError.wrapping(error)
+        }
+    }
 }

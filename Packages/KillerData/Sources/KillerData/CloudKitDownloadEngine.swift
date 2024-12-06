@@ -61,8 +61,19 @@ public actor CloudKitDownloadEngine {
         }
     }
     
-    private func handleDeletions(_ modifications: [CKDatabase.RecordZoneChange.Deletion]) async throws {
+    private func handleDeletions(_ deletions: [CKDatabase.RecordZoneChange.Deletion]) async throws {
+        let partitions = Dictionary(grouping: deletions, by: \.recordType)
         
+        for partition in partitions {
+            guard let modelType = typeRegistry[partition.key] else { continue }
+            
+            await database.deleteByCloudID(
+                modelType,
+                partition.value.compactMap {
+                    UUID(uuidString: $0.recordID.recordName)
+                }
+            )
+        }
     }
     
     /// Queries the local database for records with the same type and ID as a given list of cloud
