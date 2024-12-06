@@ -70,17 +70,17 @@ public actor CloudKitDownloadEngine {
     /// Queries the local database for records with the same type and ID as a given list of cloud
     /// records. Returns a dictionary mapping those cloud records to a mathcing local record if found, or
     /// nil if not
-    private func matchRecords<ModelType: DataBacked>(
-        _ type: ModelType.Type,
+    private func matchRecords<Model: DataBacked>(
+        _ type: Model.Type,
         _ cloudRecords: [CKRecord]
-    ) async -> [CKRecord : ModelType?] {
+    ) async -> [CKRecord : Model?] {
         let uuids = cloudRecords.compactMap { UUID(uuidString: $0.recordID.recordName) }
         
         let scope = Database.Scope { table in
             table.filter(uuids.contains(SQLite.Expression<UUID>("cloudID")))
         }
         
-        let models = await database.fetch(ModelType.self, context: scope)
+        let models = await database.fetch(Model.self, context: scope)
         
         return Dictionary(uniqueKeysWithValues: cloudRecords.map { cloudRecord in
             (cloudRecord, models.first(where: { $0.cloudID == cloudRecord.recordID }))

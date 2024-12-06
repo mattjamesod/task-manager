@@ -2,16 +2,16 @@ import KillerModels
 
 @MainActor
 public protocol SynchronisedStateContainer: Identifiable, Sendable, AnyObject {
-    associatedtype ModelType: SchemaBacked
-    func addOrUpdate(model: ModelType)
-    func addOrUpdate(models: [ModelType])
+    associatedtype Model: SchemaBacked
+    func addOrUpdate(model: Model)
+    func addOrUpdate(models: [Model])
     func remove(with id: Int)
     func remove(with ids: Set<Int>)
 }
 
-public enum SyncResult<ModelType: Sendable>: Sendable {
-    case addOrUpdate(ModelType)
-    case addOrUpdateMany([ModelType])
+public enum SyncResult<Model: Sendable>: Sendable {
+    case addOrUpdate(Model)
+    case addOrUpdateMany([Model])
     case remove(_ id: Int)
     case removeMany(_ ids: Set<Int>)
 }
@@ -19,7 +19,7 @@ public enum SyncResult<ModelType: Sendable>: Sendable {
 /// Updates the state of a view from the database, given a list of Models with IDs which should
 /// be recalculated
 
-actor ViewSyncEngine<ModelType: SchemaBacked> {
+actor ViewSyncEngine<Model: SchemaBacked> {
     let database: Database
     let query: Database.Scope
     
@@ -28,7 +28,7 @@ actor ViewSyncEngine<ModelType: SchemaBacked> {
         self.query = query
     }
     
-    func sync(_ id: Int) async -> SyncResult<ModelType> {
+    func sync(_ id: Int) async -> SyncResult<Model> {
         guard let model = await fetch(id) else {
             return .remove(id)
         }
@@ -36,26 +36,26 @@ actor ViewSyncEngine<ModelType: SchemaBacked> {
         return .addOrUpdate(model)
     }
     
-    func sync(_ ids: Set<Int>) async -> [SyncResult<ModelType>] {
+    func sync(_ ids: Set<Int>) async -> [SyncResult<Model>] {
         let models = await fetch(ids)
         let missingIDs = ids.subtracting(models.compactMap(\.id))
         
         return compileResults(addOrUpdating: models, removing: missingIDs)
     }
     
-    func sync(_ id: Int) async -> [SyncResult<ModelType>] where ModelType: RecursiveData {
+    func sync(_ id: Int) async -> [SyncResult<Model>] where Model: RecursiveData {
         await self.sync(Set<Int>.init([id]))
     }
     
-    func sync(_ ids: Set<Int>) async -> [SyncResult<ModelType>] where ModelType: RecursiveData {
+    func sync(_ ids: Set<Int>) async -> [SyncResult<Model>] where Model: RecursiveData {
         // IDs of all items changed, and all of their recursive children
         let relevantIDs = await database
-            .fetchRecursive(ModelType.self, ids: ids)
+            .fetchRecursive(Model.self, ids: ids)
             .compactMap(\.id)
         
         // all models which are relevant to this event, and which should be shown in any view displaying the context query
         let applicableModels = await database
-            .fetch(ModelType.self, context: query)
+            .fetch(Model.self, context: query)
             .filter { $0.id != nil && relevantIDs.contains($0.id) }
         
         // all IDs which are relevant to this event, but should not be shown in any reflecting views
@@ -64,8 +64,8 @@ actor ViewSyncEngine<ModelType: SchemaBacked> {
         return compileResults(addOrUpdating: applicableModels, removing: missingIDs)
     }
     
-    private func compileResults(addOrUpdating: [ModelType], removing: Set<Int>) -> [SyncResult<ModelType>] {
-        var results: [SyncResult<ModelType>] = []
+    private func compileResults(addOrUpdating: [Model], removing: Set<Int>) -> [SyncResult<Model>] {
+        var results: [SyncResult<Model>] = []
         
         switch addOrUpdating.count {
             case 0: break
@@ -85,11 +85,11 @@ actor ViewSyncEngine<ModelType: SchemaBacked> {
     // MARK: - fetch methods
     // to erase knowledge of the Query from the fetch method
     
-    private func fetch(_ id: Int) async -> ModelType? {
-        await database.pluck(ModelType.self, id: id, context: query)
+    private func fetch(_ id: Int) async -> Model? {
+        await database.pluck(Model.self, id: id, context: query)
     }
     
-    private func fetch(_ ids: Set<Int>) async -> [ModelType] {
-        await database.fetch(ModelType.self, ids: ids, context: query)
+    private func fetch(_ ids: Set<Int>) async -> [Model] {
+        await database.fetch(Model.self, ids: ids, context: query)
     }
 }

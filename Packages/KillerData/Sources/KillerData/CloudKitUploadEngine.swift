@@ -19,20 +19,20 @@ actor CloudKitUploadEngine: CustomConsoleLogger {
         try await client.ensureSubscriptionExists()
     }
 
-    func handleRecordChanged<ModelType: CloudKitBacked>(
-        _ localRecord: ModelType
+    func handleRecordChanged<Model: CloudKitBacked>(
+        _ localRecord: Model
     ) async throws(CloudKitResponseError) {
         log("CK handleRecordChanged: \(localRecord.cloudID.recordName)")
         
-        let cloudRecord = try await client.findOrCreateRecord(ModelType.self, id: localRecord.cloudID)
+        let cloudRecord = try await client.findOrCreateRecord(Model.self, id: localRecord.cloudID)
         
         cloudRecord.updateValues(from: localRecord)
         
         try await client.save(cloudRecord)
     }
     
-    func handleRecordsChanged<ModelType: CloudKitBacked>(
-        _ localRecords: [ModelType]
+    func handleRecordsChanged<Model: CloudKitBacked>(
+        _ localRecords: [Model]
     ) async throws(CloudKitResponseError) {
         log("CK handleRecordsChanged: \(localRecords.map(\.cloudID).map(\.recordName))")
         

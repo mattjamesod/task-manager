@@ -26,8 +26,8 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
     
     public func waitForChanges(_ query: Database.Scope, on database: Database) async {
         self.log("started monitoring")
-        dbMessageThread = await database.subscribe(to: StateContainer.ModelType.self)
-        let syncEngine = ViewSyncEngine<StateContainer.ModelType>(for: database, context: query)
+        dbMessageThread = await database.subscribe(to: StateContainer.Model.self)
+        let syncEngine = ViewSyncEngine<StateContainer.Model>(for: database, context: query)
         
         self.monitorTask = Task {
             guard let thread = self.dbMessageThread else { return }
@@ -48,10 +48,10 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
         }
     }
     
-    public func waitForChanges(_ query: Database.Scope, recursive: Bool, on database: Database) async where StateContainer.ModelType: RecursiveData {
+    public func waitForChanges(_ query: Database.Scope, recursive: Bool, on database: Database) async where StateContainer.Model: RecursiveData {
         self.log("started monitoring")
-        dbMessageThread = await database.subscribe(to: StateContainer.ModelType.self)
-        let syncEngine = ViewSyncEngine<StateContainer.ModelType>(for: database, context: query)
+        dbMessageThread = await database.subscribe(to: StateContainer.Model.self)
+        let syncEngine = ViewSyncEngine<StateContainer.Model>(for: database, context: query)
         
         self.monitorTask = Task {
             guard let thread = self.dbMessageThread else { return }
@@ -82,7 +82,7 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
         self.dbMessageThread = nil
     }
     
-    private func push(syncResult: SyncResult<StateContainer.ModelType>) async {
+    private func push(syncResult: SyncResult<StateContainer.Model>) async {
         for container in registeredStateContainers {
             switch syncResult {
                 case .addOrUpdate(let model):

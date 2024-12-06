@@ -8,7 +8,7 @@ public protocol DataBacked: SchemaBacked & CloudKitBacked {
 // MARK: - SchemaBacked
 
 public protocol SchemaBacked: Sendable {
-    associatedtype SchemaType: ModelSchema
+    associatedtype Schema: TableSchema
     
     static func create(from databaseRecord: SQLite.Row) throws -> Self
     static func getSchemaExpression<T>(for keyPath: KeyPath<Self, T>) throws -> SQLite.Expression<T> where T: SQLite.Value

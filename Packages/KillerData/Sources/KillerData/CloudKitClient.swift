@@ -126,8 +126,8 @@ actor CloudKitClient {
         return CloudKitChanges(modifications, changes.deletions, changes.changeToken, changes.moreComing)
     }
     
-    func findOrCreateRecord<ModelType: CloudKitBacked>(
-        _ type: ModelType.Type,
+    func findOrCreateRecord<Model: CloudKitBacked>(
+        _ type: Model.Type,
         id: CKRecord.ID
     ) async throws(CloudKitResponseError) -> CKRecord {
         if let record = try await fetch(id) {
@@ -138,9 +138,9 @@ actor CloudKitClient {
         }
     }
     
-    func findOrCreateRecords<ModelType: CloudKitBacked>(
-        for localRecords: [ModelType]
-    ) async throws(CloudKitResponseError) -> [RecordPair<ModelType>] {
+    func findOrCreateRecords<Model: CloudKitBacked>(
+        for localRecords: [Model]
+    ) async throws(CloudKitResponseError) -> [RecordPair<Model>] {
         let cloudRecords = try await fetch(ids: localRecords.map(\.cloudID))
         let indexedLocalRecords = Dictionary(uniqueKeysWithValues: localRecords.map { ($0.cloudID, $0) })
         

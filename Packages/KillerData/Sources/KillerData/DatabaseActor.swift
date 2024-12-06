@@ -98,12 +98,12 @@ public actor Database {
         try! Database(schema: .testing, connection: Connection())
     }
     
-    public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, context: Database.Scope?) -> [ModelType] {
+    public func fetch<Model: SchemaBacked>(_ type: Model.Type, context: Database.Scope?) -> [Model] {
         do {
-            let table = ModelType.SchemaType.tableExpression
+            let table = Model.Schema.baseExpression
             let query = context?.apply(table) ?? table
             let records = try connection.prepare(query)
-            return try records.map(ModelType.create(from:))
+            return try records.map(Model.create(from:))
         }
         catch {
             // do something to broad cast the error to both you and the user
@@ -113,15 +113,15 @@ public actor Database {
         }
     }
     
-    public func pluck<ModelType: SchemaBacked>(_ type: ModelType.Type, id: Int, context: Database.Scope? = nil) -> ModelType? {
+    public func pluck<Model: SchemaBacked>(_ type: Model.Type, id: Int, context: Database.Scope? = nil) -> Model? {
         do {
-            let table = ModelType.SchemaType.tableExpression
+            let table = Model.Schema.baseExpression
             let query = context?.apply(table) ?? table
-            let record = try connection.pluck(query.filter(table[ModelType.SchemaType.id] == id))
+            let record = try connection.pluck(query.filter(table[Model.Schema.id] == id))
             
             guard let record else { return nil }
             
-            return try ModelType.create(from: record)
+            return try Model.create(from: record)
         }
         catch {
             // do something to broad cast the error to both you and the user
@@ -131,13 +131,13 @@ public actor Database {
         }
     }
     
-    public func fetch<ModelType: SchemaBacked>(_ type: ModelType.Type, ids: Set<Int>, context: Database.Scope? = nil) -> [ModelType] {
+    public func fetch<Model: SchemaBacked>(_ type: Model.Type, ids: Set<Int>, context: Database.Scope? = nil) -> [Model] {
         do {
-            let table = ModelType.SchemaType.tableExpression
+            let table = Model.Schema.baseExpression
             let query = context?.apply(table) ?? table
-            let records = try connection.prepare(query.filter(ids.contains(table[ModelType.SchemaType.id])))
+            let records = try connection.prepare(query.filter(ids.contains(table[Model.Schema.id])))
             
-            return try records.map(ModelType.create(from:))
+            return try records.map(Model.create(from:))
         }
         catch {
             // do something to broad cast the error to both you and the user
@@ -147,19 +147,19 @@ public actor Database {
         }
     }
     
-    public func fetchRecursive<ModelType: SchemaBacked & RecursiveData>(_ type: ModelType.Type, ids: Set<Int>, context: Database.Scope? = nil) -> [ModelType] {
+    public func fetchRecursive<Model: SchemaBacked & RecursiveData>(_ type: Model.Type, ids: Set<Int>, context: Database.Scope? = nil) -> [Model] {
         do {
-            let table = ModelType.SchemaType.tableExpression
+            let table = Model.Schema.baseExpression
             let query = context?.apply(table) ?? table
             
             let records = try connection
                 .prepare(buildRecursiveExpression(
-                    ModelType.self,
+                    Model.self,
                     ids: ids,
                     base: query
                 ))
             
-            return try records.map(ModelType.create(from:))
+            return try records.map(Model.create(from:))
         }
         catch {
             // do something to broad cast the error to both you and the user
@@ -169,16 +169,16 @@ public actor Database {
         }
     }
     
-    public func fetchChildren<ModelType: SchemaBacked>(
-        _ type: ModelType.Type, id: Int?,
+    public func fetchChildren<Model: SchemaBacked>(
+        _ type: Model.Type, id: Int?,
         context: Database.Scope? = nil
-    ) -> [ModelType] where ModelType : RecursiveData {
+    ) -> [Model] where Model : RecursiveData {
         do {
-            let table = ModelType.SchemaType.tableExpression
+            let table = Model.Schema.baseExpression
             let query = context?.apply(table) ?? table
             let records = try connection.prepare(query.filter(SQLite.Expression<Int?>("parentID") == id))
             
-            return try records.map(ModelType.create(from:))
+            return try records.map(Model.create(from:))
         }
         catch {
             // do something to broad cast the error to both you and the user
@@ -188,9 +188,9 @@ public actor Database {
         }
     }
     
-    public func count<ModelType: SchemaBacked>(_ type: ModelType.Type, query: Database.Scope) -> Int {
+    public func count<Model: SchemaBacked>(_ type: Model.Type, query: Database.Scope) -> Int {
         do {
-            return try connection.scalar(query.apply(ModelType.SchemaType.tableExpression).count)
+            return try connection.scalar(query.apply(Model.Schema.baseExpression).count)
         }
         catch {
             // do something to broad cast the error to both you and the user
@@ -200,12 +200,12 @@ public actor Database {
         }
     }
     
-    public func insert<ModelType: SchemaBacked, PropertyType1: SQLite.Value>(
-        _ type: ModelType.Type,
-        _ property1: PropertyArgument<ModelType, PropertyType1>,
+    public func insert<Model: SchemaBacked, PropertyType1: SQLite.Value>(
+        _ type: Model.Type,
+        _ property1: PropertyArgument<Model, PropertyType1>,
         context: Database.Scope? = nil
     ) async {
-        let creation = ModelType.creationProperties()
+        let creation = Model.creationProperties()
         let context = context?.insertProperties ?? []
         let manuallyRequested = [ try? property1.getSetter() ].compact()
         
@@ -213,7 +213,7 @@ public actor Database {
         
         guard let id = self.insert(type, setters) else { return }
         
-        setters.append(ModelType.SchemaType.id <- id)
+        setters.append(Model.Schema.id <- id)
         
         let finalSetters = setters
         
@@ -223,13 +223,13 @@ public actor Database {
         ))
     }
     
-    public func insert<ModelType: SchemaBacked, PropertyType1: SQLite.Value, PropertyType2: SQLite.Value>(
-        _ type: ModelType.Type,
-        _ property1: PropertyArgument<ModelType, PropertyType1>,
-        _ property2: PropertyArgument<ModelType, PropertyType2>,
+    public func insert<Model: SchemaBacked, PropertyType1: SQLite.Value, PropertyType2: SQLite.Value>(
+        _ type: Model.Type,
+        _ property1: PropertyArgument<Model, PropertyType1>,
+        _ property2: PropertyArgument<Model, PropertyType2>,
         context: Database.Scope? = nil
     ) async {
-        let creation = ModelType.creationProperties()
+        let creation = Model.creationProperties()
         let context = context?.insertProperties ?? []
         
         let manuallyRequested = [
@@ -241,7 +241,7 @@ public actor Database {
         
         guard let id = self.insert(type, setters) else { return }
         
-        setters.append(ModelType.SchemaType.id <- id)
+        setters.append(Model.Schema.id <- id)
         
         let finalSetters = setters
         
@@ -251,35 +251,35 @@ public actor Database {
         ))
     }
     
-    public func duplicate<ModelType: SchemaBacked>(_ model: ModelType) async {
+    public func duplicate<Model: SchemaBacked>(_ model: Model) async {
         var setters = model.duplicationProperties()
         
         setters.append(contentsOf: [
-            ModelType.SchemaType.createdAt <- Date.now,
-            ModelType.SchemaType.updatedAt <- Date.now
+            Model.Schema.createdAt <- Date.now,
+            Model.Schema.updatedAt <- Date.now
         ])
         
-        guard let id = self.insert(ModelType.self, setters) else { return }
+        guard let id = self.insert(Model.self, setters) else { return }
         
-        setters.append(ModelType.SchemaType.id <- id)
+        setters.append(Model.Schema.id <- id)
         
         let finalSetters = setters
         
         await history.record(Bijection(
-            goForward: { await self.insert(ModelType.self, finalSetters) },
-            goBackward: { await self.delete(ModelType.self, id) }
+            goForward: { await self.insert(Model.self, finalSetters) },
+            goBackward: { await self.delete(Model.self, id) }
         ))
     }
     
     @discardableResult
-    internal func insert<ModelType: SchemaBacked>(
-        _ type: ModelType.Type,
+    internal func insert<Model: SchemaBacked>(
+        _ type: Model.Type,
         _ setters: [Setter],
         sender: DatabaseMessage.Sender = .userInterface
     ) -> Int? {
         do {
             let newId = try connection.run(
-                ModelType.SchemaType.tableExpression.insert(setters)
+                Model.Schema.baseExpression.insert(setters)
             )
             
             Task.detached {
@@ -299,18 +299,18 @@ public actor Database {
     
     // parameter packs and concurrency do NOT play nicely, therefor just add helpers
     // for however many args needed...
-    public func update<ModelType: SchemaBacked, PropertyType1: SQLite.Value>(
-        _ model: ModelType,
-        _ property1: PropertyArgument<ModelType, PropertyType1>
+    public func update<Model: SchemaBacked, PropertyType1: SQLite.Value>(
+        _ model: Model,
+        _ property1: PropertyArgument<Model, PropertyType1>
     ) async {
         let forwardSetters = [
             try? property1.getSetter(),
-            ModelType.SchemaType.updatedAt <- Date.now
+            Model.Schema.updatedAt <- Date.now
         ].compact()
         
         let backwardSetters = [
             try? property1.getInverseSetter(model: model),
-            ModelType.SchemaType.updatedAt <- model.updatedAt
+            Model.Schema.updatedAt <- model.updatedAt
         ].compact()
         
         await history.record(Bijection(
@@ -321,11 +321,11 @@ public actor Database {
         self.update(model, forwardSetters)
     }
     
-    public func update<ModelType: SchemaBacked & RecursiveData, PropertyType1: SQLite.Value>(
-        _ model: ModelType,
+    public func update<Model: SchemaBacked & RecursiveData, PropertyType1: SQLite.Value>(
+        _ model: Model,
         recursive: Bool = false,
         context query: Database.Scope? = nil,
-        _ property1: PropertyArgument<ModelType, PropertyType1>
+        _ property1: PropertyArgument<Model, PropertyType1>
     ) async {
         let id = model.id
         let ids: [Int]
@@ -334,12 +334,12 @@ public actor Database {
             do {
                 ids = try connection
                     .prepare(buildRecursiveExpression(
-                        ModelType.self,
+                        Model.self,
                         name: "updateCTE",
                         rootID: id,
-                        base: query?.apply(ModelType.SchemaType.tableExpression) ?? ModelType.SchemaType.tableExpression
+                        base: query?.apply(Model.Schema.baseExpression) ?? Model.Schema.baseExpression
                     ))
-                    .map { $0[ModelType.SchemaType.id] }
+                    .map { $0[Model.Schema.id] }
             }
             catch {
                 // do something to broad cast the error to both you and the user
@@ -354,30 +354,30 @@ public actor Database {
         
         let forwardSetters = [
             try? property1.getSetter(),
-            ModelType.SchemaType.updatedAt <- Date.now
+            Model.Schema.updatedAt <- Date.now
         ].compact()
         
         let backwardSetters = [
             try? property1.getInverseSetter(model: model),
-            ModelType.SchemaType.updatedAt <- model.updatedAt
+            Model.Schema.updatedAt <- model.updatedAt
         ].compact()
         
         await history.record(Bijection(
-            goForward: { await self.update(ModelType.self, ids: ids, forwardSetters) },
-            goBackward: { await self.update(ModelType.self, ids: ids, backwardSetters) }
+            goForward: { await self.update(Model.self, ids: ids, forwardSetters) },
+            goBackward: { await self.update(Model.self, ids: ids, backwardSetters) }
         ))
         
-        self.update(ModelType.self, ids: ids, forwardSetters)
+        self.update(Model.self, ids: ids, forwardSetters)
     }
     
     // TODO:  If the model has no matching record in the database, it is created with the updated value.
-    internal func update<ModelType: SchemaBacked>(
-        _ model: ModelType,
+    internal func update<Model: SchemaBacked>(
+        _ model: Model,
         _ setters: [Setter],
         sender: DatabaseMessage.Sender = .userInterface
     ) {
         do {
-            update(ModelType.self, ids: [model.id], setters, sender: sender)
+            update(Model.self, ids: [model.id], setters, sender: sender)
         }
         catch {
             // do something to broad cast the error to both you and the user
@@ -386,16 +386,16 @@ public actor Database {
         }
     }
     
-    internal func update<ModelType: SchemaBacked>(
-        _ type: ModelType.Type,
+    internal func update<Model: SchemaBacked>(
+        _ type: Model.Type,
         ids: [Int],
         _ setters: [Setter],
         sender: DatabaseMessage.Sender = .userInterface
     ) {
         do {
             try connection.run(
-                ModelType.SchemaType.tableExpression
-                    .where(ids.contains(ModelType.SchemaType.id))
+                Model.Schema.baseExpression
+                    .where(ids.contains(Model.Schema.id))
                     .update(setters)
             )
             
@@ -417,11 +417,11 @@ public actor Database {
         }
     }
     
-    private func delete<ModelType: SchemaBacked>(_ type: ModelType.Type, _ id: Int) {
+    private func delete<Model: SchemaBacked>(_ type: Model.Type, _ id: Int) {
         do {
             try connection.run(
-                ModelType.SchemaType.tableExpression
-                    .filter(ModelType.SchemaType.id == id)
+                Model.Schema.baseExpression
+                    .filter(Model.Schema.id == id)
                     .delete()
             )
             
@@ -436,11 +436,11 @@ public actor Database {
         }
     }
         
-    public func purgeRecentlyDeleted<ModelType: SchemaBacked>(_ type: ModelType.Type) {
+    public func purgeRecentlyDeleted<Model: SchemaBacked>(_ type: Model.Type) {
         do {
             try connection.run(
-                ModelType.SchemaType.tableExpression
-                    .filter(ModelType.SchemaType.deletedAt < 30.days.ago)
+                Model.Schema.baseExpression
+                    .filter(Model.Schema.deletedAt < 30.days.ago)
                     .delete()
             )
         }
@@ -451,7 +451,7 @@ public actor Database {
         }
     }
     
-    private func buildRecursiveExpression<ModelType: SchemaBacked & RecursiveData>(_ type: ModelType.Type, name: String, rootID: Int?, base: SQLite.Table) -> SQLite.Table {
+    private func buildRecursiveExpression<Model: SchemaBacked & RecursiveData>(_ type: Model.Type, name: String, rootID: Int?, base: SQLite.Table) -> SQLite.Table {
         let cte = Table(name)
                     
         let compoundQuery = base
@@ -464,7 +464,7 @@ public actor Database {
         return cte.with(cte, recursive: true, as: compoundQuery)
     }
     
-    private func buildRecursiveExpression<ModelType: SchemaBacked & RecursiveData>(_ type: ModelType.Type, ids: Set<Int>, base: SQLite.Table) -> SQLite.Table {
+    private func buildRecursiveExpression<Model: SchemaBacked & RecursiveData>(_ type: Model.Type, ids: Set<Int>, base: SQLite.Table) -> SQLite.Table {
         let cte = Table("cte")
                     
         let compoundQuery = base

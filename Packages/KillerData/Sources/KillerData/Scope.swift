@@ -55,7 +55,7 @@ extension Database {
         public static let allActiveTasks: Scope = .init(
             name: "Active",
             tableExpression: { base in
-                let table = Schema.Tasks.tableExpression
+                let table = Schema.Tasks.baseExpression
                 
                 return base
                     .filter(table[Schema.Tasks.completedAt] == nil && table[Schema.Tasks.deletedAt] == nil)
@@ -69,7 +69,7 @@ extension Database {
                 Schema.Tasks.completedAt <- Date.now
             ],
             tableExpression: { base in
-                let table = Schema.Tasks.tableExpression
+                let table = Schema.Tasks.baseExpression
                 
                 return base
                     .filter(table[Schema.Tasks.completedAt] != nil && table[Schema.Tasks.deletedAt] == nil)
@@ -78,13 +78,13 @@ extension Database {
         )
         
         public static let orphaned: Scope = .init(name: "Orphaned") { base in
-            let tasks = Schema.Tasks.tableExpression
+            let tasks = Schema.Tasks.baseExpression
             let cte = Table("cte")
             
             return base
                 .with(cte, as: base.select(Schema.Tasks.id))
                 .join(.leftOuter, cte, on: tasks[Schema.Tasks.parentID] == cte[Schema.Tasks.id])
-                .select(Schema.Tasks.tableExpression[*])
+                .select(Schema.Tasks.baseExpression[*])
                 .filter(cte[SQLite.Expression<Int?>("id")] == nil)
         }
         
@@ -95,7 +95,7 @@ extension Database {
                     Schema.Tasks.parentID <- parentID
                 ],
                 tableExpression: { base in
-                    let tasks = Schema.Tasks.tableExpression
+                    let tasks = Schema.Tasks.baseExpression
                     return base.filter(tasks[Schema.Tasks.parentID] == parentID)
                 }
             )

@@ -3,7 +3,7 @@ import CloudKit
 @preconcurrency import SQLite
 
 extension KillerTask: SchemaBacked {
-    public typealias SchemaType = Database.Schema.Tasks
+    public typealias Schema = Database.Schema.Tasks
     
     public static func create(from databaseRecord: SQLite.Row) throws -> KillerTask {
         do {
@@ -28,11 +28,11 @@ extension KillerTask: SchemaBacked {
         for keyPath: KeyPath<Self, T>
     ) throws -> SQLite.Expression<T> where T: SQLite.Value {
         switch keyPath {
-        case \.id: SchemaType.id as! SQLite.Expression<T>
-        case \.cloudID: SchemaType.cloudID as! SQLite.Expression<T>
-        case \.body: SchemaType.body as! SQLite.Expression<T>
-        case \.createdAt: SchemaType.createdAt as! SQLite.Expression<T>
-        case \.updatedAt: SchemaType.updatedAt as! SQLite.Expression<T>
+        case \.id: Schema.id as! SQLite.Expression<T>
+        case \.cloudID: Schema.cloudID as! SQLite.Expression<T>
+        case \.body: Schema.body as! SQLite.Expression<T>
+        case \.createdAt: Schema.createdAt as! SQLite.Expression<T>
+        case \.updatedAt: Schema.updatedAt as! SQLite.Expression<T>
         default: throw DatabaseError.propertyDoesNotExist
         }
     }
@@ -41,24 +41,24 @@ extension KillerTask: SchemaBacked {
         optional keyPath: KeyPath<Self, T?>
     ) throws -> SQLite.Expression<T?> where T: SQLite.Value {
         switch keyPath {
-        case \.completedAt: SchemaType.completedAt as! SQLite.Expression<T?>
-        case \.deletedAt: SchemaType.deletedAt as! SQLite.Expression<T?>
-        case \.parentID: SchemaType.parentID as! SQLite.Expression<T?>
+        case \.completedAt: Schema.completedAt as! SQLite.Expression<T?>
+        case \.deletedAt: Schema.deletedAt as! SQLite.Expression<T?>
+        case \.parentID: Schema.parentID as! SQLite.Expression<T?>
         default: throw DatabaseError.propertyDoesNotExist
         }
     }
     
     static public func creationProperties() -> [Setter] { [
-        SchemaType.createdAt <- Date.now,
-        SchemaType.updatedAt <- Date.now,
-        SchemaType.cloudID <- UUID()
+        Schema.createdAt <- Date.now,
+        Schema.updatedAt <- Date.now,
+        Schema.cloudID <- UUID()
     ] }
     
     public func duplicationProperties() -> [Setter] { [
-        SchemaType.body <- self.body,
-        SchemaType.completedAt <- self.completedAt,
-        SchemaType.deletedAt <- self.deletedAt,
-        SchemaType.parentID <- self.parentID
+        Schema.body <- self.body,
+        Schema.completedAt <- self.completedAt,
+        Schema.deletedAt <- self.deletedAt,
+        Schema.parentID <- self.parentID
     ] }
 }
 
@@ -81,12 +81,12 @@ extension KillerTask: DataBacked {
     // TODO: encode these defaults and key names somewhere sensible
     // KillerTask.MetaData.defaultCreatedAt a sensible API?
     public static func databaseSetters(from cloudRecord: CKRecord) -> [Setter] { [
-        KillerTask.SchemaType.cloudID <- UUID(uuidString: cloudRecord.recordID.recordName)!,
-        KillerTask.SchemaType.body <- cloudRecord.value(forKey: "body") as? String ?? "",
-        KillerTask.SchemaType.completedAt <- cloudRecord.value(forKey: "completedAt") as? Date,
-        KillerTask.SchemaType.parentID <- cloudRecord.value(forKey: "parentID") as? Int,
-        KillerTask.SchemaType.createdAt <- cloudRecord.value(forKey: "createdAt") as? Date ?? Date.now,
-        KillerTask.SchemaType.updatedAt <- cloudRecord.value(forKey: "updatedAt") as? Date ?? Date.now,
-        KillerTask.SchemaType.deletedAt <- cloudRecord.value(forKey: "deletedAt") as? Date,
+        KillerTask.Schema.cloudID <- UUID(uuidString: cloudRecord.recordID.recordName)!,
+        KillerTask.Schema.body <- cloudRecord.value(forKey: "body") as? String ?? "",
+        KillerTask.Schema.completedAt <- cloudRecord.value(forKey: "completedAt") as? Date,
+        KillerTask.Schema.parentID <- cloudRecord.value(forKey: "parentID") as? Int,
+        KillerTask.Schema.createdAt <- cloudRecord.value(forKey: "createdAt") as? Date ?? Date.now,
+        KillerTask.Schema.updatedAt <- cloudRecord.value(forKey: "updatedAt") as? Date ?? Date.now,
+        KillerTask.Schema.deletedAt <- cloudRecord.value(forKey: "deletedAt") as? Date,
     ] }
 }
