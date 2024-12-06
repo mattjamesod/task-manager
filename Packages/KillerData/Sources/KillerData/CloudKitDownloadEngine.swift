@@ -33,18 +33,17 @@ public actor CloudKitDownloadEngine {
     }
     
     private func handleModifications(_ modifications: [CKDatabase.RecordZoneChange.Modification]) async throws {
-        let cloudRecords = Dictionary(grouping: modifications.map(\.record), by: \.recordType)
+        let partitionedCloudRecords = Dictionary(grouping: modifications.map(\.record), by: \.recordType)
         
-        for cloudRecord in cloudRecords {
-            guard let modelType = typeRegistry[cloudRecord.key] else { continue }
+        for partition in partitionedCloudRecords {
+            guard let modelType = typeRegistry[partition.key] else { continue }
             
-            let localRecords = await matchRecords(modelType, cloudRecord.value)
+            let localRecords = await matchRecords(modelType, partition.value)
             
             for localRecord in localRecords {
                 let cloudRecord = localRecord.key
                 
                 if let localRecord = localRecord.value {
-                    print("cloudKit update, id: \(localRecord.id)")
                     await database.update(
                         localRecord,
                         modelType.databaseSetters(from: cloudRecord),
@@ -52,7 +51,6 @@ public actor CloudKitDownloadEngine {
                     )
                 }
                 else {
-                    print("cloudKit insert, id: \(cloudRecord.recordID)")
                     await database.insert(
                         modelType,
                         modelType.databaseSetters(from: cloudRecord),

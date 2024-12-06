@@ -41,12 +41,6 @@ struct AnyCloudKitBacked: CloudKitBacked {
     var cloudBackedProperties: [String : Any] { wrapped.cloudBackedProperties }
 }
 
-extension SchemaBacked {
-    static func forCloudKit() -> (any (SchemaBacked & CloudKitBacked).Type)? {
-        self as? any (SchemaBacked & CloudKitBacked).Type
-    }
-}
-
 extension CKRecord {
     func updateValues<ModelType: CloudKitBacked>(from model: ModelType) {
         self.setValuesForKeys(model.cloudBackedProperties)

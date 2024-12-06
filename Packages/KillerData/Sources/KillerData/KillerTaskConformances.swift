@@ -79,7 +79,6 @@ extension KillerTask: CloudKitBacked {
 
 extension KillerTask: DataBacked {
     // TODO: encode these defaults and key names somewhere sensible
-    // KillerTask.MetaData.defaultCreatedAt a sensible API?
     public static func databaseSetters(from cloudRecord: CKRecord) -> [Setter] { [
         KillerTask.Schema.cloudID <- UUID(uuidString: cloudRecord.recordID.recordName)!,
         KillerTask.Schema.body <- cloudRecord.value(forKey: "body") as? String ?? "",
