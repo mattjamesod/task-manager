@@ -67,11 +67,12 @@ public actor CloudKitDownloadEngine {
         for partition in partitions {
             guard let modelType = typeRegistry[partition.key] else { continue }
             
-            await database.deleteByCloudID(
+            let localRecords = await fetchRecords(modelType, partition.value.map(\.recordID))
+            
+            await database.delete(
                 modelType,
-                partition.value.compactMap {
-                    UUID(uuidString: $0.recordID.recordName)
-                }
+                localRecords.map(\.id),
+                sender: .cloudSync
             )
         }
     }
@@ -94,5 +95,18 @@ public actor CloudKitDownloadEngine {
         return Dictionary(uniqueKeysWithValues: cloudRecords.map { cloudRecord in
             (cloudRecord, models.first(where: { $0.cloudID == cloudRecord.recordID }))
         })
+    }
+    
+    private func fetchRecords<Model: DataBacked>(
+        _ type: Model.Type,
+        _ cloudIDs: [CKRecord.ID]
+    ) async -> [Model] {
+        let uuids = cloudIDs.compactMap { UUID(uuidString: $0.recordName) }
+        
+        let scope = Database.Scope { table in
+            table.filter(uuids.contains(SQLite.Expression<UUID>("cloudID")))
+        }
+        
+        return await database.fetch(Model.self, context: scope)
     }
 }

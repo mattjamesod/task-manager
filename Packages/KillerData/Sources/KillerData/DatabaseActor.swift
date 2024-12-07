@@ -420,31 +420,20 @@ public actor Database {
         }
     }
     
-    internal func deleteByCloudID<Model: DataBacked>(
+    internal func delete<Model: SchemaBacked>(
         _ type: Model.Type,
-        _ cloudIDs: [UUID],
-        sender: DatabaseMessage.Sender = .cloudSync
+        _ ids: [Int],
+        sender: DatabaseMessage.Sender
     ) {
         do {
-            let idRecords = try connection.prepare(
-                // TODO: sigh
-                Model.Schema.baseExpression
-                    .filter(cloudIDs.contains(Expression<UUID>("cloudID")))
-                    .select(Model.Schema.id)
-            )
-            
-            let localIDs = try idRecords.map {
-                try $0.get(Model.Schema.id)
-            }
-            
             try connection.run(
                 Model.Schema.baseExpression
-                    .filter(localIDs.contains(Model.Schema.id))
+                    .filter(ids.contains(Model.Schema.id))
                     .delete()
             )
             
             Task.detached {
-                await self.send(.recordsDeleted(type, ids: Set(localIDs), sender: sender))
+                await self.send(.recordsDeleted(type, ids: Set(ids)))
             }
         }
         catch {
