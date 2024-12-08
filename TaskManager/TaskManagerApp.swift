@@ -1,5 +1,6 @@
 import SwiftUI
 import KillerData
+import CloudKit
 import KillerNavigation
 import UtilViews
 
@@ -26,7 +27,7 @@ struct TaskManagerApp: App {
             self.database = database
             self.cloudKitMonitor = database.enableCloudkitUpload()
             
-            appDelegate.localDatabase = database
+            appDelegate.cloudKitDownloadEngine = CloudKitDownloadEngine(database: database)
         }
         catch {
             // TODO: log database setup error

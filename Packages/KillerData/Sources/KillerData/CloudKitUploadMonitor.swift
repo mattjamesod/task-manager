@@ -6,12 +6,10 @@ extension Database {
     public actor CloudKitUploadMonitor {
         init(database: Database) {
             self.localDatabase = database
-            self.cloudDatabase = CKContainer(identifier: "iCloud.com.missingapostrophe.scopes").privateCloudDatabase
-            self.engine = .init(client: CloudKitClient(database: cloudDatabase))
+            self.engine = .init(client: CloudKitClient())
         }
         
         private let localDatabase: Database
-        private let cloudDatabase: CKDatabase
         private let engine: CloudKitUploadEngine
         
         private var monitorTasks: [Task<Void, Never>] = []

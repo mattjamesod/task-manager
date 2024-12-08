@@ -10,9 +10,9 @@ public actor CloudKitDownloadEngine {
     private let client: CloudKitClient
     private let database: Database
     
-    public init(cloud: CKDatabase, local: Database) {
-        self.client = CloudKitClient(database: cloud)
-        self.database = local
+    public init(database: Database) {
+        self.client = CloudKitClient()
+        self.database = database
     }
     
     public func downloadLatestChanges() async throws {

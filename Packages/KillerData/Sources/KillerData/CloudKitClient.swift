@@ -1,6 +1,5 @@
 import Foundation
 import CloudKit
-import KillerModels
 
 typealias RecordZoneChangesResponse = (
     modificationResultsByID: [CKRecord.ID : Result<CKDatabase.RecordZoneChange.Modification, any Error>],
@@ -29,6 +28,8 @@ struct CloudKitChanges {
 }
 
 actor CloudKitClient {
+    static let containerName: String = "iCloud.com.missingapostrophe.scopes"
+    
     struct RecordPair<LocalRecord: CloudKitBacked>: Identifiable, Sendable {
         let id: CKRecord.ID
         let localRecord: LocalRecord
@@ -48,8 +49,12 @@ actor CloudKitClient {
     
     private let database: CKDatabase
     
-    init(database: CKDatabase) {
-        self.database = database
+//    init(database: CKDatabase) {
+//        self.database = database
+//    }
+    
+    init() {
+        self.database = CKContainer(identifier: Self.containerName).privateCloudDatabase
     }
     
     func ensureZoneExists(_ zone: CloudKitZone) async throws(CloudKitResponseError) {

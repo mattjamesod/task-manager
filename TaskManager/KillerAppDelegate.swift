@@ -6,7 +6,7 @@ import KillerData
 import UIKit
 
 class KillerAppDelegate: NSObject, UIApplicationDelegate {
-    var localDatabase: Database?
+    var cloudKitDownloadEngine: CloudKitDownloadEngine?
     
     func application(
         _ application: UIApplication,
@@ -21,14 +21,14 @@ class KillerAppDelegate: NSObject, UIApplicationDelegate {
         didReceiveRemoteNotification userInfo: [AnyHashable : Any],
         fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
     ) {
-        guard let localDatabase else { return }
+        guard let cloudKitDownloadEngine else { return }
         
-        let cloudDatabase = CKContainer(identifier: "iCloud.com.missingapostrophe.scopes").privateCloudDatabase
+//        let cloudDatabase = CKContainer(identifier: "iCloud.com.missingapostrophe.scopes").privateCloudDatabase
+//        let engine = CloudKitDownloadEngine(cloud: cloudDatabase, local: localDatabase)
         
         Task {
             do {
-                let engine = CloudKitDownloadEngine(cloud: cloudDatabase, local: localDatabase)
-                try await engine.downloadLatestChanges()
+                try await cloudKitDownloadEngine.downloadLatestChanges()
                 completionHandler(.newData)
             }
             catch {
@@ -45,7 +45,7 @@ class KillerAppDelegate: NSObject, UIApplicationDelegate {
 import AppKit
 
 class KillerAppDelegate: NSObject, NSApplicationDelegate {
-    var localDatabase: Database?
+    var cloudKitDownloadEngine: CloudKitDownloadEngine?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.registerForRemoteNotifications()
@@ -55,14 +55,14 @@ class KillerAppDelegate: NSObject, NSApplicationDelegate {
         _ application: NSApplication,
         didReceiveRemoteNotification userInfo: [String : Any]
     ) {
-        guard let localDatabase else { return }
+        guard let cloudKitDownloadEngine else { return }
         
-        let cloudDatabase = CKContainer(identifier: "iCloud.com.missingapostrophe.scopes").privateCloudDatabase
+//        let cloudDatabase = CKContainer(identifier: "iCloud.com.missingapostrophe.scopes").privateCloudDatabase
+//        let engine = CloudKitDownloadEngine(cloud: cloudDatabase, local: localDatabase)
         
         Task {
             do {
-                let engine = CloudKitDownloadEngine(cloud: cloudDatabase, local: localDatabase)
-                try await engine.downloadLatestChanges()
+                try await cloudKitDownloadEngine.downloadLatestChanges()
             }
             catch {
                 // TODO: log error
