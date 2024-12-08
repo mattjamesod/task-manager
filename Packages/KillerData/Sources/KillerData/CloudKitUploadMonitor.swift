@@ -6,7 +6,7 @@ extension Database {
     public actor CloudKitUploadMonitor {
         init(database: Database) {
             self.localDatabase = database
-            self.engine = .init(client: CloudKitClient())
+            self.engine = .init()
         }
         
         private let localDatabase: Database

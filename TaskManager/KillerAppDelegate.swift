@@ -13,6 +13,18 @@ class KillerAppDelegate: NSObject, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
     ) -> Bool {
         application.registerForRemoteNotifications()
+        
+        guard let cloudKitDownloadEngine else { return true }
+        
+        Task {
+            do {
+                try await cloudKitDownloadEngine.downloadLatestChanges()
+            }
+            catch {
+                // TODO: log error
+            }
+        }
+        
         return true
     }
     
@@ -21,10 +33,27 @@ class KillerAppDelegate: NSObject, UIApplicationDelegate {
         didReceiveRemoteNotification userInfo: [AnyHashable : Any],
         fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
     ) {
-        guard let cloudKitDownloadEngine else { return }
+        guard let cloudKitDownloadEngine else {
+            print("failed to download CK changes from notification")
+            completionHandler(.failed)
+            return
+        }
         
-//        let cloudDatabase = CKContainer(identifier: "iCloud.com.missingapostrophe.scopes").privateCloudDatabase
-//        let engine = CloudKitDownloadEngine(cloud: cloudDatabase, local: localDatabase)
+        Task {
+            do {
+                try await cloudKitDownloadEngine.downloadLatestChanges()
+                completionHandler(.newData)
+            }
+            catch {
+                // TODO: log error
+                print("failed to download CK changes from notification")
+                completionHandler(.failed)
+            }
+        }
+    }
+    
+    private func downloadCloudKitChanges(completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        guard let cloudKitDownloadEngine else { completionHandler(.failed); return }
         
         Task {
             do {
@@ -49,6 +78,17 @@ class KillerAppDelegate: NSObject, NSApplicationDelegate {
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.registerForRemoteNotifications()
+        
+        guard let cloudKitDownloadEngine else { return }
+        
+        Task {
+            do {
+                try await cloudKitDownloadEngine.downloadLatestChanges()
+            }
+            catch {
+                // TODO: log error
+            }
+        }
     }
     
     func application(
@@ -56,9 +96,6 @@ class KillerAppDelegate: NSObject, NSApplicationDelegate {
         didReceiveRemoteNotification userInfo: [String : Any]
     ) {
         guard let cloudKitDownloadEngine else { return }
-        
-//        let cloudDatabase = CKContainer(identifier: "iCloud.com.missingapostrophe.scopes").privateCloudDatabase
-//        let engine = CloudKitDownloadEngine(cloud: cloudDatabase, local: localDatabase)
         
         Task {
             do {

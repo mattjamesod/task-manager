@@ -8,11 +8,7 @@ import Logging
 actor CloudKitUploadEngine: CustomConsoleLogger {
     let logToConsole: Bool = false
     
-    private let client: CloudKitClient
-    
-    init(client: CloudKitClient) {
-        self.client = client
-    }
+    private let client: CloudKitClient = .init()
     
     func ensureRemoteSchemaSetup() async throws(CloudKitResponseError) {
         try await client.ensureZoneExists(.userData)

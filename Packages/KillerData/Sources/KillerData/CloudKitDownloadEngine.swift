@@ -7,12 +7,12 @@ public actor CloudKitDownloadEngine {
         "KillerTask": KillerTask.self
     ]
     
-    private let client: CloudKitClient
     private let database: Database
+    private let client: CloudKitClient
     
     public init(database: Database) {
-        self.client = CloudKitClient()
         self.database = database
+        self.client = CloudKitClient()
     }
     
     public func downloadLatestChanges() async throws {
