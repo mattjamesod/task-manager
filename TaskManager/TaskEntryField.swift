@@ -28,9 +28,13 @@ struct NewTaskButton: View {
     
     @Binding var enteredText: String
     
+    private var sanitisedText: String {
+        String(enteredText.prefix(4000))
+    }
+    
     var body: some View {
         Button("Add") {
-            let currentText = enteredText
+            let currentText = sanitisedText
             enteredText = ""
             
             Task.detached {
