@@ -32,6 +32,7 @@
 		A079C6BD2C8AEE020053BC4F /* TaskBodyField.swift in Sources */ = {isa = PBXBuildFile; fileRef = A079C6BC2C8AEDFC0053BC4F /* TaskBodyField.swift */; };
 		A09B7A6E2C3B0DA500C01586 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = A09B7A6D2C3B0DA500C01586 /* AsyncAlgorithms */; };
 		A09BB03D2CD165FE00740468 /* TaskCompleteCheckbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = A09BB03C2CD165F800740468 /* TaskCompleteCheckbox.swift */; };
+		A0AE865A2D0B24C6005E0D19 /* TaskEntryField.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0AE86592D0B24C6005E0D19 /* TaskEntryField.swift */; };
 		A0D1EBED2C26C5C7008636CB /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = A0D1EBEC2C26C5C7008636CB /* SQLite */; };
 		A0DB377C2C2DD02A00D17C00 /* KillerModels in Frameworks */ = {isa = PBXBuildFile; productRef = A0DB377B2C2DD02A00D17C00 /* KillerModels */; };
 		A0DB37812C2E0ED200D17C00 /* KillerModels in Frameworks */ = {isa = PBXBuildFile; productRef = A0DB37802C2E0ED200D17C00 /* KillerModels */; };
@@ -75,6 +76,7 @@
 		A06A95F82C4E3DB4004302DF /* TaskListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskListView.swift; sourceTree = "<group>"; };
 		A079C6BC2C8AEDFC0053BC4F /* TaskBodyField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskBodyField.swift; sourceTree = "<group>"; };
 		A09BB03C2CD165F800740468 /* TaskCompleteCheckbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskCompleteCheckbox.swift; sourceTree = "<group>"; };
+		A0AE86592D0B24C6005E0D19 /* TaskEntryField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskEntryField.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -146,6 +148,7 @@
 				A003DE8A2C957116005057A9 /* ScopeListView.swift */,
 				A06244A22CE4A5BD00F86255 /* TaskContainerState.swift */,
 				A055B5BF2C25E52200BCB5C2 /* TaskContainerView.swift */,
+				A0AE86592D0B24C6005E0D19 /* TaskEntryField.swift */,
 				A06A95F82C4E3DB4004302DF /* TaskListView.swift */,
 				A06244A02CE20B1A00F86255 /* TaskProvider.swift */,
 				A03581DF2C5771650078F59E /* TaskView.swift */,
@@ -337,6 +340,7 @@
 				A055B5C02C25E52200BCB5C2 /* TaskContainerView.swift in Sources */,
 				A031618C2CA53E450031B2E6 /* AboutView.swift in Sources */,
 				A09BB03D2CD165FE00740468 /* TaskCompleteCheckbox.swift in Sources */,
+				A0AE865A2D0B24C6005E0D19 /* TaskEntryField.swift in Sources */,
 				A079C6BD2C8AEE020053BC4F /* TaskBodyField.swift in Sources */,
 				A031618E2CA93F0A0031B2E6 /* KillerSettings.swift in Sources */,
 				A06244A52CF46EAD00F86255 /* KillerAppDelegate.swift in Sources */,

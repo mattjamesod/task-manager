@@ -157,7 +157,7 @@ struct TaskContainerView: View {
                 }
                 .buttonStyle(KillerBorderedButtonStyle())
                 
-                NewTaskEntryField()
+                TaskEntryField()
             }
             .containerPadding(axis: .horizontal)
             .padding(.bottom, 8)
@@ -187,43 +187,7 @@ extension EnvironmentValues {
     @Entry var contextQuery: Database.Scope? = nil
 }
 
-struct NewTaskEntryField: View {
-    @SceneStorage("newTaskEntryText") var enteredText: String = ""
-    
-    var body: some View {
-        HStack {
-            TextField("New Task", text: $enteredText)
-                .textFieldStyle(.plain)
-            NewTaskButton(enteredText: $enteredText)
-                .buttonStyle(KillerInlineButtonStyle())
-        }
-        .containerPadding()
-        .background {
-            RoundedRectangle(cornerRadius: 12)
-                .foregroundStyle(.ultraThinMaterial)
-        }
-    }
-}
 
-struct NewTaskButton: View {
-    @Environment(\.database) var database
-    @Environment(\.contextQuery) var query
-    @Environment(Selection<KillerTask>.self) var selection
-    
-    @Binding var enteredText: String
-    
-    var body: some View {
-        Button("Add") {
-            let currentText = enteredText
-            enteredText = ""
-            
-            Task.detached {
-                let query = await self.query
-                await database?.insert(KillerTask.self, \.body <- currentText, \.parentID <- selection.chosen, context: query)
-            }
-        }
-    }
-}
 
 struct DoneButton: View {
     @Environment(\.database) var database

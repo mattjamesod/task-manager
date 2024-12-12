@@ -108,12 +108,14 @@ public struct KillerBorderedButtonStyle: ButtonStyle {
 }
 
 public struct KillerInlineButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) var isEnabled
+    
     public init() { }
     
     public func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .contentShape(Rectangle())
-            .foregroundStyle(Color.accentColor)
+            .foregroundStyle(isEnabled ? Color.accentColor : Color.gray)
             .brightness(configuration.isPressed ? 0.1 : 0)
             .animation(.easeInOut, value: configuration.isPressed)
     }
