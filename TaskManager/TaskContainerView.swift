@@ -89,6 +89,20 @@ struct TaskContainerEmptyView: View {
     }
 }
 
+// shows a progress veiw if it's taking a while to render something else
+struct EventuallyProgressView: View {
+    @State var takingAWhile = false
+    
+    var body: some View {
+        ProgressView()
+            .opacity(takingAWhile ? 1 : 0)
+            .task {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                takingAWhile = true
+            }
+    }
+}
+
 struct TaskContainerView: View {
     @Environment(\.database) var database
     @Environment(\.navigationSizeClass) var navigationSizeClass
@@ -135,8 +149,8 @@ struct TaskContainerView: View {
             }
             
             if state == .loading {
-                // TODO: loading view that shows spinner after a bit
-                EmptyView()
+                EventuallyProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .transition(.scale(scale: 0.8).combined(with: .opacity))
             }
         }
@@ -163,7 +177,9 @@ struct TaskContainerView: View {
             .padding(.bottom, 8)
         }
         .onPreferenceChange(TaskContainerStateKey.self) { state in
-            self.state = state
+            Task {
+                self.state = state
+            }
         }
         .environment(\.focusedTaskID, $focusedTaskID)
         .environment(\.contextQuery, viewModel.query)
