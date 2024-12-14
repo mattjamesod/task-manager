@@ -23,7 +23,7 @@ struct TaskBodyField: View {
     }
     
     private func permit() -> Bool {
-        taskBody = String(taskBody.prefix(4000))
+        taskBody = String(taskBody.prefix(KillerTask.maxBodyLength))
         return taskBody != task.body
     }
 }
