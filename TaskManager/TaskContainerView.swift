@@ -140,6 +140,8 @@ struct TaskContainerView: View {
                             }
                         }
                     }
+                
+                TaskEntryField()
             }
             .opacity(state.isDone ? 1 : 0)
                 
@@ -157,7 +159,7 @@ struct TaskContainerView: View {
         .animation(.bouncy(duration: 0.4), value: state)
         .containerPadding(axis: .horizontal)
         .safeAreaInset(edge: .bottom) {
-            VStack(spacing: 8) {
+//            VStack(spacing: 8) {
                 HStack {
                     if focusedTaskID != nil {
                         DoneButton()
@@ -170,9 +172,7 @@ struct TaskContainerView: View {
                     .opacity(DeviceKind.current.isMobile ? 1 : 0)
                 }
                 .buttonStyle(KillerBorderedButtonStyle())
-                
-                TaskEntryField()
-            }
+//            }
             .containerPadding(axis: .horizontal)
             .padding(.bottom, 8)
         }

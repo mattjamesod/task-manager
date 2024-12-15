@@ -2,16 +2,34 @@ import SwiftUI
 import KillerModels
 import KillerData
 import KillerStyle
+import UtilViews
 
 struct TaskEntryField: View {
-    @SceneStorage("newTaskEntryText") var enteredText: String = ""
+    @Environment(\.database) var database
+    @Environment(\.contextQuery) var query
+    @Environment(Selection<KillerTask>.self) var selection
+    
+    @State var enteredText: String = ""
     
     var body: some View {
         HStack {
-            TextField("New Task", text: $enteredText)
+            DebouncedTextField("New Task", text: $enteredText)
                 .textFieldStyle(.plain)
-            NewTaskButton(enteredText: $enteredText)
-                .buttonStyle(KillerInlineButtonStyle())
+                .onChange(of: enteredText) {
+                    let currentText = String(enteredText.prefix(KillerTask.maxBodyLength))
+                    guard !enteredText.isEmpty else { return }
+                    enteredText = ""
+                    
+                    Task.detached {
+                        let query = await self.query
+                        await database?.insert(
+                            KillerTask.self,
+                            \.body <- currentText,
+                            \.parentID <- selection.chosen,
+                            context: query
+                        )
+                    }
+                }
         }
         .containerPadding()
         .background {
@@ -21,28 +39,3 @@ struct TaskEntryField: View {
     }
 }
 
-struct NewTaskButton: View {
-    @Environment(\.database) var database
-    @Environment(\.contextQuery) var query
-    @Environment(Selection<KillerTask>.self) var selection
-    
-    @Binding var enteredText: String
-    
-    var body: some View {
-        Button("Add") {
-            let currentText = String(enteredText.prefix(KillerTask.maxBodyLength))
-            enteredText = ""
-            
-            Task.detached {
-                let query = await self.query
-                await database?.insert(
-                    KillerTask.self,
-                    \.body <- currentText,
-                    \.parentID <- selection.chosen,
-                    context: query
-                )
-            }
-        }
-        .disabled(enteredText.isEmpty)
-    }
-}
