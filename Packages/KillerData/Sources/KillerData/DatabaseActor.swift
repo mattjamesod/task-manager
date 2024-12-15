@@ -89,7 +89,7 @@ public actor Database {
         self.events = .init()
         
         do {
-            try schema.destroy(connection: connection)
+//            try schema.destroy(connection: connection)
             try schema.create(connection: connection)
         }
         catch {
