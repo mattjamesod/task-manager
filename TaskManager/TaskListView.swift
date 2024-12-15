@@ -21,7 +21,7 @@ struct TaskListView: View {
         self.detailQuery = detailQuery
     }
     
-    init(parentID: Int?) {
+    init(parentID: UUID?) {
         self.taskProvider = TaskProvider(filter: { $0.parentID == parentID })
         self.monitor = nil
         self.detailQuery = .children(of: parentID)

@@ -34,12 +34,12 @@ final class TaskProvider: SynchronisedStateContainer {
         }
     }
     
-    func remove(with id: Int) {
+    func remove(with id: UUID) {
         guard let index = tasks.firstIndex(where: { $0.id == id }) else { return }
         tasks.remove(at: index)
     }
     
-    func remove(with ids: Set<Int>) {
+    func remove(with ids: Set<UUID>) {
         for id in ids {
             remove(with: id)
         }

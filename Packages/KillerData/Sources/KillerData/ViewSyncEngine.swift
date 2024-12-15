@@ -1,25 +1,26 @@
+import Foundation
 import KillerModels
 
 @MainActor
 public protocol SynchronisedStateContainer: Identifiable, Sendable, AnyObject {
-    associatedtype Model: SchemaBacked
+    associatedtype Model: SchemaBacked & Identifiable
     func addOrUpdate(model: Model)
     func addOrUpdate(models: [Model])
-    func remove(with id: Int)
-    func remove(with ids: Set<Int>)
+    func remove(with id: UUID)
+    func remove(with ids: Set<UUID>)
 }
 
 public enum SyncResult<Model: Sendable>: Sendable {
     case addOrUpdate(Model)
     case addOrUpdateMany([Model])
-    case remove(_ id: Int)
-    case removeMany(_ ids: Set<Int>)
+    case remove(_ id: UUID)
+    case removeMany(_ ids: Set<UUID>)
 }
 
 /// Updates the state of a view from the database, given a list of Models with IDs which should
 /// be recalculated
 
-actor ViewSyncEngine<Model: SchemaBacked> {
+actor ViewSyncEngine<Model: SchemaBacked & Identifiable> {
     let database: Database
     let query: Database.Scope
     
@@ -28,7 +29,7 @@ actor ViewSyncEngine<Model: SchemaBacked> {
         self.query = query
     }
     
-    func sync(_ id: Int) async -> SyncResult<Model> {
+    func sync(_ id: UUID) async -> SyncResult<Model> {
         guard let model = await fetch(id) else {
             return .remove(id)
         }
@@ -36,18 +37,18 @@ actor ViewSyncEngine<Model: SchemaBacked> {
         return .addOrUpdate(model)
     }
     
-    func sync(_ ids: Set<Int>) async -> [SyncResult<Model>] {
+    func sync(_ ids: Set<UUID>) async -> [SyncResult<Model>] {
         let models = await fetch(ids)
         let missingIDs = ids.subtracting(models.compactMap(\.id))
         
         return compileResults(addOrUpdating: models, removing: missingIDs)
     }
     
-    func sync(_ id: Int) async -> [SyncResult<Model>] where Model: RecursiveData {
-        await self.sync(Set<Int>.init([id]))
+    func sync(_ id: UUID) async -> [SyncResult<Model>] where Model: RecursiveData {
+        await self.sync(Set<UUID>.init([id]))
     }
     
-    func sync(_ ids: Set<Int>) async -> [SyncResult<Model>] where Model: RecursiveData {
+    func sync(_ ids: Set<UUID>) async -> [SyncResult<Model>] where Model: RecursiveData {
         // IDs of all items changed, and all of their recursive children
         let relevantIDs = await database
             .fetchRecursive(Model.self, ids: ids)
@@ -64,7 +65,7 @@ actor ViewSyncEngine<Model: SchemaBacked> {
         return compileResults(addOrUpdating: applicableModels, removing: missingIDs)
     }
     
-    private func compileResults(addOrUpdating: [Model], removing: Set<Int>) -> [SyncResult<Model>] {
+    private func compileResults(addOrUpdating: [Model], removing: Set<UUID>) -> [SyncResult<Model>] {
         var results: [SyncResult<Model>] = []
         
         switch addOrUpdating.count {
@@ -85,11 +86,11 @@ actor ViewSyncEngine<Model: SchemaBacked> {
     // MARK: - fetch methods
     // to erase knowledge of the Query from the fetch method
     
-    private func fetch(_ id: Int) async -> Model? {
+    private func fetch(_ id: UUID) async -> Model? {
         await database.pluck(Model.self, id: id, context: query)
     }
     
-    private func fetch(_ ids: Set<Int>) async -> [Model] {
+    private func fetch(_ ids: Set<UUID>) async -> [Model] {
         await database.fetch(Model.self, ids: ids, context: query)
     }
 }

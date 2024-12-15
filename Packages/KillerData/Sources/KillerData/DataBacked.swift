@@ -17,7 +17,7 @@ public protocol SchemaBacked: Sendable {
     static func creationProperties() -> [Setter]
     func duplicationProperties() -> [Setter]
     
-    var id: Int { get }
+    var id: UUID { get }
     var createdAt: Date { get }
     var updatedAt: Date { get }
     var deletedAt: Date? { get }

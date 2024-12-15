@@ -20,10 +20,10 @@ public enum DatabaseMessage: Sendable {
         case cloudSync
     }
     
-    case recordChange(_ type: any SchemaBacked.Type, id: Int, sender: Sender = .userInterface)
-    case recordsChanged(_ type: any SchemaBacked.Type, ids: Set<Int>, sender: Sender = .userInterface)
-    case recordDeleted(_ type: any SchemaBacked.Type, id: Int, sender: Sender = .userInterface)
-    case recordsDeleted(_ type: any SchemaBacked.Type, ids: Set<Int>, sender: Sender = .userInterface)
+    case recordChange(_ type: any SchemaBacked.Type, id: UUID, sender: Sender = .userInterface)
+    case recordsChanged(_ type: any SchemaBacked.Type, ids: Set<UUID>, sender: Sender = .userInterface)
+    case recordDeleted(_ type: any SchemaBacked.Type, id: UUID, sender: Sender = .userInterface)
+    case recordsDeleted(_ type: any SchemaBacked.Type, ids: Set<UUID>, sender: Sender = .userInterface)
     
     var type: any SchemaBacked.Type {
         switch self {
@@ -89,7 +89,7 @@ public actor Database {
         self.events = .init()
         
         do {
-//            try schema.destroy(connection: connection)
+            try schema.destroy(connection: connection)
             try schema.create(connection: connection)
         }
         catch {
@@ -116,7 +116,7 @@ public actor Database {
         }
     }
     
-    public func pluck<Model: SchemaBacked>(_ type: Model.Type, id: Int, context: Database.Scope? = nil) -> Model? {
+    public func pluck<Model: SchemaBacked>(_ type: Model.Type, id: UUID, context: Database.Scope? = nil) -> Model? {
         do {
             let table = Model.Schema.baseExpression
             let query = context?.apply(table) ?? table
@@ -134,7 +134,7 @@ public actor Database {
         }
     }
     
-    public func fetch<Model: SchemaBacked>(_ type: Model.Type, ids: Set<Int>, context: Database.Scope? = nil) -> [Model] {
+    public func fetch<Model: SchemaBacked>(_ type: Model.Type, ids: Set<UUID>, context: Database.Scope? = nil) -> [Model] {
         do {
             let table = Model.Schema.baseExpression
             let query = context?.apply(table) ?? table
@@ -150,7 +150,7 @@ public actor Database {
         }
     }
     
-    public func fetchRecursive<Model: SchemaBacked & RecursiveData>(_ type: Model.Type, ids: Set<Int>, context: Database.Scope? = nil) -> [Model] {
+    public func fetchRecursive<Model: SchemaBacked & RecursiveData>(_ type: Model.Type, ids: Set<UUID>, context: Database.Scope? = nil) -> [Model] {
         do {
             let table = Model.Schema.baseExpression
             let query = context?.apply(table) ?? table
@@ -173,13 +173,13 @@ public actor Database {
     }
     
     public func fetchChildren<Model: SchemaBacked>(
-        _ type: Model.Type, id: Int?,
+        _ type: Model.Type, id: UUID?,
         context: Database.Scope? = nil
     ) -> [Model] where Model : RecursiveData {
         do {
             let table = Model.Schema.baseExpression
             let query = context?.apply(table) ?? table
-            let records = try connection.prepare(query.filter(SQLite.Expression<Int?>("parentID") == id))
+            let records = try connection.prepare(query.filter(SQLite.Expression<UUID?>("parentID") == id))
             
             return try records.map(Model.create(from:))
         }
@@ -208,20 +208,19 @@ public actor Database {
         _ property1: PropertyArgument<Model, PropertyType1>,
         context: Database.Scope? = nil
     ) async {
+        let id = UUID()
         let creation = Model.creationProperties()
         let context = context?.insertProperties ?? []
         let manuallyRequested = [ try? property1.getSetter() ].compact()
         
         var setters = creation + context + manuallyRequested
         
-        guard let id = self.insert(type, setters) else { return }
-        
-        setters.append(Model.Schema.id <- id)
-        
+        guard self.insert(type, id, setters) else { return }
+                
         let finalSetters = setters
         
         await history.record(Bijection(
-            goForward: { await self.insert(type, finalSetters) },
+            goForward: { await self.insert(type, id, finalSetters) },
             goBackward: { await self.delete(type, id) }
         ))
     }
@@ -232,6 +231,7 @@ public actor Database {
         _ property2: PropertyArgument<Model, PropertyType2>,
         context: Database.Scope? = nil
     ) async {
+        let id = UUID()
         let creation = Model.creationProperties()
         let context = context?.insertProperties ?? []
         
@@ -242,61 +242,63 @@ public actor Database {
         
         var setters = creation + context + manuallyRequested
         
-        guard let id = self.insert(type, setters) else { return }
-        
-        setters.append(Model.Schema.id <- id)
+        guard self.insert(type, id, setters) else { return }
         
         let finalSetters = setters
         
         await history.record(Bijection(
-            goForward: { await self.insert(type, finalSetters) },
+            goForward: { await self.insert(type, id, finalSetters) },
             goBackward: { await self.delete(type, id) }
         ))
     }
     
     public func duplicate<Model: SchemaBacked>(_ model: Model) async {
+        let id = UUID()
         var setters = model.duplicationProperties()
         
         setters.append(contentsOf: [
+            Model.Schema.id <- id,
             Model.Schema.createdAt <- Date.now,
             Model.Schema.updatedAt <- Date.now
         ])
         
-        guard let id = self.insert(Model.self, setters) else { return }
-        
-        setters.append(Model.Schema.id <- id)
+        guard self.insert(Model.self, id, setters) else { return }
         
         let finalSetters = setters
         
         await history.record(Bijection(
-            goForward: { await self.insert(Model.self, finalSetters) },
+            goForward: { await self.insert(Model.self, id, finalSetters) },
             goBackward: { await self.delete(Model.self, id) }
         ))
     }
     
+    // what is now the purpose of this method? should it expose errors
     @discardableResult
     internal func insert<Model: SchemaBacked>(
         _ type: Model.Type,
+        _ id: UUID,
         _ setters: [Setter],
         sender: DatabaseMessage.Sender = .userInterface
-    ) -> Int? {
+    ) -> Bool {
         do {
-            let newId = try connection.run(
-                Model.Schema.baseExpression.insert(setters)
+            let finalSetters = setters + [Model.Schema.id <- id]
+            
+            try connection.run(
+                Model.Schema.baseExpression.insert(finalSetters)
             )
             
             Task.detached {
-                await self.send(.recordChange(type, id: Int(newId), sender: sender))
+                await self.send(.recordChange(type, id: id, sender: sender))
             }
             
-            return Int(newId)
+            return true
         }
         catch {
             // sqlite specific errors, print problem query?
             // do something to broad cast the error to both you and the user
             print(error)
             print("\(#file):\(#function):\(#line)")
-            return nil
+            return false
         }
     }
     
@@ -331,7 +333,7 @@ public actor Database {
         _ property1: PropertyArgument<Model, PropertyType1>
     ) async {
         let id = model.id
-        let ids: [Int]
+        let ids: [UUID]
         
         if recursive {
             do {
@@ -391,7 +393,7 @@ public actor Database {
     
     internal func update<Model: SchemaBacked>(
         _ type: Model.Type,
-        ids: [Int],
+        ids: [UUID],
         _ setters: [Setter],
         sender: DatabaseMessage.Sender = .userInterface
     ) {
@@ -422,7 +424,7 @@ public actor Database {
     
     internal func delete<Model: SchemaBacked>(
         _ type: Model.Type,
-        _ ids: [Int],
+        _ ids: [UUID],
         sender: DatabaseMessage.Sender
     ) {
         do {
@@ -443,7 +445,7 @@ public actor Database {
         }
     }
     
-    private func delete<Model: SchemaBacked>(_ type: Model.Type, _ id: Int) {
+    private func delete<Model: SchemaBacked>(_ type: Model.Type, _ id: UUID) {
         do {
             try connection.run(
                 Model.Schema.baseExpression
@@ -477,26 +479,26 @@ public actor Database {
         }
     }
     
-    private func buildRecursiveExpression<Model: SchemaBacked & RecursiveData>(_ type: Model.Type, name: String, rootID: Int?, base: SQLite.Table) -> SQLite.Table {
+    private func buildRecursiveExpression<Model: SchemaBacked & RecursiveData>(_ type: Model.Type, name: String, rootID: UUID?, base: SQLite.Table) -> SQLite.Table {
         let cte = Table(name)
                     
         let compoundQuery = base
-            .where(base[SQLite.Expression<Int?>("id")] == rootID)
+            .where(base[SQLite.Expression<UUID?>("id")] == rootID)
             .union(
-                cte.join(base, on: cte[SQLite.Expression<Int>("id")] == base[SQLite.Expression<Int>("parentID")])
+                cte.join(base, on: cte[SQLite.Expression<UUID>("id")] == base[SQLite.Expression<UUID>("parentID")])
                    .select(base[*])
             )
         
         return cte.with(cte, recursive: true, as: compoundQuery)
     }
     
-    private func buildRecursiveExpression<Model: SchemaBacked & RecursiveData>(_ type: Model.Type, ids: Set<Int>, base: SQLite.Table) -> SQLite.Table {
+    private func buildRecursiveExpression<Model: SchemaBacked & RecursiveData>(_ type: Model.Type, ids: Set<UUID>, base: SQLite.Table) -> SQLite.Table {
         let cte = Table("cte")
                     
         let compoundQuery = base
-            .where(ids.contains(base[SQLite.Expression<Int?>("id")]))
+            .where(ids.contains(base[SQLite.Expression<UUID?>("id")]))
             .union(
-                cte.join(base, on: cte[SQLite.Expression<Int>("id")] == base[SQLite.Expression<Int>("parentID")])
+                cte.join(base, on: cte[SQLite.Expression<UUID>("id")] == base[SQLite.Expression<UUID>("parentID")])
                    .select(base[*])
             )
         

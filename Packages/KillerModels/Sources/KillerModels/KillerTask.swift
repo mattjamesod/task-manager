@@ -5,17 +5,15 @@ public struct KillerTask: Sendable, Identifiable, Equatable, Clonable, Timestamp
     public static let maxBodyLength = 2000 //chars
     
     public init(
-        id: Int,
-        cloudID: UUID,
+        id: UUID,
         body: String,
         createdAt: Date,
         updatedAt: Date,
         completedAt: Date? = nil,
         deletedAt: Date? = nil,
-        parentID: Int? = nil
+        parentID: UUID? = nil
     ) {
         self.id = id
-        self.internalCloudID = cloudID
         self.body = body
         self.createdAt = createdAt
         self.updatedAt = updatedAt
@@ -26,13 +24,9 @@ public struct KillerTask: Sendable, Identifiable, Equatable, Clonable, Timestamp
         self.instanceID = UUID()
     }
     
-    /// the (auto-incrementing, sequantial) ID of the task in the local database
+    /// the (auto-incrementing, sequantial) ID of the task in the local & cloud databases
     /// used as the model's ID for SwiftUI rendering purposes
-    public let id: Int
-    
-    /// the ID of the task used in the CloudKit database, used to identify it
-    /// between devices
-    public let internalCloudID: UUID
+    public let id: UUID
     
     /// the ID of the instance of the task. used by SwiftUI's .id method sometimes
     /// when a view should re-render after a DB update
@@ -45,15 +39,15 @@ public struct KillerTask: Sendable, Identifiable, Equatable, Clonable, Timestamp
     
     public var isComplete: Bool { self.completedAt != nil }
     
-    public var parentID: Int?
+    public var parentID: UUID?
     
     public var createdAt: Date
     public var updatedAt: Date
     public var deletedAt: Date?
 }
 
-public protocol RecursiveData: Identifiable where ID == Int {
-    var parentID: Int? { get }
+public protocol RecursiveData: Identifiable {
+    var parentID: Self.ID? { get }
 }
 
 extension KillerTask: RecursiveData { }

@@ -88,7 +88,7 @@ extension Database {
                 .filter(cte[SQLite.Expression<Int?>("id")] == nil)
         }
         
-        public static func children(of parentID: Int?) -> Scope {
+        public static func children(of parentID: UUID?) -> Scope {
             .init(
                 name: "Children of \(parentID)",
                 insertArguments: [
