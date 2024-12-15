@@ -47,7 +47,6 @@ extension KillerTask: SchemaBacked {
     }
     
     static public func creationProperties() -> [Setter] { [
-        Schema.id <- UUID(),
         Schema.createdAt <- Date.now,
         Schema.updatedAt <- Date.now,
     ] }
@@ -68,7 +67,7 @@ extension KillerTask: CloudKitBacked {
     public var cloudBackedProperties: [String : Any] { [
         "body": self.body,
         "completedAt": self.completedAt,
-        "parentID": self.parentID,
+        "parentID": self.parentID?.uuidString,
         "createdAt": self.createdAt,
         "updatedAt": self.updatedAt,
         "deletedAt": self.deletedAt,
@@ -78,12 +77,16 @@ extension KillerTask: CloudKitBacked {
 extension KillerTask: DataBacked {
     // TODO: encode these defaults and key names somewhere sensible
     public static func databaseSetters(from cloudRecord: CKRecord) -> [Setter] { [
-        KillerTask.Schema.id <- UUID(uuidString: cloudRecord.recordID.recordName)!,
         KillerTask.Schema.body <- cloudRecord.value(forKey: "body") as? String ?? "",
         KillerTask.Schema.completedAt <- cloudRecord.value(forKey: "completedAt") as? Date,
-        KillerTask.Schema.parentID <- UUID(uuidString: cloudRecord.value(forKey: "parentID") as! String),
+        KillerTask.Schema.parentID <- parentID(from: cloudRecord),
         KillerTask.Schema.createdAt <- cloudRecord.value(forKey: "createdAt") as? Date ?? Date.now,
         KillerTask.Schema.updatedAt <- cloudRecord.value(forKey: "updatedAt") as? Date ?? Date.now,
         KillerTask.Schema.deletedAt <- cloudRecord.value(forKey: "deletedAt") as? Date,
     ] }
+    
+    private static func parentID(from cloudRecord: CKRecord) -> UUID? {
+        guard let strID = cloudRecord.value(forKey: "parentID") as? String else { return nil }
+        return UUID(uuidString: strID)
+    }
 }

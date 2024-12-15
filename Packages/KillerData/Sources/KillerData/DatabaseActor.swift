@@ -89,7 +89,7 @@ public actor Database {
         self.events = .init()
         
         do {
-//            try schema.destroy(connection: connection)
+            try schema.destroy(connection: connection)
             try schema.create(connection: connection)
         }
         catch {
@@ -208,20 +208,19 @@ public actor Database {
         _ property1: PropertyArgument<Model, PropertyType1>,
         context: Database.Scope? = nil
     ) async {
+        let id = UUID()
         let creation = Model.creationProperties()
         let context = context?.insertProperties ?? []
         let manuallyRequested = [ try? property1.getSetter() ].compact()
         
         var setters = creation + context + manuallyRequested
         
-        guard let id = self.insert(type, setters) else { return }
-        
-        setters.append(Model.Schema.id <- id)
-        
+        guard self.insert(type, id, setters) else { return }
+                
         let finalSetters = setters
         
         await history.record(Bijection(
-            goForward: { await self.insert(type, finalSetters) },
+            goForward: { await self.insert(type, id, finalSetters) },
             goBackward: { await self.delete(type, id) }
         ))
     }
@@ -232,6 +231,7 @@ public actor Database {
         _ property2: PropertyArgument<Model, PropertyType2>,
         context: Database.Scope? = nil
     ) async {
+        let id = UUID()
         let creation = Model.creationProperties()
         let context = context?.insertProperties ?? []
         
@@ -242,68 +242,63 @@ public actor Database {
         
         var setters = creation + context + manuallyRequested
         
-        guard let id = self.insert(type, setters) else { return }
-        
-        setters.append(Model.Schema.id <- id)
+        guard self.insert(type, id, setters) else { return }
         
         let finalSetters = setters
         
         await history.record(Bijection(
-            goForward: { await self.insert(type, finalSetters) },
+            goForward: { await self.insert(type, id, finalSetters) },
             goBackward: { await self.delete(type, id) }
         ))
     }
     
     public func duplicate<Model: SchemaBacked>(_ model: Model) async {
+        let id = UUID()
         var setters = model.duplicationProperties()
         
         setters.append(contentsOf: [
+            Model.Schema.id <- id,
             Model.Schema.createdAt <- Date.now,
             Model.Schema.updatedAt <- Date.now
         ])
         
-        guard let id = self.insert(Model.self, setters) else { return }
-        
-        setters.append(Model.Schema.id <- id)
+        guard self.insert(Model.self, id, setters) else { return }
         
         let finalSetters = setters
         
         await history.record(Bijection(
-            goForward: { await self.insert(Model.self, finalSetters) },
+            goForward: { await self.insert(Model.self, id, finalSetters) },
             goBackward: { await self.delete(Model.self, id) }
         ))
     }
     
+    // what is now the purpose of this method? should it expose errors
     @discardableResult
     internal func insert<Model: SchemaBacked>(
         _ type: Model.Type,
+        _ id: UUID,
         _ setters: [Setter],
         sender: DatabaseMessage.Sender = .userInterface
-    ) -> UUID? {
+    ) -> Bool {
         do {
-            let insert = Model.Schema.baseExpression.insert(setters).returning(Model.Schema.id)
-            let rows = try connection.prepare(insert.template, insert.bindings)
+            let finalSetters = setters + [Model.Schema.id <- id]
             
-            rows.first
-
+            try connection.run(
+                Model.Schema.baseExpression.insert(finalSetters)
+            )
             
-//            let newRecordID = try connection.pluck(
-//                Model.Schema.baseExpression.filter(Model == id)
-//            )
-//            
-//            Task.detached {
-//                await self.send(.recordChange(type, id: UUID(newId), sender: sender))
-//            }
-//            
-//            return Int(newId)
-            return nil
+            Task.detached {
+                await self.send(.recordChange(type, id: id, sender: sender))
+            }
+            
+            return true
         }
         catch {
             // sqlite specific errors, print problem query?
             // do something to broad cast the error to both you and the user
             print(error)
             print("\(#file):\(#function):\(#line)")
-            return nil
+            return false
         }
     }
     

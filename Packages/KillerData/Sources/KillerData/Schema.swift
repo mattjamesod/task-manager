@@ -3,20 +3,6 @@ import AsyncAlgorithms
 @preconcurrency import SQLite
 import KillerModels
 
-extension Insert {
-    func returning<T>(_ column: SQLite.Expression<T>) -> Insert {
-        var template = self.template
-        let bindings = self.bindings
-        
-        template.append(" RETURNING ")
-        template.append(column.expression.template)
-        
-        let insert = Insert(template, bindings)
-        
-        return insert
-    }
-}
-
 public protocol TableSchema {
     static var baseExpression: SQLite.Table { get }
     static var id: SQLite.Expression<UUID> { get }

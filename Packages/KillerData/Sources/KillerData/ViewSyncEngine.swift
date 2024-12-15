@@ -3,7 +3,7 @@ import KillerModels
 
 @MainActor
 public protocol SynchronisedStateContainer: Identifiable, Sendable, AnyObject {
-    associatedtype Model: SchemaBacked
+    associatedtype Model: SchemaBacked & Identifiable
     func addOrUpdate(model: Model)
     func addOrUpdate(models: [Model])
     func remove(with id: UUID)

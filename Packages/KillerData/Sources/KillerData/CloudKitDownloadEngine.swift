@@ -53,6 +53,7 @@ public actor CloudKitDownloadEngine {
                 else {
                     await database.insert(
                         modelType,
+                        UUID(uuidString: cloudRecord.recordID.recordName)!,
                         modelType.databaseSetters(from: cloudRecord),
                         sender: .cloudSync
                     )
@@ -87,7 +88,7 @@ public actor CloudKitDownloadEngine {
         let uuids = cloudRecords.compactMap { UUID(uuidString: $0.recordID.recordName) }
         
         let scope = Database.Scope { table in
-            table.filter(uuids.contains(SQLite.Expression<UUID>("cloudID")))
+            table.filter(uuids.contains(Model.Schema.id))
         }
         
         let models = await database.fetch(Model.self, context: scope)
@@ -104,7 +105,7 @@ public actor CloudKitDownloadEngine {
         let uuids = cloudIDs.compactMap { UUID(uuidString: $0.recordName) }
         
         let scope = Database.Scope { table in
-            table.filter(uuids.contains(SQLite.Expression<UUID>("cloudID")))
+            table.filter(uuids.contains(Model.Schema.id))
         }
         
         return await database.fetch(Model.self, context: scope)
