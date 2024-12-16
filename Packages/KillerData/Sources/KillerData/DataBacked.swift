@@ -14,6 +14,7 @@ public protocol SchemaBacked: Sendable {
     static func getSchemaExpression<T>(for keyPath: KeyPath<Self, T>) throws -> SQLite.Expression<T> where T: SQLite.Value
     static func getSchemaExpression<T>(optional keyPath: KeyPath<Self, T?>) throws -> SQLite.Expression<T?> where T: SQLite.Value
     
+    func allProperties() -> [Setter]
     static func creationProperties() -> [Setter]
     func duplicationProperties() -> [Setter]
     

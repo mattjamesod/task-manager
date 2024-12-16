@@ -302,6 +302,56 @@ public actor Database {
         }
     }
     
+    public func upsert<Model: SchemaBacked, PropertyType1: SQLite.Value>(
+        _ model: Model,
+        _ property1: PropertyArgument<Model, PropertyType1>
+    ) async {
+        let existingProperties = model.allProperties()
+        let manuallyRequested = [ try? property1.getSetter() ].compact()
+        
+        // manually requested must come first, as there are duplicates
+        var setters = manuallyRequested + existingProperties
+        
+        guard self.upsert(Model.self, model.id, setters) else { return }
+                
+        let finalSetters = setters
+        
+        await history.record(Bijection(
+            goForward: { await self.upsert(Model.self, model.id, finalSetters) },
+            goBackward: { await self.delete(Model.self, model.id) }
+        ))
+    }
+    
+    @discardableResult
+    internal func upsert<Model: SchemaBacked>(
+        _ type: Model.Type,
+        _ id: UUID,
+        _ setters: [Setter]
+    ) -> Bool {
+        do {
+            let finalSetters = setters + [Model.Schema.id <- id]
+            
+            print(Model.Schema.baseExpression.upsert(finalSetters, onConflictOf: Model.Schema.id).expression)
+            
+            try connection.run(
+                Model.Schema.baseExpression.upsert(finalSetters, onConflictOf: Model.Schema.id)
+            )
+            
+            Task.detached {
+                await self.send(.recordChange(type, id: id))
+            }
+            
+            return true
+        }
+        catch {
+            // sqlite specific errors, print problem query?
+            // do something to broad cast the error to both you and the user
+            print(error)
+            print("\(#file):\(#function):\(#line)")
+            return false
+        }
+    }
+    
     // parameter packs and concurrency do NOT play nicely, therefor just add helpers
     // for however many args needed...
     public func update<Model: SchemaBacked, PropertyType1: SQLite.Value>(

@@ -45,6 +45,34 @@ extension EnvironmentValues {
     @Entry var focusedTaskID: FocusState<KillerTask.ID?>.Binding?
 }
 
+
+let hardCodedID: UUID = UUID()
+
+@Observable @MainActor
+class NewTaskMonitor {
+    var currentID: UUID {
+        hardCodedID
+    }
+    
+    private var thread: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
+    
+    private func waitForUpdate(on database: Database) async {
+        thread = await database.subscribe(to: KillerTask.self)
+        
+        for await message in thread!.events {
+            switch message {
+            case .recordChange(_, let id, sender: _):
+                if id == currentID { internalCurrentID = UUID() }
+            case .recordsChanged(_, let ids, sender: _):
+                if ids.contains(currentID) { internalCurrentID = UUID() }
+            default: continue
+            }
+        }
+    }
+    
+    private var internalCurrentID: UUID = UUID()
+}
+
 @Observable @MainActor
 class TaskContainerViewModel {
     let taskListMonitor: QueryMonitor<TaskProvider> = .init()
@@ -109,13 +137,12 @@ struct TaskContainerView: View {
     @FocusState var focusedTaskID: KillerTask.ID?
     
     @State var viewModel: TaskContainerViewModel
+    @State var taskSelection = Selection<KillerTask>()
+    @State var state: TaskContainerState = .loading
     
     init(scope: Database.Scope) {
         self.viewModel = .init(query: scope)
     }
-    
-    @State var taskSelection = Selection<KillerTask>()
-    @State var state: TaskContainerState = .loading
     
     var body: some View {
         ZStack {
@@ -140,8 +167,6 @@ struct TaskContainerView: View {
                             }
                         }
                     }
-                
-                TaskEntryField()
             }
             .opacity(state.isDone ? 1 : 0)
                 

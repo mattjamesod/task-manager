@@ -16,8 +16,8 @@ struct TaskEntryField: View {
             DebouncedTextField("New Task", text: $enteredText)
                 .textFieldStyle(.plain)
                 .onChange(of: enteredText) {
-                    let currentText = String(enteredText.prefix(KillerTask.maxBodyLength))
                     guard !enteredText.isEmpty else { return }
+                    let currentText = String(enteredText.prefix(KillerTask.maxBodyLength))
                     enteredText = ""
                     
                     Task.detached {

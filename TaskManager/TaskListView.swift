@@ -15,16 +15,20 @@ struct TaskListView: View {
     let monitor: QueryMonitor<TaskProvider>?
     let detailQuery: Database.Scope?
     
+    let includeNewTask: Bool
+    
     init(_ detailQuery: Database.Scope? = nil, monitor: QueryMonitor<TaskProvider>) {
         self.taskProvider = TaskProvider()
         self.monitor = monitor
         self.detailQuery = detailQuery
+        self.includeNewTask = true
     }
     
     init(parentID: UUID?) {
         self.taskProvider = TaskProvider(filter: { $0.parentID == parentID })
         self.monitor = nil
         self.detailQuery = .children(of: parentID)
+        self.includeNewTask = false
     }
     
     var body: some View {
@@ -34,6 +38,10 @@ struct TaskListView: View {
                     .focused(focusedTaskID!, equals: task.id)
                 TaskListView(parentID: task.id)
                     .padding(.leading, 24)
+            }
+            
+            if includeNewTask {
+                TaskEntryField()
             }
         }
         .animation(.bouncy(duration: 0.4), value: taskProvider.tasks)
@@ -47,6 +55,17 @@ struct TaskListView: View {
                 KillerTask.self,
                 context: contextQuery?.compose(with: self.detailQuery)
             )
+            
+            if includeNewTask {
+                let newTask = KillerTask(
+                    id: hardCodedID,
+                    body: "",
+                    createdAt: Date.now,
+                    updatedAt: Date.now
+                )
+                
+                self.taskProvider.tasks.append(newTask)
+            }
             
             // onChange will not do anything if an empty array is reassigned to empty array
             if self.taskProvider.tasks.count == 0 {
