@@ -330,9 +330,7 @@ public actor Database {
     ) -> Bool {
         do {
             let finalSetters = setters + [Model.Schema.id <- id]
-            
-            print(Model.Schema.baseExpression.upsert(finalSetters, onConflictOf: Model.Schema.id).expression)
-            
+                        
             try connection.run(
                 Model.Schema.baseExpression.upsert(finalSetters, onConflictOf: Model.Schema.id)
             )

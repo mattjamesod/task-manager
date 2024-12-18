@@ -11,6 +11,7 @@ struct TaskListView: View {
         
     @State var taskProvider: TaskProvider
     @State var loadState: TaskContainerState = .loading
+    @State var newTaskMonitor: NewTaskMonitor = .init()
     
     let monitor: QueryMonitor<TaskProvider>?
     let detailQuery: Database.Scope?
@@ -39,10 +40,6 @@ struct TaskListView: View {
                 TaskListView(parentID: task.id)
                     .padding(.leading, 24)
             }
-            
-            if includeNewTask {
-                TaskEntryField()
-            }
         }
         .animation(.bouncy(duration: 0.4), value: taskProvider.tasks)
         .task {
@@ -58,7 +55,7 @@ struct TaskListView: View {
             
             if includeNewTask {
                 let newTask = KillerTask(
-                    id: hardCodedID,
+                    id: newTaskMonitor.currentID,
                     body: "",
                     createdAt: Date.now,
                     updatedAt: Date.now
@@ -71,10 +68,22 @@ struct TaskListView: View {
             if self.taskProvider.tasks.count == 0 {
                 self.loadState = .empty
             }
+            
+            await self.newTaskMonitor.waitForUpdate(on: database)
         }
         .onChange(of: taskProvider.tasks) {
             let count = taskProvider.tasks.count
             self.loadState = count == 0 ? .empty : .done(itemCount: count)
+        }
+        .onChange(of: newTaskMonitor.currentID) {
+            let newTask = KillerTask(
+                id: newTaskMonitor.currentID,
+                body: "",
+                createdAt: Date.now,
+                updatedAt: Date.now
+            )
+            
+            self.taskProvider.tasks.append(newTask)
         }
         .taskListState(self.loadState)
         .onDisappear {

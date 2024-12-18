@@ -51,12 +51,10 @@ let hardCodedID: UUID = UUID()
 @Observable @MainActor
 class NewTaskMonitor {
     var currentID: UUID {
-        hardCodedID
+        internalCurrentID
     }
     
-    private var thread: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
-    
-    private func waitForUpdate(on database: Database) async {
+    func waitForUpdate(on database: Database) async {
         thread = await database.subscribe(to: KillerTask.self)
         
         for await message in thread!.events {
@@ -70,6 +68,7 @@ class NewTaskMonitor {
         }
     }
     
+    private var thread: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
     private var internalCurrentID: UUID = UUID()
 }
 
