@@ -17,13 +17,7 @@ struct TaskBodyField: View {
                 guard permit() else { return }
                 
                 Task.detached {
-//                    let taskBody = await self.taskBody
-//                    if taskBody.isEmpty {
-//                        await database?.delete(KillerTask.self, task.id)
-//                    }
-//                    else {
-                        await database?.upsert(task, \.body <- taskBody)
-//                    }
+                    await database?.upsert(task, \.body <- taskBody)
                 }
             }
     }

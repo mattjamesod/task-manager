@@ -2,6 +2,38 @@ import SwiftUI
 import KillerModels
 import KillerData
 
+extension TaskListView {
+    struct IncludesNewTaskViewModifier: ViewModifier {
+        func body(content: Content) -> some View {
+            content
+        }
+    }
+}
+
+@Observable @MainActor
+class NewTaskMonitor {
+    var currentID: UUID {
+        internalCurrentID
+    }
+    
+    func waitForUpdate(on database: Database) async {
+        thread = await database.subscribe(to: KillerTask.self)
+        
+        for await message in thread!.events {
+            switch message {
+            case .recordChange(_, let id, sender: _):
+                if id == currentID { internalCurrentID = UUID() }
+            case .recordsChanged(_, let ids, sender: _):
+                if ids.contains(currentID) { internalCurrentID = UUID() }
+            default: continue
+            }
+        }
+    }
+    
+    private var thread: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
+    private var internalCurrentID: UUID = UUID()
+}
+
 struct TaskListView: View {
     @Environment(\.database) var database
     @Environment(\.contextQuery) var contextQuery
@@ -48,7 +80,7 @@ struct TaskListView: View {
         .task {
             guard let database else { return }
             
-            self.taskProvider.tasks = await database.fetch(
+            let tasks = await database.fetch(
                 KillerTask.self,
                 context: contextQuery?.compose(with: self.detailQuery)
             )
@@ -61,7 +93,10 @@ struct TaskListView: View {
                     updatedAt: Date.now
                 )
                 
-                self.taskProvider.tasks.append(newTask)
+                self.taskProvider.tasks = tasks + [newTask]
+            }
+            else {
+                self.taskProvider.tasks = tasks
             }
             
             // onChange will not do anything if an empty array is reassigned to empty array
@@ -70,10 +105,6 @@ struct TaskListView: View {
             }
             
             await self.newTaskMonitor.waitForUpdate(on: database)
-        }
-        .onChange(of: taskProvider.tasks) {
-            let count = taskProvider.tasks.count
-            self.loadState = count == 0 ? .empty : .done(itemCount: count)
         }
         .onChange(of: newTaskMonitor.currentID) {
             let newTask = KillerTask(
@@ -84,6 +115,10 @@ struct TaskListView: View {
             )
             
             self.taskProvider.tasks.append(newTask)
+        }
+        .onChange(of: taskProvider.tasks) {
+            let count = taskProvider.tasks.count
+            self.loadState = count == 0 ? .empty : .done(itemCount: count)
         }
         .taskListState(self.loadState)
         .onDisappear {

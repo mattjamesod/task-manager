@@ -45,33 +45,6 @@ extension EnvironmentValues {
     @Entry var focusedTaskID: FocusState<KillerTask.ID?>.Binding?
 }
 
-
-let hardCodedID: UUID = UUID()
-
-@Observable @MainActor
-class NewTaskMonitor {
-    var currentID: UUID {
-        internalCurrentID
-    }
-    
-    func waitForUpdate(on database: Database) async {
-        thread = await database.subscribe(to: KillerTask.self)
-        
-        for await message in thread!.events {
-            switch message {
-            case .recordChange(_, let id, sender: _):
-                if id == currentID { internalCurrentID = UUID() }
-            case .recordsChanged(_, let ids, sender: _):
-                if ids.contains(currentID) { internalCurrentID = UUID() }
-            default: continue
-            }
-        }
-    }
-    
-    private var thread: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
-    private var internalCurrentID: UUID = UUID()
-}
-
 @Observable @MainActor
 class TaskContainerViewModel {
     let taskListMonitor: QueryMonitor<TaskProvider> = .init()
