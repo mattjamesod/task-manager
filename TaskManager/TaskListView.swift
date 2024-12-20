@@ -2,14 +2,6 @@ import SwiftUI
 import KillerModels
 import KillerData
 
-extension TaskListView {
-    struct IncludesNewTaskViewModifier: ViewModifier {
-        func body(content: Content) -> some View {
-            content
-        }
-    }
-}
-
 extension KillerTask {
     static func empty() -> KillerTask {
         KillerTask(
