@@ -10,11 +10,22 @@ extension TaskListView {
     }
 }
 
+extension KillerTask {
+    static func empty() -> KillerTask {
+        KillerTask(
+            id: UUID(),
+            body: "",
+            createdAt: Date.now,
+            updatedAt: Date.now
+        )
+    }
+}
+
 @Observable @MainActor
 class NewTaskMonitor {
-    var currentID: UUID {
-        internalCurrentID
-    }
+    var task: KillerTask = KillerTask.empty()
+    
+    private var thread: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
     
     func waitForUpdate(on database: Database) async {
         thread = await database.subscribe(to: KillerTask.self)
@@ -22,16 +33,13 @@ class NewTaskMonitor {
         for await message in thread!.events {
             switch message {
             case .recordChange(_, let id, sender: _):
-                if id == currentID { internalCurrentID = UUID() }
+                if id == task.id { task = KillerTask.empty() }
             case .recordsChanged(_, let ids, sender: _):
-                if ids.contains(currentID) { internalCurrentID = UUID() }
+                if ids.contains(task.id) { task = KillerTask.empty() }
             default: continue
             }
         }
     }
-    
-    private var thread: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
-    private var internalCurrentID: UUID = UUID()
 }
 
 struct TaskListView: View {
@@ -86,14 +94,7 @@ struct TaskListView: View {
             )
             
             if includeNewTask {
-                let newTask = KillerTask(
-                    id: newTaskMonitor.currentID,
-                    body: "",
-                    createdAt: Date.now,
-                    updatedAt: Date.now
-                )
-                
-                self.taskProvider.tasks = tasks + [newTask]
+                self.taskProvider.tasks = tasks + [self.newTaskMonitor.task]
             }
             else {
                 self.taskProvider.tasks = tasks
@@ -106,15 +107,8 @@ struct TaskListView: View {
             
             await self.newTaskMonitor.waitForUpdate(on: database)
         }
-        .onChange(of: newTaskMonitor.currentID) {
-            let newTask = KillerTask(
-                id: newTaskMonitor.currentID,
-                body: "",
-                createdAt: Date.now,
-                updatedAt: Date.now
-            )
-            
-            self.taskProvider.tasks.append(newTask)
+        .onChange(of: newTaskMonitor.task) {
+            self.taskProvider.tasks.append(newTaskMonitor.task)
         }
         .onChange(of: taskProvider.tasks) {
             let count = taskProvider.tasks.count
