@@ -7,8 +7,8 @@ public struct KillerTask: Sendable, Identifiable, Equatable, Clonable, Timestamp
     public init(
         id: UUID,
         body: String,
-        createdAt: Date,
-        updatedAt: Date,
+        createdAt: Date?,
+        updatedAt: Date?,
         completedAt: Date? = nil,
         deletedAt: Date? = nil,
         parentID: UUID? = nil
@@ -41,8 +41,8 @@ public struct KillerTask: Sendable, Identifiable, Equatable, Clonable, Timestamp
     
     public var parentID: UUID?
     
-    public var createdAt: Date
-    public var updatedAt: Date
+    public var createdAt: Date?
+    public var updatedAt: Date?
     public var deletedAt: Date?
 }
 
@@ -53,7 +53,7 @@ public protocol RecursiveData: Identifiable {
 extension KillerTask: RecursiveData { }
 
 public protocol Timestamped {
-    var createdAt: Date { get }
-    var updatedAt: Date { get set }
+    var createdAt: Date? { get }
+    var updatedAt: Date? { get set }
     var deletedAt: Date? { get set }
 }

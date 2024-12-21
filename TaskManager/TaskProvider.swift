@@ -3,6 +3,16 @@ import UtilAlgorithms
 import KillerModels
 import KillerData
 
+extension Optional where Wrapped: Comparable {
+    func lessThan(_ other: Wrapped?) -> Bool {
+        switch (self == nil, other == nil) {
+            case (_, true): return true
+            case (true, _): return false
+            case (false, false): return self! < other!
+        }
+    }
+}
+
 @Observable @MainActor
 final class TaskProvider: SynchronisedStateContainer {
     var tasks: [KillerTask] = []
@@ -11,7 +21,7 @@ final class TaskProvider: SynchronisedStateContainer {
     
     init(
         filter: @escaping (KillerTask) -> Bool = { _ in true },
-        sortOrder: @escaping (KillerTask, KillerTask) -> Bool = { $0.createdAt < $1.createdAt }
+        sortOrder: @escaping (KillerTask, KillerTask) -> Bool = { $0.createdAt.lessThan($1.createdAt) }
     ) {
         self.filter = filter
         self.sortOrder = sortOrder

@@ -307,7 +307,11 @@ public actor Database {
         _ property1: PropertyArgument<Model, PropertyType1>
     ) async {
         let existingProperties = model.allProperties()
-        let manuallyRequested = [ try? property1.getSetter() ].compact()
+        let manuallyRequested = [
+            try? property1.getSetter(),
+            model.createdAt == nil ? Model.Schema.createdAt <- Date.now : nil,
+            Model.Schema.updatedAt <- Date.now
+        ].compact()
         
         // manually requested must come first, as there are duplicates
         var setters = manuallyRequested + existingProperties

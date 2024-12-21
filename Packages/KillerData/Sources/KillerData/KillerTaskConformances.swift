@@ -29,8 +29,6 @@ extension KillerTask: SchemaBacked {
         switch keyPath {
         case \.id: Schema.id as! SQLite.Expression<T>
         case \.body: Schema.body as! SQLite.Expression<T>
-        case \.createdAt: Schema.createdAt as! SQLite.Expression<T>
-        case \.updatedAt: Schema.updatedAt as! SQLite.Expression<T>
         default: throw DatabaseError.propertyDoesNotExist
         }
     }
@@ -39,6 +37,8 @@ extension KillerTask: SchemaBacked {
         optional keyPath: KeyPath<Self, T?>
     ) throws -> SQLite.Expression<T?> where T: SQLite.Value {
         switch keyPath {
+        case \.createdAt: Schema.createdAt as! SQLite.Expression<T?>
+        case \.updatedAt: Schema.updatedAt as! SQLite.Expression<T?>
         case \.completedAt: Schema.completedAt as! SQLite.Expression<T?>
         case \.deletedAt: Schema.deletedAt as! SQLite.Expression<T?>
         case \.parentID: Schema.parentID as! SQLite.Expression<T?>

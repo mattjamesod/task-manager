@@ -7,8 +7,8 @@ extension KillerTask {
         KillerTask(
             id: UUID(),
             body: "",
-            createdAt: Date.now,
-            updatedAt: Date.now
+            createdAt: nil,
+            updatedAt: nil
         )
     }
 }
