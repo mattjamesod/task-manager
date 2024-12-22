@@ -41,24 +41,24 @@ struct TaskListView: View {
     @Environment(\.focusedTaskID) var focusedTaskID
     @Environment(Selection<KillerTask>.self) var selection
         
-    @State var taskProvider: TaskProvider
+    @State var taskProvider: TaskContainer
     @State var loadState: TaskContainerState = .loading
     @State var newTaskMonitor: NewTaskMonitor = .init()
     
-    let monitor: QueryMonitor<TaskProvider>?
+    let monitor: QueryMonitor<TaskContainer>?
     let detailQuery: Database.Scope?
     
     let includeNewTask: Bool
     
-    init(_ detailQuery: Database.Scope? = nil, monitor: QueryMonitor<TaskProvider>) {
-        self.taskProvider = TaskProvider()
+    init(_ detailQuery: Database.Scope? = nil, monitor: QueryMonitor<TaskContainer>) {
+        self.taskProvider = TaskContainer()
         self.monitor = monitor
         self.detailQuery = detailQuery
         self.includeNewTask = true
     }
     
     init(parentID: UUID?) {
-        self.taskProvider = TaskProvider(filter: { $0.parentID == parentID })
+        self.taskProvider = TaskContainer(filter: { $0.parentID == parentID })
         self.monitor = nil
         self.detailQuery = .children(of: parentID)
         self.includeNewTask = false
@@ -100,6 +100,7 @@ struct TaskListView: View {
             await self.newTaskMonitor.waitForUpdate(on: database)
         }
         .onChange(of: newTaskMonitor.task) {
+            guard includeNewTask else { return } // should be redundant
             self.taskProvider.tasks.append(newTaskMonitor.task)
         }
         .onChange(of: taskProvider.tasks) {
@@ -114,7 +115,7 @@ struct TaskListView: View {
         }
     }
     
-    private var activeMonitor: QueryMonitor<TaskProvider>? {
+    private var activeMonitor: QueryMonitor<TaskContainer>? {
         self.monitor ?? taskListMonitor
     }
 }

@@ -46,9 +46,9 @@ extension EnvironmentValues {
 }
 
 @Observable @MainActor
-class TaskContainerViewModel {
-    let taskListMonitor: QueryMonitor<TaskProvider> = .init()
-    let orphanMonitor: QueryMonitor<TaskProvider> = .init()
+class TaskHierarchyViewModel {
+    let taskListMonitor: QueryMonitor<TaskContainer> = .init()
+    let orphanMonitor: QueryMonitor<TaskContainer> = .init()
     
     let query: Database.Scope
     
@@ -76,16 +76,18 @@ class TaskContainerViewModel {
     }
 }
 
-struct TaskContainerEmptyView: View {
-    var body: some View {
-        VStack(spacing: 8) {
-            Text("Nothing Here")
-                .font(.title)
-                .fontWeight(.bold)
-            Text("Add a new task or edit this scope")
+extension TaskHierarchyView {
+    struct EmptyView: View {
+        var body: some View {
+            VStack(spacing: 8) {
+                Text("Nothing Here")
+                    .font(.title)
+                    .fontWeight(.bold)
+                Text("Add a new task or edit this scope")
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .foregroundStyle(.gray)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .foregroundStyle(.gray)
     }
 }
 
@@ -103,12 +105,12 @@ struct EventuallyProgressView: View {
     }
 }
 
-struct TaskContainerView: View {
+struct TaskHierarchyView: View {
     @Environment(\.database) var database
     @Environment(\.navigationSizeClass) var navigationSizeClass
     @FocusState var focusedTaskID: KillerTask.ID?
     
-    @State var viewModel: TaskContainerViewModel
+    @State var viewModel: TaskHierarchyViewModel
     @State var taskSelection = Selection<KillerTask>()
     @State var state: TaskContainerState = .loading
     
@@ -143,7 +145,7 @@ struct TaskContainerView: View {
             .opacity(state.isDone ? 1 : 0)
                 
             if state == .empty {
-                TaskContainerEmptyView()
+                EmptyView()
                     .transition(.scale(scale: 0.8).combined(with: .opacity))
             }
             
@@ -156,20 +158,18 @@ struct TaskContainerView: View {
         .animation(.bouncy(duration: 0.4), value: state)
         .containerPadding(axis: .horizontal)
         .safeAreaInset(edge: .bottom) {
-//            VStack(spacing: 8) {
-                HStack {
-                    if focusedTaskID != nil {
-                        DoneButton()
-                    }
-                    Spacer()
-                    Group {
-                        UndoButton()
-                        RedoButton()
-                    }
-                    .opacity(DeviceKind.current.isMobile ? 1 : 0)
+            HStack {
+                if focusedTaskID != nil {
+                    DoneButton()
                 }
-                .buttonStyle(KillerBorderedButtonStyle())
-//            }
+                Spacer()
+                Group {
+                    UndoButton()
+                    RedoButton()
+                }
+                .opacity(DeviceKind.current.isMobile ? 1 : 0)
+            }
+            .buttonStyle(KillerBorderedButtonStyle())
             .containerPadding(axis: .horizontal)
             .padding(.bottom, 8)
         }
@@ -196,7 +196,7 @@ struct TaskContainerView: View {
 
 
 extension EnvironmentValues {
-    @Entry var taskListMonitor: QueryMonitor<TaskProvider>? = nil
+    @Entry var taskListMonitor: QueryMonitor<TaskContainer>? = nil
     @Entry var contextQuery: Database.Scope? = nil
 }
 

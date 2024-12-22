@@ -15,7 +15,7 @@ struct ScopeNavigation: View {
         KillerNavigation.Flexible(
             selection: $selection,
             selectorView: ScopeListView.init,
-            contentView: TaskContainerView.init
+            contentView: TaskHierarchyView.init
         )
         .taskCompleteButton(position: DeviceKind.current == .other ? .leading : .trailing)
     }

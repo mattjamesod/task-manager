@@ -14,7 +14,7 @@ extension Optional where Wrapped: Comparable {
 }
 
 @Observable @MainActor
-final class TaskProvider: SynchronisedStateContainer {
+final class TaskContainer: SynchronisedStateContainer {
     var tasks: [KillerTask] = []
     let filter: (KillerTask) -> Bool
     let sortOrder: (KillerTask, KillerTask) -> Bool
