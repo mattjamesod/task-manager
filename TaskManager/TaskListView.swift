@@ -3,20 +3,27 @@ import KillerModels
 import KillerData
 
 extension KillerTask {
-    static func empty() -> KillerTask {
+    static func empty(_ parentID: UUID?) -> KillerTask {
         KillerTask(
             id: UUID(),
             body: "",
             createdAt: nil,
-            updatedAt: nil
+            updatedAt: nil,
+            parentID: parentID
         )
     }
 }
 
 @Observable @MainActor
 class NewTaskMonitor {
-    var task: KillerTask = KillerTask.empty()
+    init(parentID: UUID?) {
+        self.parentID = parentID
+        self.task = KillerTask.empty(parentID)
+    }
     
+    var task: KillerTask
+    
+    private let parentID: UUID?
     private var thread: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
     
     func waitForUpdate(on database: Database) async {
@@ -25,9 +32,9 @@ class NewTaskMonitor {
         for await message in thread!.events {
             switch message {
             case .recordChange(_, let id, sender: _):
-                if id == task.id { task = KillerTask.empty() }
+                if id == task.id { task = KillerTask.empty(parentID) }
             case .recordsChanged(_, let ids, sender: _):
-                if ids.contains(task.id) { task = KillerTask.empty() }
+                if ids.contains(task.id) { task = KillerTask.empty(parentID) }
             default: continue
             }
         }
@@ -43,7 +50,7 @@ struct TaskListView: View {
         
     @State var taskProvider: TaskContainer
     @State var loadState: TaskContainerState = .loading
-    @State var newTaskMonitor: NewTaskMonitor = .init()
+    @State var newTaskMonitor: NewTaskMonitor
     
     let monitor: QueryMonitor<TaskContainer>?
     let detailQuery: Database.Scope?
@@ -55,6 +62,8 @@ struct TaskListView: View {
         self.monitor = monitor
         self.detailQuery = detailQuery
         self.includeNewTask = true
+        
+        self._newTaskMonitor = State(initialValue: .init(parentID: nil))
     }
     
     init(parentID: UUID?) {
@@ -62,6 +71,8 @@ struct TaskListView: View {
         self.monitor = nil
         self.detailQuery = .children(of: parentID)
         self.includeNewTask = false
+        
+        self._newTaskMonitor = State(initialValue: .init(parentID: parentID))
     }
     
     var body: some View {
