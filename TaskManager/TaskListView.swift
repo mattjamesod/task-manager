@@ -55,13 +55,13 @@ struct TaskListView: View {
     let monitor: QueryMonitor<TaskContainer>?
     let detailQuery: Database.Scope?
     
-    let includeNewTask: Bool
+    @State var includeNewTask: Bool
     
     init(_ detailQuery: Database.Scope? = nil, monitor: QueryMonitor<TaskContainer>) {
         self.taskProvider = TaskContainer()
         self.monitor = monitor
         self.detailQuery = detailQuery
-        self.includeNewTask = true
+        self._includeNewTask = State(initialValue: true)
         
         self._newTaskMonitor = State(initialValue: .init(parentID: nil))
     }
@@ -70,7 +70,7 @@ struct TaskListView: View {
         self.taskProvider = TaskContainer(filter: { $0.parentID == parentID })
         self.monitor = nil
         self.detailQuery = .children(of: parentID)
-        self.includeNewTask = false
+        self._includeNewTask = State(initialValue: false)
         
         self._newTaskMonitor = State(initialValue: .init(parentID: parentID))
     }
@@ -96,16 +96,19 @@ struct TaskListView: View {
                 context: contextQuery?.compose(with: self.detailQuery)
             )
             
+            // onChange will not do anything if an empty array is reassigned to empty array
+            if tasks.count == 0 {
+                self.loadState = .empty
+            }
+            else {
+                self.includeNewTask = true
+            }
+            
             if includeNewTask {
                 self.taskProvider.tasks = tasks + [self.newTaskMonitor.task]
             }
             else {
                 self.taskProvider.tasks = tasks
-            }
-            
-            // onChange will not do anything if an empty array is reassigned to empty array
-            if self.taskProvider.tasks.count == 0 {
-                self.loadState = .empty
             }
             
             await self.newTaskMonitor.waitForUpdate(on: database)
