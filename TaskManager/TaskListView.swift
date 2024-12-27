@@ -21,6 +21,7 @@ class NewTaskMonitor {
         self.task = KillerTask.empty(parentID)
     }
     
+    var included: Bool = false
     var task: KillerTask
     
     private let parentID: UUID?
@@ -32,12 +33,16 @@ class NewTaskMonitor {
         for await message in thread!.events {
             switch message {
             case .recordChange(_, let id, sender: _):
-                if id == task.id { task = KillerTask.empty(parentID) }
+                if id == task.id { update() }
             case .recordsChanged(_, let ids, sender: _):
-                if ids.contains(task.id) { task = KillerTask.empty(parentID) }
+                if ids.contains(task.id) { update() }
             default: continue
             }
         }
+    }
+    
+    func update() {
+        self.task = KillerTask.empty(parentID)
     }
 }
 
@@ -55,13 +60,10 @@ struct TaskListView: View {
     let monitor: QueryMonitor<TaskContainer>?
     let detailQuery: Database.Scope?
     
-    @State var includeNewTask: Bool
-    
     init(_ detailQuery: Database.Scope? = nil, monitor: QueryMonitor<TaskContainer>) {
         self.taskProvider = TaskContainer()
         self.monitor = monitor
         self.detailQuery = detailQuery
-        self._includeNewTask = State(initialValue: true)
         
         self._newTaskMonitor = State(initialValue: .init(parentID: nil))
     }
@@ -70,7 +72,6 @@ struct TaskListView: View {
         self.taskProvider = TaskContainer(filter: { $0.parentID == parentID })
         self.monitor = nil
         self.detailQuery = .children(of: parentID)
-        self._includeNewTask = State(initialValue: false)
         
         self._newTaskMonitor = State(initialValue: .init(parentID: parentID))
     }
@@ -96,30 +97,39 @@ struct TaskListView: View {
                 context: contextQuery?.compose(with: self.detailQuery)
             )
             
+            self.taskProvider.tasks = tasks
+            
             // onChange will not do anything if an empty array is reassigned to empty array
             if tasks.count == 0 {
                 self.loadState = .empty
             }
             else {
-                self.includeNewTask = true
-            }
-            
-            if includeNewTask {
-                self.taskProvider.tasks = tasks + [self.newTaskMonitor.task]
-            }
-            else {
-                self.taskProvider.tasks = tasks
+                newTaskMonitor.included = true
             }
             
             await self.newTaskMonitor.waitForUpdate(on: database)
         }
+        .onChange(of: newTaskMonitor.included) {
+            if newTaskMonitor.included {
+                self.taskProvider.tasks.append(newTaskMonitor.task)
+            }
+            else {
+                self.taskProvider.tasks.removeLast()
+            }
+        }
         .onChange(of: newTaskMonitor.task) {
-            guard includeNewTask else { return } // should be redundant
+            guard newTaskMonitor.included else { return } // should be redundant
             self.taskProvider.tasks.append(newTaskMonitor.task)
         }
         .onChange(of: taskProvider.tasks) {
             let count = taskProvider.tasks.count
-            self.loadState = count == 0 ? .empty : .done(itemCount: count)
+            if count == 0  || (newTaskMonitor.included && count == 1) {
+                self.loadState = .empty
+                self.newTaskMonitor.included = false
+            }
+            else {
+                self.loadState = .done(itemCount: count)
+            }
         }
         .taskListState(self.loadState)
         .onDisappear {
