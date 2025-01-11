@@ -78,7 +78,7 @@ struct ScopeNavigationWindow: Scene {
         WindowGroup {
             Group {
                 if let database {
-                    ScopeNavigation(selection: .completedTasks)
+                    ScopeNavigation(selection: .allActiveTasks)
                         .mainWindowContent()
                         .recordsBijections(on: database)
                     // TODO: move this into recordsBijections, commands are hard

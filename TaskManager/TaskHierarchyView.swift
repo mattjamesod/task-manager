@@ -183,12 +183,10 @@ struct TaskHierarchyView: View {
         .environment(taskSelection)
         .task {
             guard let database else { return }
-            print("attempt view level start")
             await viewModel.startMonitoring(database)
         }
         .onDisappear {
             guard let database else { return }
-            print("attempt view level stop")
             Task {
                 await viewModel.stopMonitoring(database: database)
             }
@@ -196,13 +194,10 @@ struct TaskHierarchyView: View {
     }
 }
 
-
 extension EnvironmentValues {
     @Entry var taskListMonitor: QueryMonitor<TaskContainer>? = nil
     @Entry var contextQuery: Database.Scope? = nil
 }
-
-
 
 struct DoneButton: View {
     @Environment(\.database) var database

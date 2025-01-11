@@ -36,6 +36,10 @@ struct TaskView: View {
             
             VStack(alignment: .leading) {
                 TaskBodyField(task: self.task)
+                
+//                Text(self.task.id.uuidString)
+//                    .font(.subheadline)
+//                    .foregroundStyle(.gray)
                                 
                 if selection.chosen == task.id {
                     AddSubtaskButton(task: self.task)
