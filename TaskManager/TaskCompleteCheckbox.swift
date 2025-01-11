@@ -12,6 +12,7 @@ import KillerData
 struct TaskCompleteCheckbox: View {
     @Environment(\.database) var database
     @Environment(\.contextQuery) var query
+    @Environment(\.taskListMonitor) var taskListMonitor
     
     @ScaledMetric private var checkboxWidth: Double = 16
     @ScaledMetric private var checkboxBorderWidth: Double = 1.5
@@ -55,6 +56,7 @@ struct TaskCompleteCheckbox: View {
         .toggleStyle(.button)
         .onLocalChange(of: $isOn, source: task.isComplete, setupFromSource: true) {
             let isOn = self.isOn
+            
             Task.detached {
                 try? await Task.sleep(for: self.delay)
                 

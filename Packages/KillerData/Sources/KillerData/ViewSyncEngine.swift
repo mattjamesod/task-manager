@@ -31,9 +31,11 @@ actor ViewSyncEngine<Model: SchemaBacked & Identifiable> {
     
     func sync(_ id: UUID) async -> SyncResult<Model> {
         guard let model = await fetch(id) else {
+//            print(SyncResult<Model>.remove(id))
             return .remove(id)
         }
         
+//        print(SyncResult<Model>.addOrUpdate(model))
         return .addOrUpdate(model)
     }
     
@@ -79,6 +81,8 @@ actor ViewSyncEngine<Model: SchemaBacked & Identifiable> {
             case 1: results.append(.remove(removing.first!))
             default: results.append(.removeMany(removing))
         }
+        
+//        print(results)
         
         return results
     }

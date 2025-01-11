@@ -12,15 +12,16 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
     private var dbMessageThread: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
     private var registeredStateContainers: [StateContainer] = []
     
+    public var isMonitoring: Bool {
+        dbMessageThread != nil
+    }
+    
     public func register(container: StateContainer) {
-        self.log("QM registered new container")
         registeredStateContainers.append(container)
     }
     
     public func deregister(container: StateContainer) {
-        self.log("QM tried to deregister container...")
         guard let index = registeredStateContainers.firstIndex(where: { $0.id == container.id }) else { return }
-        self.log("...and succeeded")
         registeredStateContainers.remove(at: index)
     }
     
@@ -32,7 +33,7 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
         self.monitorTask = Task {
             guard let thread = self.dbMessageThread else { return }
             for await event in thread.events {
-                self.log("received event: \(event)")
+                print("received event: \(event)")
                 
                 switch event {
                 case .recordChange(let _, let id, let _):

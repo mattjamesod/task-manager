@@ -25,20 +25,32 @@ class NewTaskMonitor {
     var task: KillerTask
     
     private let parentID: UUID?
+    private var monitorTask: Task<Void, Never>? = nil
     private var thread: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
     
     func waitForUpdate(on database: Database) async {
         thread = await database.subscribe(to: KillerTask.self)
         
-        for await message in thread!.events {
-            switch message {
-            case .recordChange(_, let id, sender: _):
-                if id == task.id { update() }
-            case .recordsChanged(_, let ids, sender: _):
-                if ids.contains(task.id) { update() }
-            default: continue
+        self.monitorTask = Task {
+            guard let thread = self.thread else { return }
+            for await message in thread.events {
+                switch message {
+                case .recordChange(_, let id, sender: _):
+                    if id == task.id { update() }
+                case .recordsChanged(_, let ids, sender: _):
+                    if ids.contains(task.id) { update() }
+                default: continue
+                }
             }
         }
+    }
+    
+    public func stop(database: Database) async {
+        guard let thread else { return }
+        self.monitorTask?.cancel()
+        self.monitorTask = nil
+        await database.unsubscribe(thread)
+        self.thread = nil
     }
     
     func update() {
@@ -135,6 +147,8 @@ struct TaskListView: View {
         .onDisappear {
             Task {
                 await activeMonitor?.deregister(container: taskProvider)
+                guard let database else { return }
+                await newTaskMonitor.stop(database: database)
             }
         }
     }

@@ -70,7 +70,7 @@ public actor Database {
     public func subscribe<Model: SchemaBacked>(
         to modelType: Model.Type
     ) async -> AsyncMessageHandler<DatabaseMessage>.Thread {
-        await self.events.subscribe(predicate: { event in
+        return await self.events.subscribe(predicate: { event in
             event.type is Model.Type
         })
     }
@@ -105,6 +105,8 @@ public actor Database {
         do {
             let table = Model.Schema.baseExpression
             let query = context?.apply(table) ?? table
+//            print(query.expression)
+//            print("--------------")
             let records = try connection.prepare(query)
             return try records.map(Model.create(from:))
         }
@@ -121,6 +123,9 @@ public actor Database {
             let table = Model.Schema.baseExpression
             let query = context?.apply(table) ?? table
             let record = try connection.pluck(query.filter(table[Model.Schema.id] == id))
+            
+//            print(query.filter(table[Model.Schema.id] == id).expression)
+//            print("--------------")
             
             guard let record else { return nil }
             
@@ -139,6 +144,9 @@ public actor Database {
             let table = Model.Schema.baseExpression
             let query = context?.apply(table) ?? table
             let records = try connection.prepare(query.filter(ids.contains(table[Model.Schema.id])))
+            
+//            print(query.filter(ids.contains(table[Model.Schema.id])).expression)
+//            print("--------------")
             
             return try records.map(Model.create(from:))
         }

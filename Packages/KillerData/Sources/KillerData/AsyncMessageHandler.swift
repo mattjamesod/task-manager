@@ -21,16 +21,19 @@ public actor AsyncMessageHandler<T: Sendable> {
     
     public init() { }
     
-    private var messageThreads: [Thread] = []
+    public var messageThreads: [Thread] = []
     
     public func subscribe(predicate: (@Sendable (T) -> Bool)? = nil) -> Thread {
         let newThread = Thread(predicate)
         self.messageThreads.append(newThread)
+        print("newthread: \(self.messageThreads.count)")
         return newThread
     }
     
     public func unsubscribe(_ thread: Thread) {
-        guard let index = self.messageThreads.firstIndex(where: { $0.id == thread.id }) else { return }
+        guard let index = self.messageThreads.firstIndex(where: { $0.id == thread.id }) else {
+            return
+        }
         self.messageThreads.remove(at: index)
     }
     
