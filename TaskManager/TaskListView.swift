@@ -3,28 +3,34 @@ import KillerModels
 import KillerData
 
 extension KillerTask {
-    static func empty(_ parentID: UUID?) -> KillerTask {
-        KillerTask(
+    static func empty(context: Database.Scope? = nil) -> KillerTask {
+        let base = KillerTask(
             id: UUID(),
             body: "",
             createdAt: nil,
-            updatedAt: nil,
-            parentID: parentID
+            updatedAt: nil
         )
+        
+        if let context {
+            return context.applyToModel(base)
+        }
+        else {
+            return base
+        }
     }
 }
 
 @Observable @MainActor
 class NewTaskMonitor {
-    init(parentID: UUID?) {
-        self.parentID = parentID
+    init(context: Database.Scope?) {
+        self.context = context
         self.task = nil
     }
     
     var task: KillerTask?
     var shortCircuit: Bool = false
     
-    private let parentID: UUID?
+    private let context: Database.Scope?
     private var monitorTask: Task<Void, Never>? = nil
     private var thread: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
     
@@ -59,18 +65,19 @@ class NewTaskMonitor {
             self.task = nil
         }
         else {
-            self.task = KillerTask.empty(parentID)
+            self.task = KillerTask.empty(context: self.context)
         }
     }
 }
 
 struct TaskWithChildrenView: View {
     @Environment(\.focusedTaskID) var focusedTaskID
+    
     @State var newTaskMonitor: NewTaskMonitor
     
-    init(task: KillerTask) {
+    init(task: KillerTask, context: Database.Scope?) {
         self.task = task
-        self.newTaskMonitor = .init(parentID: task.id)
+        self.newTaskMonitor = .init(context: context?.compose(with: .children(of: task.id)))
     }
     
     let task: KillerTask
@@ -114,7 +121,7 @@ struct TaskListView: View {
     var body: some View {
         TaskList {
             ForEach(taskProvider.tasks) { task in
-                TaskWithChildrenView(task: task)
+                TaskWithChildrenView(task: task, context: contextQuery)
             }
         }
         .animation(.bouncy(duration: 0.4), value: taskProvider.tasks)

@@ -117,12 +117,13 @@ struct TaskHierarchyView: View {
     @FocusState var focusedTaskID: KillerTask.ID?
     
     @State var viewModel: TaskHierarchyViewModel
-    @State var newTaskMonitor: NewTaskMonitor = .init(parentID: nil)
+    @State var newTaskMonitor: NewTaskMonitor
     @State var taskSelection = Selection<KillerTask>()
     @State var state: TaskContainerState = .loading
     
     init(scope: Database.Scope) {
         self.viewModel = .init(query: scope)
+        self.newTaskMonitor = .init(context: scope)
     }
     
     var body: some View {
