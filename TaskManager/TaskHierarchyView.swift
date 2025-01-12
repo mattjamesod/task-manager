@@ -111,6 +111,7 @@ struct TaskHierarchyView: View {
     @FocusState var focusedTaskID: KillerTask.ID?
     
     @State var viewModel: TaskHierarchyViewModel
+    @State var newTaskMonitor: NewTaskMonitor = .init(parentID: nil)
     @State var taskSelection = Selection<KillerTask>()
     @State var state: TaskContainerState = .loading
     
@@ -132,6 +133,7 @@ struct TaskHierarchyView: View {
                 .containerPadding(axis: .horizontal)
                 
                 TaskListView(.orphaned, monitor: viewModel.orphanMonitor)
+                    .environment(newTaskMonitor)
                     .environment(\.taskListMonitor, viewModel.taskListMonitor)
                     .onChange(of: focusedTaskID) {
                         Task {

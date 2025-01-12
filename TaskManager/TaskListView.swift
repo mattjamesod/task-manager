@@ -62,16 +62,37 @@ class NewTaskMonitor {
     }
 }
 
+struct TaskWithChildrenView: View {
+    @Environment(\.focusedTaskID) var focusedTaskID
+    @State var newTaskMonitor: NewTaskMonitor
+    
+    init(task: KillerTask) {
+        self.task = task
+        self.newTaskMonitor = .init(parentID: task.id)
+    }
+    
+    let task: KillerTask
+    
+    var body: some View {
+        Group {
+            TaskView(task: task)
+                .focused(focusedTaskID!, equals: task.id)
+            TaskListView(parentID: task.id)
+                .padding(.leading, 24)
+        }
+        .environment(newTaskMonitor)
+    }
+}
+
 struct TaskListView: View {
     @Environment(\.database) var database
     @Environment(\.contextQuery) var contextQuery
     @Environment(\.taskListMonitor) var taskListMonitor
-    @Environment(\.focusedTaskID) var focusedTaskID
     @Environment(Selection<KillerTask>.self) var selection
         
     @State var taskProvider: TaskContainer
     @State var loadState: TaskContainerState = .loading
-    @State var newTaskMonitor: NewTaskMonitor
+    @Environment(NewTaskMonitor.self) var newTaskMonitor
     
     let monitor: QueryMonitor<TaskContainer>?
     let detailQuery: Database.Scope?
@@ -80,25 +101,18 @@ struct TaskListView: View {
         self.taskProvider = TaskContainer()
         self.monitor = monitor
         self.detailQuery = detailQuery
-        
-        self._newTaskMonitor = State(initialValue: .init(parentID: nil))
     }
     
     init(parentID: UUID?) {
         self.taskProvider = TaskContainer(filter: { $0.parentID == parentID })
         self.monitor = nil
         self.detailQuery = .children(of: parentID)
-        
-        self._newTaskMonitor = State(initialValue: .init(parentID: parentID))
     }
     
     var body: some View {
         TaskList {
             ForEach(taskProvider.tasks) { task in
-                TaskView(task: task)
-                    .focused(focusedTaskID!, equals: task.id)
-                TaskListView(parentID: task.id)
-                    .padding(.leading, 24)
+                TaskWithChildrenView(task: task)
             }
         }
         .animation(.bouncy(duration: 0.4), value: taskProvider.tasks)
