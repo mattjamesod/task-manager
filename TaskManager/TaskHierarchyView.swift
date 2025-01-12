@@ -78,12 +78,18 @@ class TaskHierarchyViewModel {
 
 extension TaskHierarchyView {
     struct EmptyView: View {
+        @Environment(NewTaskMonitor.self) var newTaskMonitor
+        
         var body: some View {
             VStack(spacing: 8) {
                 Text("Nothing Here")
                     .font(.title)
                     .fontWeight(.bold)
-                Text("Add a new task or edit this scope")
+                Button.async {
+                    await newTaskMonitor.update(shortCircuit: true)
+                } label: {
+                    Text("Add a Task")
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .foregroundStyle(.gray)
@@ -148,6 +154,7 @@ struct TaskHierarchyView: View {
                 
             if state == .empty {
                 EmptyView()
+                    .environment(newTaskMonitor)
                     .transition(.scale(scale: 0.8).combined(with: .opacity))
             }
             

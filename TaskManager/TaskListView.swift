@@ -152,29 +152,28 @@ struct TaskListView: View {
             }
         }
         .onChange(of: taskProvider.tasks) {
-            guard !newTaskMonitor.shortCircuit else {
-                newTaskMonitor.shortCircuit = false; return
-            }
-            
-            let count = taskProvider.tasks.count
             let newTask: Bool = newTaskMonitor.task != nil
+            let count = newTask ? taskProvider.tasks.count - 1 : taskProvider.tasks.count
             
-            if newTask && count == 1 {
+            if count == 0 {
                 self.loadState = .empty
-                self.newTaskMonitor.update(empty: true)
+                
+                if newTask {
+                    guard !newTaskMonitor.shortCircuit else {
+                        newTaskMonitor.shortCircuit = false
+                        self.loadState = .done(itemCount: 1)
+                        return
+                    }
+                    
+                    self.newTaskMonitor.update(empty: true)
+                }
             }
-            
-            if !newTask && count == 0 {
-                self.loadState = .empty
-            }
-            
-            if newTask && count > 1 {
+            else {
                 self.loadState = .done(itemCount: count)
-            }
-            
-            if !newTask && count > 0 {
-                self.loadState = .done(itemCount: count)
-                self.newTaskMonitor.update(empty: false)
+                
+                if !newTask {
+                    self.newTaskMonitor.update(empty: false)
+                }
             }
         }
         .taskListState(self.loadState)
