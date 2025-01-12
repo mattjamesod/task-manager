@@ -73,8 +73,6 @@ struct TaskListView: View {
     @State var loadState: TaskContainerState = .loading
     @State var newTaskMonitor: NewTaskMonitor
     
-    @State var shortCircuit: Bool = false
-    
     let monitor: QueryMonitor<TaskContainer>?
     let detailQuery: Database.Scope?
     
@@ -128,8 +126,6 @@ struct TaskListView: View {
         // append or remove a blank task with relevant context when the monitor
         // says to do so
         .onChange(of: newTaskMonitor.task) {
-            shortCircuit = true
-            
             if let task = newTaskMonitor.task {
                 self.taskProvider.tasks.append(task)
             }
@@ -140,20 +136,25 @@ struct TaskListView: View {
             }
         }
         .onChange(of: taskProvider.tasks) {
-            guard !shortCircuit else { shortCircuit = false; return }
-            
             let count = taskProvider.tasks.count
             let newTask: Bool = newTaskMonitor.task != nil
             
-            if count == 0  || (newTask && count == 1) {
+            if newTask && count == 1 {
                 self.loadState = .empty
                 self.newTaskMonitor.update(empty: true)
             }
-            else {
+            
+            if !newTask && count == 0 {
+                self.loadState = .empty
+            }
+            
+            if newTask && count > 1 {
                 self.loadState = .done(itemCount: count)
-                if newTaskMonitor.task == nil {
-                    newTaskMonitor.update(empty: false)
-                }
+            }
+            
+            if !newTask && count > 0 {
+                self.loadState = .done(itemCount: count)
+                self.newTaskMonitor.update(empty: false)
             }
         }
         .taskListState(self.loadState)
