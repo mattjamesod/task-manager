@@ -18,11 +18,10 @@ extension KillerTask {
 class NewTaskMonitor {
     init(parentID: UUID?) {
         self.parentID = parentID
-        self.task = KillerTask.empty(parentID)
+        self.task = nil
     }
     
-    var included: Bool = false
-    var task: KillerTask
+    var task: KillerTask?
     
     private let parentID: UUID?
     private var monitorTask: Task<Void, Never>? = nil
@@ -36,9 +35,9 @@ class NewTaskMonitor {
             for await message in thread.events {
                 switch message {
                 case .recordChange(_, let id, sender: _):
-                    if id == task.id { update() }
+                    if id == task?.id { update() }
                 case .recordsChanged(_, let ids, sender: _):
-                    if ids.contains(task.id) { update() }
+                    if let id = task?.id, ids.contains(id) { update() }
                 default: continue
                 }
             }
@@ -53,8 +52,13 @@ class NewTaskMonitor {
         self.thread = nil
     }
     
-    func update() {
-        self.task = KillerTask.empty(parentID)
+    func update(empty: Bool = false) {
+        if empty {
+            self.task = nil
+        }
+        else {
+            self.task = KillerTask.empty(parentID)
+        }
     }
 }
 
@@ -68,6 +72,8 @@ struct TaskListView: View {
     @State var taskProvider: TaskContainer
     @State var loadState: TaskContainerState = .loading
     @State var newTaskMonitor: NewTaskMonitor
+    
+    @State var shortCircuit: Bool = false
     
     let monitor: QueryMonitor<TaskContainer>?
     let detailQuery: Database.Scope?
@@ -114,33 +120,40 @@ struct TaskListView: View {
             // onChange will not do anything if an empty array is reassigned to empty array
             if tasks.count == 0 {
                 self.loadState = .empty
-            }
-            else {
-                newTaskMonitor.included = true
+                newTaskMonitor.update(empty: true)
             }
             
             await self.newTaskMonitor.waitForUpdate(on: database)
         }
-        .onChange(of: newTaskMonitor.included) {
-            if newTaskMonitor.included {
-                self.taskProvider.tasks.append(newTaskMonitor.task)
+        // append or remove a blank task with relevant context when the monitor
+        // says to do so
+        .onChange(of: newTaskMonitor.task) {
+            shortCircuit = true
+            
+            if let task = newTaskMonitor.task {
+                self.taskProvider.tasks.append(task)
             }
             else {
-                self.taskProvider.tasks.removeLast()
+                if self.taskProvider.tasks.count > 0 {
+                    self.taskProvider.tasks.removeLast()
+                }
             }
         }
-        .onChange(of: newTaskMonitor.task) {
-            guard newTaskMonitor.included else { return } // should be redundant
-            self.taskProvider.tasks.append(newTaskMonitor.task)
-        }
         .onChange(of: taskProvider.tasks) {
+            guard !shortCircuit else { shortCircuit = false; return }
+            
             let count = taskProvider.tasks.count
-            if count == 0  || (newTaskMonitor.included && count == 1) {
+            let newTask: Bool = newTaskMonitor.task != nil
+            
+            if count == 0  || (newTask && count == 1) {
                 self.loadState = .empty
-                self.newTaskMonitor.included = false
+                self.newTaskMonitor.update(empty: true)
             }
             else {
                 self.loadState = .done(itemCount: count)
+                if newTaskMonitor.task == nil {
+                    newTaskMonitor.update(empty: false)
+                }
             }
         }
         .taskListState(self.loadState)
