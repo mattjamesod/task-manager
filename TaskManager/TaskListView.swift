@@ -22,6 +22,7 @@ class NewTaskMonitor {
     }
     
     var task: KillerTask?
+    var shortCircuit: Bool = false
     
     private let parentID: UUID?
     private var monitorTask: Task<Void, Never>? = nil
@@ -52,7 +53,8 @@ class NewTaskMonitor {
         self.thread = nil
     }
     
-    func update(empty: Bool = false) {
+    func update(empty: Bool = false, shortCircuit: Bool = false) {
+        self.shortCircuit = shortCircuit
         if empty {
             self.task = nil
         }
@@ -150,6 +152,10 @@ struct TaskListView: View {
             }
         }
         .onChange(of: taskProvider.tasks) {
+            guard !newTaskMonitor.shortCircuit else {
+                newTaskMonitor.shortCircuit = false; return
+            }
+            
             let count = taskProvider.tasks.count
             let newTask: Bool = newTaskMonitor.task != nil
             

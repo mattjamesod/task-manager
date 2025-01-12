@@ -96,12 +96,14 @@ struct TaskView: View {
 struct AddSubtaskButton: View {
     @Environment(\.database) var database
     @Environment(\.contextQuery) var query
+    @Environment(NewTaskMonitor.self) var newTaskMonitor
     
     let task: KillerTask
     
     var body: some View {
         Button.async {
-        	await database?.insert(KillerTask.self, \.parentID <- task.id, context: self.query)
+            await newTaskMonitor.update(shortCircuit: true)
+//        	await database?.insert(KillerTask.self, \.parentID <- task.id, context: self.query)
         } label: {
             Label("Add Subtask", systemImage: "arrow.turn.down.right")
         }
