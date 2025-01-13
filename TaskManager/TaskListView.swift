@@ -110,27 +110,28 @@ struct TaskListView: View {
         }
         .onChange(of: taskContainer.tasks) {
             let newTask: Bool = newTaskContainer.task != nil
-            let count = newTask ? taskContainer.tasks.count - 1 : taskContainer.tasks.count
+            let count = taskContainer.tasks.count
+            
+            if count == 1 && newTask {
+                guard !newTaskContainer.shortCircuit else {
+                    newTaskContainer.shortCircuit = false; return
+                }
+                
+                self.newTaskContainer.clear()
+            }
+            
+            if count > 0 && !newTask {
+                self.newTaskContainer.push()
+            }
+        }
+        .onChange(of: taskContainer.tasks) {
+            let count = taskContainer.tasks.count
             
             if count == 0 {
                 self.loadState = .empty
-                
-                if newTask {
-                    guard !newTaskContainer.shortCircuit else {
-                        newTaskContainer.shortCircuit = false
-                        self.loadState = .done(itemCount: 1)
-                        return
-                    }
-                    
-                    self.newTaskContainer.clear()
-                }
             }
             else {
                 self.loadState = .done(itemCount: count)
-                
-                if !newTask {
-                    self.newTaskContainer.push()
-                }
             }
         }
         .taskListState(self.loadState)
