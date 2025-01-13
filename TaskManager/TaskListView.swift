@@ -20,64 +20,14 @@ extension KillerTask {
     }
 }
 
-@Observable @MainActor
-class NewTaskMonitor {
-    init(context: Database.Scope?) {
-        self.context = context
-        self.task = nil
-    }
-    
-    var task: KillerTask?
-    var shortCircuit: Bool = false
-    
-    private let context: Database.Scope?
-    private var monitorTask: Task<Void, Never>? = nil
-    private var thread: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
-    
-    func waitForUpdate(on database: Database) async {
-        thread = await database.subscribe(to: KillerTask.self)
-        
-        self.monitorTask = Task {
-            guard let thread = self.thread else { return }
-            for await message in thread.events {
-                switch message {
-                case .recordChange(_, let id, sender: _):
-                    if id == task?.id { update() }
-                case .recordsChanged(_, let ids, sender: _):
-                    if let id = task?.id, ids.contains(id) { update() }
-                default: continue
-                }
-            }
-        }
-    }
-    
-    public func stop(database: Database) async {
-        guard let thread else { return }
-        self.monitorTask?.cancel()
-        self.monitorTask = nil
-        await database.unsubscribe(thread)
-        self.thread = nil
-    }
-    
-    func update(empty: Bool = false, shortCircuit: Bool = false) {
-        self.shortCircuit = shortCircuit
-        if empty {
-            self.task = nil
-        }
-        else {
-            self.task = KillerTask.empty(context: self.context)
-        }
-    }
-}
-
 struct TaskWithChildrenView: View {
     @Environment(\.focusedTaskID) var focusedTaskID
     
-    @State var newTaskMonitor: NewTaskMonitor
+    @State var newTaskContainer: NewTaskContainer
     
     init(task: KillerTask, context: Database.Scope?) {
         self.task = task
-        self.newTaskMonitor = .init(context: context?.compose(with: .children(of: task.id)))
+        self.newTaskContainer = .init(context: context?.compose(with: .children(of: task.id)))
     }
     
     let task: KillerTask
@@ -89,7 +39,7 @@ struct TaskWithChildrenView: View {
             TaskListView(parentID: task.id)
                 .padding(.leading, 24)
         }
-        .environment(newTaskMonitor)
+        .environment(newTaskContainer)
     }
 }
 
@@ -99,34 +49,34 @@ struct TaskListView: View {
     @Environment(\.taskListMonitor) var taskListMonitor
     @Environment(Selection<KillerTask>.self) var selection
         
-    @State var taskProvider: TaskContainer
+    @State var taskContainer: TaskContainer
     @State var loadState: TaskContainerState = .loading
-    @Environment(NewTaskMonitor.self) var newTaskMonitor
+    @Environment(NewTaskContainer.self) var newTaskContainer
     
     let monitor: QueryMonitor<TaskContainer>?
     let detailQuery: Database.Scope?
     
     init(_ detailQuery: Database.Scope? = nil, monitor: QueryMonitor<TaskContainer>) {
-        self.taskProvider = TaskContainer()
+        self.taskContainer = TaskContainer()
         self.monitor = monitor
         self.detailQuery = detailQuery
     }
     
     init(parentID: UUID?) {
-        self.taskProvider = TaskContainer(filter: { $0.parentID == parentID })
+        self.taskContainer = TaskContainer(filter: { $0.parentID == parentID })
         self.monitor = nil
         self.detailQuery = .children(of: parentID)
     }
     
     var body: some View {
         TaskList {
-            ForEach(taskProvider.tasks) { task in
+            ForEach(taskContainer.tasks) { task in
                 TaskWithChildrenView(task: task, context: contextQuery)
             }
         }
-        .animation(.bouncy(duration: 0.4), value: taskProvider.tasks)
+        .animation(.bouncy(duration: 0.4), value: taskContainer.tasks)
         .task {
-            await activeMonitor?.register(container: taskProvider)
+            await activeMonitor?.register(container: taskContainer)
         }
         .task {
             guard let database else { return }
@@ -136,59 +86,59 @@ struct TaskListView: View {
                 context: contextQuery?.compose(with: self.detailQuery)
             )
             
-            self.taskProvider.tasks = tasks
+            self.taskContainer.tasks = tasks
             
             // onChange will not do anything if an empty array is reassigned to empty array
             if tasks.count == 0 {
                 self.loadState = .empty
-                newTaskMonitor.update(empty: true)
+                newTaskContainer.clear()
             }
             
-            await self.newTaskMonitor.waitForUpdate(on: database)
+            await self.newTaskContainer.waitForUpdate(on: database)
         }
         // append or remove a blank task with relevant context when the monitor
         // says to do so
-        .onChange(of: newTaskMonitor.task) {
-            if let task = newTaskMonitor.task {
-                self.taskProvider.tasks.append(task)
+        .onChange(of: newTaskContainer.task) {
+            if let task = newTaskContainer.task {
+                self.taskContainer.tasks.append(task)
             }
             else {
-                if self.taskProvider.tasks.count > 0 {
-                    self.taskProvider.tasks.removeLast()
+                if self.taskContainer.tasks.count > 0 {
+                    self.taskContainer.tasks.removeLast()
                 }
             }
         }
-        .onChange(of: taskProvider.tasks) {
-            let newTask: Bool = newTaskMonitor.task != nil
-            let count = newTask ? taskProvider.tasks.count - 1 : taskProvider.tasks.count
+        .onChange(of: taskContainer.tasks) {
+            let newTask: Bool = newTaskContainer.task != nil
+            let count = newTask ? taskContainer.tasks.count - 1 : taskContainer.tasks.count
             
             if count == 0 {
                 self.loadState = .empty
                 
                 if newTask {
-                    guard !newTaskMonitor.shortCircuit else {
-                        newTaskMonitor.shortCircuit = false
+                    guard !newTaskContainer.shortCircuit else {
+                        newTaskContainer.shortCircuit = false
                         self.loadState = .done(itemCount: 1)
                         return
                     }
                     
-                    self.newTaskMonitor.update(empty: true)
+                    self.newTaskContainer.clear()
                 }
             }
             else {
                 self.loadState = .done(itemCount: count)
                 
                 if !newTask {
-                    self.newTaskMonitor.update(empty: false)
+                    self.newTaskContainer.push()
                 }
             }
         }
         .taskListState(self.loadState)
         .onDisappear {
             Task {
-                await activeMonitor?.deregister(container: taskProvider)
+                await activeMonitor?.deregister(container: taskContainer)
                 guard let database else { return }
-                await newTaskMonitor.stop(database: database)
+                await newTaskContainer.stopMonitoring(database: database)
             }
         }
     }

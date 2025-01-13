@@ -78,7 +78,7 @@ class TaskHierarchyViewModel {
 
 extension TaskHierarchyView {
     struct EmptyView: View {
-        @Environment(NewTaskMonitor.self) var newTaskMonitor
+        @Environment(NewTaskContainer.self) var newTaskContainer
         
         var body: some View {
             VStack(spacing: 8) {
@@ -86,7 +86,7 @@ extension TaskHierarchyView {
                     .font(.title)
                     .fontWeight(.bold)
                 Button.async {
-                    await newTaskMonitor.update(shortCircuit: true)
+                    await newTaskContainer.push(shortCircuit: true)
                 } label: {
                     Text("Add a Task")
                 }
@@ -117,13 +117,13 @@ struct TaskHierarchyView: View {
     @FocusState var focusedTaskID: KillerTask.ID?
     
     @State var viewModel: TaskHierarchyViewModel
-    @State var newTaskMonitor: NewTaskMonitor
+    @State var orphanedNewTaskContainer: NewTaskContainer
     @State var taskSelection = Selection<KillerTask>()
     @State var state: TaskContainerState = .loading
     
     init(scope: Database.Scope) {
         self.viewModel = .init(query: scope)
-        self.newTaskMonitor = .init(context: scope)
+        self.orphanedNewTaskContainer = .init(context: scope)
     }
     
     var body: some View {
@@ -140,7 +140,7 @@ struct TaskHierarchyView: View {
                 .containerPadding(axis: .horizontal)
                 
                 TaskListView(.orphaned, monitor: viewModel.orphanMonitor)
-                    .environment(newTaskMonitor)
+                    .environment(orphanedNewTaskContainer)
                     .environment(\.taskListMonitor, viewModel.taskListMonitor)
                     .onChange(of: focusedTaskID) {
                         Task {
@@ -155,7 +155,7 @@ struct TaskHierarchyView: View {
                 
             if state == .empty {
                 EmptyView()
-                    .environment(newTaskMonitor)
+                    .environment(orphanedNewTaskContainer)
                     .transition(.scale(scale: 0.8).combined(with: .opacity))
             }
             
