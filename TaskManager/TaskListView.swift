@@ -96,33 +96,12 @@ struct TaskListView: View {
             
             await self.newTaskContainer.waitForUpdate(on: database)
         }
-        // append or remove a blank task with relevant context when the monitor
-        // says to do so
         .onChange(of: newTaskContainer.task) {
-            if let task = newTaskContainer.task {
-                self.taskContainer.tasks.append(task)
-            }
-            else {
-                if self.taskContainer.tasks.count > 0 {
-                    self.taskContainer.tasks.removeLast()
-                }
-            }
+            self.taskContainer.appendOrRemoveNewTask(newTaskContainer.task)
         }
         .onChange(of: taskContainer.tasks) {
-            let newTask: Bool = newTaskContainer.task != nil
             let count = taskContainer.tasks.count
-            
-            if count == 1 && newTask {
-                guard !newTaskContainer.shortCircuit else {
-                    newTaskContainer.shortCircuit = false; return
-                }
-                
-                self.newTaskContainer.clear()
-            }
-            
-            if count > 0 && !newTask {
-                self.newTaskContainer.push()
-            }
+            self.newTaskContainer.onListChange(itemCount: count)
         }
         .onChange(of: taskContainer.tasks) {
             let count = taskContainer.tasks.count

@@ -55,6 +55,16 @@ final class TaskContainer: SynchronisedStateContainer {
         }
     }
     
+    func appendOrRemoveNewTask(_ newTask: KillerTask?) {
+        if let newTask {
+            self.tasks.append(newTask)
+        }
+        else {
+            guard self.tasks.count > 0 else { return }
+            self.tasks.removeLast()
+        }
+    }
+    
     private func insertIndex(of task: KillerTask) -> Int {
         self.tasks.binarySearch { self.sortOrder($0, task) }
     }

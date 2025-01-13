@@ -41,6 +41,17 @@ class NewTaskContainer {
         self.thread = nil
     }
     
+    func onListChange(itemCount: Int) {
+        if itemCount > 0 && task == nil {
+            self.push()
+        }
+        
+        if itemCount == 1 && task != nil {
+            guard !shortCircuit else { shortCircuit = false; return }
+            self.clear()
+        }
+    }
+    
     func push(shortCircuit: Bool = false) {
         self.shortCircuit = shortCircuit
         self.task = KillerTask.empty(context: self.context)
