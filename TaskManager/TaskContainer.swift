@@ -55,9 +55,9 @@ final class TaskContainer: SynchronisedStateContainer {
         }
     }
     
-    func appendOrRemoveNewTask(_ newTask: KillerTask?) {
-        if let newTask {
-            self.tasks.append(newTask)
+    func appendOrRemovePendingTask(_ pendingTask: KillerTask?) {
+        if let pendingTask {
+            self.tasks.append(pendingTask)
         }
         else {
             guard self.tasks.count > 0 else { return }

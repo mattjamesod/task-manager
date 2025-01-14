@@ -96,7 +96,7 @@ struct TaskView: View {
 struct AddSubtaskButton: View {
     @Environment(\.database) var database
     @Environment(\.contextQuery) var query
-    @Environment(NewTaskContainer.self) var newTaskContainer
+    @Environment(PendingTaskProvider.self) var newTaskContainer
     
     let task: KillerTask
     

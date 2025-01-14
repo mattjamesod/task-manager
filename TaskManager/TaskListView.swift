@@ -2,47 +2,6 @@ import SwiftUI
 import KillerModels
 import KillerData
 
-extension KillerTask {
-    static func empty(context: Database.Scope? = nil) -> KillerTask {
-        let base = KillerTask(
-            id: UUID(),
-            body: "",
-            createdAt: nil,
-            updatedAt: nil
-        )
-        
-        if let context {
-            return context.applyToModel(base)
-        }
-        else {
-            return base
-        }
-    }
-}
-
-struct TaskWithChildrenView: View {
-    @Environment(\.focusedTaskID) var focusedTaskID
-    
-    @State var newTaskContainer: NewTaskContainer
-    
-    init(task: KillerTask, context: Database.Scope?) {
-        self.task = task
-        self.newTaskContainer = .init(context: context?.compose(with: .children(of: task.id)))
-    }
-    
-    let task: KillerTask
-    
-    var body: some View {
-        Group {
-            TaskView(task: task)
-                .focused(focusedTaskID!, equals: task.id)
-            TaskListView(parentID: task.id)
-                .padding(.leading, 24)
-        }
-        .environment(newTaskContainer)
-    }
-}
-
 struct TaskListView: View {
     @Environment(\.database) var database
     @Environment(\.contextQuery) var contextQuery
@@ -51,7 +10,7 @@ struct TaskListView: View {
         
     @State var taskContainer: TaskContainer
     @State var loadState: TaskContainerState = .loading
-    @Environment(NewTaskContainer.self) var newTaskContainer
+    @Environment(PendingTaskProvider.self) var pendingTaskProvider
     
     let monitor: QueryMonitor<TaskContainer>?
     let detailQuery: Database.Scope?
@@ -69,7 +28,7 @@ struct TaskListView: View {
     }
     
     var body: some View {
-        TaskList {
+        TaskSpacing {
             ForEach(taskContainer.tasks) { task in
                 TaskWithChildrenView(task: task, context: contextQuery)
             }
@@ -91,17 +50,17 @@ struct TaskListView: View {
             // onChange will not do anything if an empty array is reassigned to empty array
             if tasks.count == 0 {
                 self.loadState = .empty
-                newTaskContainer.clear()
+                pendingTaskProvider.clear()
             }
             
-            await self.newTaskContainer.waitForUpdate(on: database)
+            await self.pendingTaskProvider.respondToChanges(on: database)
         }
-        .onChange(of: newTaskContainer.task) {
-            self.taskContainer.appendOrRemoveNewTask(newTaskContainer.task)
+        .onChange(of: pendingTaskProvider.task) {
+            self.taskContainer.appendOrRemovePendingTask(pendingTaskProvider.task)
         }
         .onChange(of: taskContainer.tasks) {
             let count = taskContainer.tasks.count
-            self.newTaskContainer.onListChange(itemCount: count)
+            self.pendingTaskProvider.onListChange(itemCount: count)
         }
         .onChange(of: taskContainer.tasks) {
             let count = taskContainer.tasks.count
@@ -118,7 +77,7 @@ struct TaskListView: View {
             Task {
                 await activeMonitor?.deregister(container: taskContainer)
                 guard let database else { return }
-                await newTaskContainer.stopMonitoring(database: database)
+                await pendingTaskProvider.stopMonitoring(database: database)
             }
         }
     }
@@ -128,7 +87,7 @@ struct TaskListView: View {
     }
 }
 
-struct TaskList<Content: View>: View {
+struct TaskSpacing<Content: View>: View {
     @ViewBuilder var content: Content
     
     var body: some View {

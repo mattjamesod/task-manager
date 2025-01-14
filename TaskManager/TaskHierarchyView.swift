@@ -78,7 +78,7 @@ class TaskHierarchyViewModel {
 
 extension TaskHierarchyView {
     struct EmptyView: View {
-        @Environment(NewTaskContainer.self) var newTaskContainer
+        @Environment(PendingTaskProvider.self) var newTaskContainer
         
         var body: some View {
             VStack(spacing: 8) {
@@ -117,13 +117,13 @@ struct TaskHierarchyView: View {
     @FocusState var focusedTaskID: KillerTask.ID?
     
     @State var viewModel: TaskHierarchyViewModel
-    @State var orphanedNewTaskContainer: NewTaskContainer
+    @State var pendingTaskProvider: PendingTaskProvider
     @State var taskSelection = Selection<KillerTask>()
     @State var state: TaskContainerState = .loading
     
     init(scope: Database.Scope) {
         self.viewModel = .init(query: scope)
-        self.orphanedNewTaskContainer = .init(context: scope)
+        self.pendingTaskProvider = .init(listContext: scope)
     }
     
     var body: some View {
@@ -140,7 +140,7 @@ struct TaskHierarchyView: View {
                 .containerPadding(axis: .horizontal)
                 
                 TaskListView(.orphaned, monitor: viewModel.orphanMonitor)
-                    .environment(orphanedNewTaskContainer)
+                    .environment(pendingTaskProvider)
                     .environment(\.taskListMonitor, viewModel.taskListMonitor)
                     .onChange(of: focusedTaskID) {
                         Task {
@@ -155,7 +155,7 @@ struct TaskHierarchyView: View {
                 
             if state == .empty {
                 EmptyView()
-                    .environment(orphanedNewTaskContainer)
+                    .environment(pendingTaskProvider)
                     .transition(.scale(scale: 0.8).combined(with: .opacity))
             }
             
