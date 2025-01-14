@@ -5,11 +5,16 @@ import KillerData
 
 fileprivate extension EnvironmentValues {
     @Entry var taskCompleteButtonPosition: TaskView.CompleteButtonPosition = .leading
+    @Entry var tasksPending: Bool = false
 }
 
 extension View {
     func taskCompleteButton(position: TaskView.CompleteButtonPosition) -> some View {
         self.environment(\.taskCompleteButtonPosition, position)
+    }
+    
+    func tasksPending(_ on: Bool = true) -> some View {
+        self.environment(\.tasksPending, on)
     }
 }
 
@@ -21,6 +26,7 @@ struct TaskView: View {
     
     @Environment(\.database) var database
     @Environment(\.contextQuery) var contextQuery
+    @Environment(\.tasksPending) var pending
     @Environment(\.taskCompleteButtonPosition) var completeButtonPosition
     @Environment(Selection<KillerTask>.self) var selection
         
@@ -32,20 +38,18 @@ struct TaskView: View {
                 TaskCompleteCheckbox(task: self.task)
                     .buttonStyle(KillerInlineButtonStyle())
                     .id(task.instanceID)
+                    .opacity(pending ? 0 : 1)
             }
             
             VStack(alignment: .leading) {
                 TaskBodyField(task: self.task)
-                
-//                Text(self.task.id.uuidString)
-//                    .font(.subheadline)
-//                    .foregroundStyle(.gray)
                                 
                 if selection.chosen == task.id {
                     AddSubtaskButton(task: self.task)
                         .foregroundStyle(.gray)
                         .buttonStyle(KillerInlineButtonStyle())
                         .transition(.move(edge: .top).combined(with: .opacity))
+                        .opacity(pending ? 0 : 1)
                 }
             }
             .animation(.easeInOut(duration: 0.2), value: selection.chosen)
@@ -56,6 +60,7 @@ struct TaskView: View {
                 TaskCompleteCheckbox(task: self.task)
                     .buttonStyle(KillerInlineButtonStyle())
                     .id(task.instanceID)
+                    .opacity(pending ? 0 : 1)
             }
         }
         .fixedSize(horizontal: false, vertical: true)

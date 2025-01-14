@@ -31,6 +31,7 @@ struct TaskListView: View {
         TaskSpacing {
             ForEach(taskContainer.tasks) { task in
                 TaskWithChildrenView(task: task, context: contextQuery)
+                    .tasksPending(task.id == pendingTaskProvider.task?.id)
             }
         }
         .animation(.bouncy(duration: 0.4), value: taskContainer.tasks)
