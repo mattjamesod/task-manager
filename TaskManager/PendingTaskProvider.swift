@@ -53,8 +53,7 @@ class PendingTaskProvider {
         if itemCount > 0 && task == nil {
             self.push()
         }
-        
-        if itemCount == 1 && task != nil {
+        else if itemCount == 1 && task != nil {
             // sometimes we want to add a pending task as the only task in the list
             guard !shortCircuit else { shortCircuit = false; return }
             self.clear()
