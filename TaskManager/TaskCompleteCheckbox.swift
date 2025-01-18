@@ -13,11 +13,13 @@ struct TaskCompleteCheckbox: View {
     @Environment(\.database) var database
     @Environment(\.contextQuery) var query
     @Environment(\.taskListMonitor) var taskListMonitor
+    @Environment(\.tasksPending) var pending
     
     @ScaledMetric private var checkboxWidth: Double = 16
     @ScaledMetric private var checkboxBorderWidth: Double = 1.5
     
     @State private var isOn: Bool = false
+    private var completedStyling: Bool { isOn && !pending }
     
     private let delay: Duration = .seconds(0.3)
     
@@ -32,12 +34,16 @@ struct TaskCompleteCheckbox: View {
             HStack {
                 ZStack {
                     RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
-                        .strokeBorder(.gray, lineWidth: isOn ? 0 : self.checkboxBorderWidth)
+                        .strokeBorder(style: .init(
+                            lineWidth: completedStyling ? 0 : self.checkboxBorderWidth,
+                            dash: pending ? [2] : []
+                        ))
+                        .foregroundStyle(.gray)
                     
                     RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
-                        .foregroundStyle(isOn ? Color.accentColor : .clear)
+                        .foregroundStyle(completedStyling ? Color.accentColor : .clear)
                     
-                    if isOn {
+                    if completedStyling {
                         Image(systemName: "checkmark")
                             .resizable()
                             .fontWeight(.bold)
@@ -51,6 +57,7 @@ struct TaskCompleteCheckbox: View {
                 .contentShape(Rectangle())
             }
         }
+        .disabled(pending)
         .sensoryFeedback(.success, trigger: isOn)
         .animation(.snappy(duration: 0.1), value: isOn)
         .toggleStyle(.button)

@@ -5,6 +5,9 @@ import KillerData
 
 fileprivate extension EnvironmentValues {
     @Entry var taskCompleteButtonPosition: TaskView.CompleteButtonPosition = .leading
+}
+
+extension EnvironmentValues {
     @Entry var tasksPending: Bool = false
 }
 
@@ -38,18 +41,16 @@ struct TaskView: View {
                 TaskCompleteCheckbox(task: self.task)
                     .buttonStyle(KillerInlineButtonStyle())
                     .id(task.instanceID)
-                    .opacity(pending ? 0 : 1)
             }
             
             VStack(alignment: .leading) {
                 TaskBodyField(task: self.task)
                                 
-                if selection.chosen == task.id {
+                if selection.chosen == task.id && !pending {
                     AddSubtaskButton(task: self.task)
                         .foregroundStyle(.gray)
                         .buttonStyle(KillerInlineButtonStyle())
                         .transition(.move(edge: .top).combined(with: .opacity))
-                        .opacity(pending ? 0 : 1)
                 }
             }
             .animation(.easeInOut(duration: 0.2), value: selection.chosen)
@@ -60,7 +61,6 @@ struct TaskView: View {
                 TaskCompleteCheckbox(task: self.task)
                     .buttonStyle(KillerInlineButtonStyle())
                     .id(task.instanceID)
-                    .opacity(pending ? 0 : 1)
             }
         }
         .fixedSize(horizontal: false, vertical: true)

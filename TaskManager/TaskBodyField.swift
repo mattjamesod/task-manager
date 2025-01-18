@@ -7,11 +7,12 @@ struct TaskBodyField: View {
     @Environment(\.database) var database
     
     let task: KillerTask
+    private let emptyText: String = "Enter a task"
     
     @State private var taskBody: String = ""
     
     var body: some View {
-        DebouncedTextField("Task", text: $taskBody)
+        DebouncedTextField(emptyText, text: $taskBody)
             .textFieldStyle(.plain)
             .onLocalChange(of: $taskBody, source: task.body, setupFromSource: true) {
                 guard permit() else { return }
