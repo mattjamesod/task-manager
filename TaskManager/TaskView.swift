@@ -97,6 +97,14 @@ struct TaskView: View {
         
     let task: KillerTask
     
+    // TODO: return false if task already has children
+    private var showSubtaskButton: Bool {
+        let allowsTaskEntry = contextQuery?.allowsTaskEntry ?? false
+        let shouldEverShowButton = !pending && allowsTaskEntry
+        
+        return shouldEverShowButton && selection.chosen == task.id
+    }
+    
     var body: some View {
         HStack {
             CompleteOrDeleteMetaData(.leading, task: task)
@@ -104,7 +112,7 @@ struct TaskView: View {
             VStack(alignment: .leading) {
                 TaskBodyField(task: self.task)
                 
-                if selection.chosen == task.id && !pending {
+                if showSubtaskButton {
                     AddSubtaskButton(task: self.task)
                         .foregroundStyle(.gray)
                         .buttonStyle(KillerInlineButtonStyle())

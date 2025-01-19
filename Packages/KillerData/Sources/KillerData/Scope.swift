@@ -6,6 +6,8 @@ extension Database {
     public struct Scope: Identifiable, Sendable {
         public let id: Int
         public let name: String
+        public let allowsTaskEntry: Bool
+        
         public let apply: @Sendable (SQLite.Table) -> (SQLite.Table)
         public let applyToModel: @Sendable (KillerTask) -> (KillerTask)
         
@@ -18,20 +20,28 @@ extension Database {
         public func compose(with other: Scope?) -> Scope {
             guard let other else { return self }
             
-            return Scope(name: self.name, insertArguments: self.insertProperties + other.insertProperties) {
-                other.apply(self.apply($0))
-            } modelScopingRules: {
-                other.applyToModel(self.applyToModel($0))
-            }
+            return Scope(
+                name: self.name,
+                allowsTaskEntry: self.allowsTaskEntry && other.allowsTaskEntry,
+                insertArguments: self.insertProperties + other.insertProperties,
+                tableExpression: {
+                    other.apply(self.apply($0))
+                },
+                modelScopingRules: {
+                    other.applyToModel(self.applyToModel($0))
+                }
+            )
         }
         
         fileprivate init(
             name: String,
+            allowsTaskEntry: Bool = true,
             insertArguments: [Setter] = [],
             tableExpression: @escaping @Sendable (SQLite.Table) -> (SQLite.Table),
             modelScopingRules: @escaping @Sendable (KillerTask) -> (KillerTask)
         ) {
             self.name = name
+            self.allowsTaskEntry = allowsTaskEntry
             self.insertProperties = insertArguments
             self.apply = tableExpression
             self.applyToModel = modelScopingRules
@@ -47,6 +57,7 @@ extension Database {
             tableExpression: @escaping @Sendable (SQLite.Table) -> (SQLite.Table)
         ) {
             self.name = "Custom Scope"
+            self.allowsTaskEntry = true
             self.insertProperties = []
             self.apply = tableExpression
             self.applyToModel = { $0 }
@@ -126,6 +137,7 @@ extension Database {
         
         public static let deletedTasks: Scope = .init(
             name: "Deleted",
+            allowsTaskEntry: false,
             insertArguments: [
                 Schema.Tasks.deletedAt <- Date.now
             ],

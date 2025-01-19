@@ -61,6 +61,8 @@ class PendingTaskProvider {
     }
     
     func push(shortCircuit: Bool = false) {
+        guard context?.allowsTaskEntry ?? false else { return }
+        
         self.shortCircuit = shortCircuit
         self.task = KillerTask.empty(context: self.context)
     }
