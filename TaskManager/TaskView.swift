@@ -21,6 +21,52 @@ extension View {
     }
 }
 
+extension TaskView {
+    struct CompleteOrDeleteMetaData: View {
+        @Environment(\.taskCompleteButtonPosition) var desiredPosition
+        
+        let thisPosition: CompleteButtonPosition
+        let task: KillerTask
+        
+        init(_ thisPosition: CompleteButtonPosition, task: KillerTask) {
+            self.thisPosition = thisPosition
+            self.task = task
+        }
+        
+        var body: some View {
+            if thisPosition == desiredPosition {
+                TaskCompleteCheckbox(task: self.task)
+                    .buttonStyle(KillerInlineButtonStyle())
+                    .id(task.instanceID)
+            }
+            else if let deletedAt = self.task.deletedAt {
+                WillBeDeletedInMessage(deletedAt: deletedAt)
+            }
+        }
+    }
+    
+    struct WillBeDeletedInMessage: View {
+        @State var message: String = ""
+        
+        let deletedAt: Date
+        
+        var body: some View {
+            Text(self.message)
+                .font(.caption)
+                .foregroundStyle(.red)
+                .onAppear {
+                    let formatter = DateComponentsFormatter()
+                    
+                    formatter.unitsStyle = .abbreviated
+                    formatter.allowedUnits = [.day, .hour, .minute]
+                    formatter.maximumUnitCount = 1
+                    
+                    self.message = formatter.string(from: 30.days.ago, to: deletedAt) ?? ""
+                }
+        }
+    }
+}
+
 struct TaskView: View {
     enum CompleteButtonPosition {
         case leading
@@ -37,11 +83,7 @@ struct TaskView: View {
     
     var body: some View {
         HStack {
-            if completeButtonPosition == .leading {
-                TaskCompleteCheckbox(task: self.task)
-                    .buttonStyle(KillerInlineButtonStyle())
-                    .id(task.instanceID)
-            }
+            CompleteOrDeleteMetaData(.leading, task: task)
             
             VStack(alignment: .leading) {
                 TaskBodyField(task: self.task)
@@ -57,11 +99,7 @@ struct TaskView: View {
             
             Spacer()
             
-            if completeButtonPosition == .trailing {
-                TaskCompleteCheckbox(task: self.task)
-                    .buttonStyle(KillerInlineButtonStyle())
-                    .id(task.instanceID)
-            }
+            CompleteOrDeleteMetaData(.trailing, task: task)
         }
         .fixedSize(horizontal: false, vertical: true)
         .containerPadding()

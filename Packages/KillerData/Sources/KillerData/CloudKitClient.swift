@@ -49,10 +49,6 @@ actor CloudKitClient {
     
     private let database: CKDatabase
     
-//    init(database: CKDatabase) {
-//        self.database = database
-//    }
-    
     init() {
         self.database = CKContainer(identifier: Self.containerName).privateCloudDatabase
     }
