@@ -314,10 +314,11 @@ public actor Database {
         _ model: Model,
         _ property1: PropertyArgument<Model, PropertyType1>
     ) async {
+        let persisted = model.createdAt != nil
         let existingProperties = model.allProperties()
         let manuallyRequested = [
             try? property1.getSetter(),
-            model.createdAt == nil ? Model.Schema.createdAt <- Date.now : nil,
+            !persisted ? Model.Schema.createdAt <- Date.now : nil,
             Model.Schema.updatedAt <- Date.now
         ].compact()
         
@@ -327,10 +328,22 @@ public actor Database {
         guard self.upsert(Model.self, model.id, setters) else { return }
                 
         let finalSetters = setters
+        let inverseSetters = [
+            try? property1.getInverseSetter(model: model),
+            Model.Schema.updatedAt <- model.updatedAt
+        ].compact()
         
         await history.record(Bijection(
             goForward: { await self.upsert(Model.self, model.id, finalSetters) },
-            goBackward: { await self.delete(Model.self, model.id) }
+            goBackward: {
+                if persisted {
+                    await self.update(model, inverseSetters)
+                }
+                else {
+                    await self.delete(Model.self, model.id)
+                }
+                
+            }
         ))
     }
     
@@ -342,6 +355,7 @@ public actor Database {
     ) -> Bool {
         do {
             let finalSetters = setters + [Model.Schema.id <- id]
+            
                         
             try connection.run(
                 Model.Schema.baseExpression.upsert(finalSetters, onConflictOf: Model.Schema.id)
