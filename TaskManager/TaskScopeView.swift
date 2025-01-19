@@ -58,6 +58,7 @@ extension TaskScopeView {
                 } label: {
                     Text("Add a Task")
                 }
+                .buttonStyle(KillerBorderedButtonStyle())
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .foregroundStyle(.gray)
