@@ -65,6 +65,22 @@ extension TaskView {
                 }
         }
     }
+    
+    struct AddSubtaskButton: View {
+        @Environment(\.database) var database
+        @Environment(\.contextQuery) var query
+        @Environment(PendingTaskProvider.self) var newTaskContainer
+        
+        let task: KillerTask
+        
+        var body: some View {
+            Button.async {
+                await newTaskContainer.push(shortCircuit: true)
+            } label: {
+                Label("Add Subtask", systemImage: "arrow.turn.down.right")
+            }
+        }
+    }
 }
 
 struct TaskView: View {
@@ -135,23 +151,6 @@ struct TaskView: View {
         .fadeOutScrollTransition()
     }
 }
-
-struct AddSubtaskButton: View {
-    @Environment(\.database) var database
-    @Environment(\.contextQuery) var query
-    @Environment(PendingTaskProvider.self) var newTaskContainer
-    
-    let task: KillerTask
-    
-    var body: some View {
-        Button.async {
-            await newTaskContainer.push(shortCircuit: true)
-        } label: {
-            Label("Add Subtask", systemImage: "arrow.turn.down.right")
-        }
-    }
-}
-
 
 extension View {
     func fadeOutScrollTransition() -> some View {
