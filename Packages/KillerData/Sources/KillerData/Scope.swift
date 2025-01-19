@@ -6,6 +6,7 @@ extension Database {
     public struct Scope: Identifiable, Sendable {
         public let id: Int
         public let name: String
+        public let symbolName: String
         public let allowsTaskEntry: Bool
         
         public let apply: @Sendable (SQLite.Table) -> (SQLite.Table)
@@ -35,12 +36,14 @@ extension Database {
         
         fileprivate init(
             name: String,
+            symbolName: String = "list.bullet.indent",
             allowsTaskEntry: Bool = true,
             insertArguments: [Setter] = [],
             tableExpression: @escaping @Sendable (SQLite.Table) -> (SQLite.Table),
             modelScopingRules: @escaping @Sendable (KillerTask) -> (KillerTask)
         ) {
             self.name = name
+            self.symbolName = symbolName
             self.allowsTaskEntry = allowsTaskEntry
             self.insertProperties = insertArguments
             self.apply = tableExpression
@@ -57,6 +60,7 @@ extension Database {
             tableExpression: @escaping @Sendable (SQLite.Table) -> (SQLite.Table)
         ) {
             self.name = "Custom Scope"
+            self.symbolName = "list.bullet.indent"
             self.allowsTaskEntry = true
             self.insertProperties = []
             self.apply = tableExpression
@@ -85,6 +89,7 @@ extension Database {
         
         public static let completedTasks: Scope = .init(
             name: "Completed",
+            symbolName: "checkmark",
             insertArguments: [
                 Schema.Tasks.completedAt <- Date.now
             ],
@@ -137,6 +142,7 @@ extension Database {
         
         public static let deletedTasks: Scope = .init(
             name: "Deleted",
+            symbolName: "trash",
             allowsTaskEntry: false,
             insertArguments: [
                 Schema.Tasks.deletedAt <- Date.now

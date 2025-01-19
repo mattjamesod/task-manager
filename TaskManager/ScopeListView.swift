@@ -45,7 +45,7 @@ struct ScopeListView: View {
                         Button {
                             selectedScope = scope
                         } label: {
-                            Label(scope.name, systemImage: scope.name == "Completed" ? "pencil" : "list.bullet.indent")
+                            Label(scope.name, systemImage: scope.symbolName)
                                 .labelStyle(ScopeListLabelStyle(
                                     selected: scope == selectedScope,
                                     animationNamespace: namespace
