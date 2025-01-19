@@ -45,7 +45,7 @@ struct TaskView: View {
             
             VStack(alignment: .leading) {
                 TaskBodyField(task: self.task)
-                                
+                
                 if selection.chosen == task.id && !pending {
                     AddSubtaskButton(task: self.task)
                         .foregroundStyle(.gray)

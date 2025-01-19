@@ -52,6 +52,7 @@ extension KillerTask: SchemaBacked {
         Schema.parentID <- self.parentID,
         Schema.createdAt <- self.createdAt,
         Schema.updatedAt <- self.updatedAt,
+        Schema.deletedAt <- self.deletedAt,
     ] }
     
     static public func creationProperties() -> [Setter] { [
