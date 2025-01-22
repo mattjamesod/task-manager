@@ -90,6 +90,7 @@ extension Database {
         public static let completedTasks: Scope = .init(
             name: "Completed",
             symbolName: "checkmark",
+            allowsTaskEntry: false,
             insertArguments: [
                 Schema.Tasks.completedAt <- Date.now
             ],
