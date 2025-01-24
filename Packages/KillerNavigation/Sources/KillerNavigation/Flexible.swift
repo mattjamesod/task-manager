@@ -28,15 +28,13 @@ public extension KillerNavigation {
                 )
                 .environment(\.navigationSizeClass, .regular)
                 .frame(minWidth: KillerNavigation.flexibleBreakPoint)
-                
-                Rectangle().foregroundStyle(.gray)
-                
-//                KillerNavigation.Stack(
-//                    selection: $selection,
-//                    selectorView: selectorView,
-//                    contentView: contentView
-//                )
-//                .environment(\.navigationSizeClass, .compact)
+                                
+                KillerNavigation.Stack(
+                    selection: $selection,
+                    selectorView: selectorView,
+                    contentView: contentView
+                )
+                .environment(\.navigationSizeClass, .compact)
             }
         }
     }

@@ -43,9 +43,6 @@ struct TaskListView: View {
             await activeMonitor?.register(container: taskContainer)
         }
         .task {
-            self.taskContainer.tasks = []
-            self.pendingTaskProvider.clear()
-            
             guard let database else { return }
             
             let tasks = await database.fetch(
@@ -62,6 +59,10 @@ struct TaskListView: View {
             }
             
             await self.pendingTaskProvider.respondToChanges(on: database)
+        }
+        .onDisappear {
+            self.taskContainer.tasks = []
+            self.pendingTaskProvider.clear()
         }
         .onChange(of: pendingTaskProvider.task) {
             self.taskContainer.appendOrRemovePendingTask(pendingTaskProvider.task)
