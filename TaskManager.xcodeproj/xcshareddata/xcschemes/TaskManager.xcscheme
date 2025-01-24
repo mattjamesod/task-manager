@@ -15,6 +15,62 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "KillerModels"
+               BuildableName = "KillerModels"
+               BlueprintName = "KillerModels"
+               ReferencedContainer = "container:Packages/KillerModels">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "KillerData"
+               BuildableName = "KillerData"
+               BlueprintName = "KillerData"
+               ReferencedContainer = "container:Packages/KillerData">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "KillerNavigation"
+               BuildableName = "KillerNavigation"
+               BlueprintName = "KillerNavigation"
+               ReferencedContainer = "container:Packages/KillerNavigation">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "KillerStyle"
+               BuildableName = "KillerStyle"
+               BlueprintName = "KillerStyle"
+               ReferencedContainer = "container:Packages/KillerStyle">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "A055B5B92C25E52200BCB5C2"
                BuildableName = "TaskManager.app"
                BlueprintName = "TaskManager"

@@ -1,5 +1,4 @@
 import Foundation
-import CloudKit
 
 public struct KillerTask: Sendable, Identifiable, Equatable, Clonable, Timestamped {
     public static let maxBodyLength = 2000 //chars
