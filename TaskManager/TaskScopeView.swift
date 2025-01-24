@@ -66,6 +66,30 @@ extension TaskScopeView {
     }
 }
 
+struct AfterDurationViewModifier: ViewModifier {
+    private let duration: Duration
+    private let callback: () -> ()
+    
+    init(_ duration: Duration, _ callback: @escaping () -> ()) {
+        self.duration = duration
+        self.callback = callback
+    }
+    
+    func body(content: Content) -> some View {
+        content
+            .task {
+                try? await Task.sleep(for: self.duration)
+                callback()
+            }
+    }
+}
+
+extension View {
+    func after(_ duration: Duration, _ callback: @escaping () -> ()) -> some View {
+        self.modifier(AfterDurationViewModifier(duration, callback))
+    }
+}
+
 // shows a progress veiw if it's taking a while to render something else
 struct EventuallyProgressView: View {
     @State var takingAWhile = false
@@ -73,8 +97,7 @@ struct EventuallyProgressView: View {
     var body: some View {
         ProgressView()
             .opacity(takingAWhile ? 1 : 0)
-            .task {
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
+            .after(.seconds(1)) {
                 takingAWhile = true
             }
     }
@@ -97,7 +120,7 @@ struct TaskScopeView: View {
     }
     
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             TaskHierarchyView(scope: self.scope)
                 .environment(pendingTaskProvider)
                 .onChange(of: focusedTaskID) {
@@ -120,6 +143,10 @@ struct TaskScopeView: View {
                 EventuallyProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .transition(.scale(scale: 0.8).combined(with: .opacity))
+            }
+            
+            Button("break") {
+                print("-------")
             }
         }
         .animation(.bouncy(duration: 0.4), value: state)

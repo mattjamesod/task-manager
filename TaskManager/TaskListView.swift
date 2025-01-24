@@ -27,6 +27,10 @@ struct TaskListView: View {
         self.detailQuery = .children(of: parentID)
     }
     
+    var printID: String {
+        self.taskContainer.tasks.first?.id.uuidString ?? "nil"
+    }
+    
     var body: some View {
         TaskSpacing {
             ForEach(taskContainer.tasks) { task in
@@ -47,6 +51,7 @@ struct TaskListView: View {
             )
             
             self.taskContainer.tasks = tasks
+            print("\(printID): .onAppear (task)")
             
             // onChange will not do anything if an empty array is reassigned to empty array
             if tasks.count == 0 {
@@ -57,9 +62,11 @@ struct TaskListView: View {
             await self.pendingTaskProvider.respondToChanges(on: database)
         }
         .onChange(of: pendingTaskProvider.task) {
+            print("\(printID): .onChange(of: pendingTaskProvider.task)")
             self.taskContainer.appendOrRemovePendingTask(pendingTaskProvider.task)
         }
         .onChange(of: taskContainer.tasks) {
+            print("\(printID): .onChange(of: taskContainer.tasks)")
             let count = taskContainer.tasks.count
             self.pendingTaskProvider.onListChange(itemCount: count)
         }

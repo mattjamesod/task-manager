@@ -9,6 +9,14 @@ enum TaskContainerState: Equatable {
         if case .done(_) = self { true } else { false }
     }
     
+    var descrption: String {
+        switch self {
+        case .loading: "loading"
+        case .empty: "empty"
+        case .done(let itemCount): "\(itemCount) items"
+        }
+    }
+    
     static func combine(_ x: TaskContainerState, _ y: TaskContainerState) -> TaskContainerState {
         switch (x, y) {
             case (.empty, .empty): .empty

@@ -29,12 +29,14 @@ public extension KillerNavigation {
                 .environment(\.navigationSizeClass, .regular)
                 .frame(minWidth: KillerNavigation.flexibleBreakPoint)
                 
-                KillerNavigation.Stack(
-                    selection: $selection,
-                    selectorView: selectorView,
-                    contentView: contentView
-                )
-                .environment(\.navigationSizeClass, .compact)
+                Rectangle().foregroundStyle(.gray)
+                
+//                KillerNavigation.Stack(
+//                    selection: $selection,
+//                    selectorView: selectorView,
+//                    contentView: contentView
+//                )
+//                .environment(\.navigationSizeClass, .compact)
             }
         }
     }
