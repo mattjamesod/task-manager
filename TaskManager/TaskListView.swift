@@ -6,7 +6,6 @@ struct TaskListView: View {
     @Environment(\.database) var database
     @Environment(\.contextQuery) var contextQuery
     @Environment(\.taskListMonitor) var taskListMonitor
-    @Environment(Selection<KillerTask>.self) var selection
         
     @State var taskContainer: TaskContainer
     @State var loadState: TaskContainerState = .loading
@@ -27,10 +26,6 @@ struct TaskListView: View {
         self.detailQuery = .children(of: parentID)
     }
     
-    var printID: String {
-        self.taskContainer.tasks.first?.id.uuidString ?? "nil"
-    }
-    
     var body: some View {
         TaskSpacing {
             ForEach(taskContainer.tasks) { task in
@@ -40,29 +35,12 @@ struct TaskListView: View {
         }
         .animation(.bouncy(duration: 0.4), value: taskContainer.tasks)
         .task {
-            await activeMonitor?.register(container: taskContainer)
-        }
-        .task {
-            guard let database else { return }
-            
-            let tasks = await database.fetch(
-                KillerTask.self,
-                context: contextQuery?.compose(with: self.detailQuery)
-            )
-            
-            self.taskContainer.tasks = tasks
-            
-            // onChange will not do anything if an empty array is reassigned to empty array
-            if tasks.count == 0 {
-                self.loadState = .empty
-                pendingTaskProvider.clear()
-            }
-            
-            await self.pendingTaskProvider.respondToChanges(on: database)
+            await self.load()
         }
         .onDisappear {
-            self.taskContainer.tasks = []
-            self.pendingTaskProvider.clear()
+            Task {
+                await self.unload()
+            }
         }
         .onChange(of: pendingTaskProvider.task) {
             self.taskContainer.appendOrRemovePendingTask(pendingTaskProvider.task)
@@ -82,12 +60,37 @@ struct TaskListView: View {
             }
         }
         .taskListState(self.loadState)
-        .onDisappear {
-            Task {
-                await activeMonitor?.deregister(container: taskContainer)
-                guard let database else { return }
-                await pendingTaskProvider.stopMonitoring(database: database)
-            }
+    }
+    
+    private func load() async {
+        await activeMonitor?.register(container: taskContainer)
+        
+        guard let database else { return }
+        
+        let tasks = await database.fetch(
+            KillerTask.self,
+            context: contextQuery?.compose(with: self.detailQuery)
+        )
+        
+        self.taskContainer.tasks = tasks
+        
+        // onChange will not do anything if an empty array is reassigned to empty array
+        if tasks.count == 0 {
+            self.loadState = .empty
+            pendingTaskProvider.clear()
+        }
+        
+        await self.pendingTaskProvider.respondToChanges(on: database)
+    }
+    
+    private func unload() async {
+        self.taskContainer.tasks = []
+        self.pendingTaskProvider.clear()
+        
+        Task {
+            await activeMonitor?.deregister(container: taskContainer)
+            guard let database else { return }
+            await pendingTaskProvider.stopMonitoring(database: database)
         }
     }
     
