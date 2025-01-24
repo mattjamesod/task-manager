@@ -62,6 +62,9 @@ struct TaskHierarchyView: View {
             TaskListView(.orphaned, monitor: viewModel.orphanMonitor)
                 .environment(\.taskListMonitor, viewModel.taskListMonitor)
         }
+        .after(.seconds(0.2)) {
+            print("-------")
+        }
         .environment(\.contextQuery, viewModel.query)
         .task {
             guard let database else { return }

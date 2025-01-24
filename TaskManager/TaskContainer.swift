@@ -59,10 +59,10 @@ final class TaskContainer: SynchronisedStateContainer {
         if let pendingTask {
             self.tasks.append(pendingTask)
         }
-//        else {
-//            guard self.tasks.count > 0 else { return }
-//            self.tasks.removeLast()
-//        }
+        else {
+            guard self.tasks.count > 0 else { return }
+            self.tasks.removeLast()
+        }
     }
     
     private func insertIndex(of task: KillerTask) -> Int {

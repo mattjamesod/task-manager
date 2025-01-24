@@ -144,10 +144,6 @@ struct TaskScopeView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .transition(.scale(scale: 0.8).combined(with: .opacity))
             }
-            
-            Button("break") {
-                print("-------")
-            }
         }
         .animation(.bouncy(duration: 0.4), value: state)
         .containerPadding(axis: .horizontal)
