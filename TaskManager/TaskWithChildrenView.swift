@@ -3,8 +3,6 @@ import KillerData
 import KillerModels
 
 struct TaskWithChildrenView: View {
-    @Environment(\.focusedTaskID) var focusedTaskID
-    
     @State var pendingTaskProvider: PendingTaskProvider
     
     init(task: KillerTask, context: Database.Scope?) {
@@ -17,10 +15,12 @@ struct TaskWithChildrenView: View {
     let task: KillerTask
     
     var body: some View {
-        TaskSpacing {
+        Self._printChanges()
+        return TaskSpacing {
             TaskView(task: task)
-                .focused(focusedTaskID!, equals: task.id)
+                .id(task.id)
             TaskListView(parentID: task.id)
+                .id(task.id)
                 .padding(.leading, 24)
         }
         .environment(pendingTaskProvider)

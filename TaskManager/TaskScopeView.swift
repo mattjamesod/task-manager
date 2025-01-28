@@ -66,30 +66,6 @@ extension TaskScopeView {
     }
 }
 
-struct AfterDurationViewModifier: ViewModifier {
-    private let duration: Duration
-    private let callback: () -> ()
-    
-    init(_ duration: Duration, _ callback: @escaping () -> ()) {
-        self.duration = duration
-        self.callback = callback
-    }
-    
-    func body(content: Content) -> some View {
-        content
-            .task {
-                try? await Task.sleep(for: self.duration)
-                callback()
-            }
-    }
-}
-
-extension View {
-    func after(_ duration: Duration, _ callback: @escaping () -> ()) -> some View {
-        self.modifier(AfterDurationViewModifier(duration, callback))
-    }
-}
-
 // shows a progress veiw if it's taking a while to render something else
 struct EventuallyProgressView: View {
     @State var takingAWhile = false
@@ -162,6 +138,9 @@ struct TaskScopeView: View {
             .buttonStyle(KillerBorderedButtonStyle())
             .containerPadding(axis: .horizontal)
             .padding(.bottom, 8)
+        }
+        .after(.seconds(0.5)) {
+            print("----")
         }
         .onPreferenceChange(TaskContainerStateKey.self) { state in
             Task { @MainActor in

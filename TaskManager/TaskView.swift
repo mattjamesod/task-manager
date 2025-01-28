@@ -24,6 +24,7 @@ extension View {
 extension TaskView {
     struct CompleteOrDeleteMetaData: View {
         @Environment(\.taskCompleteButtonPosition) var desiredPosition
+        @Environment(\.tasksPending) var pending
         
         let thisPosition: CompleteButtonPosition
         let task: KillerTask
@@ -35,9 +36,15 @@ extension TaskView {
         
         var body: some View {
             if thisPosition == desiredPosition {
-                TaskCompleteCheckbox(task: self.task)
-                    .buttonStyle(KillerInlineButtonStyle())
-                    .id(task.instanceID)
+                ZStack {
+                    TaskCompleteCheckbox.Pending()
+                        .opacity(pending ? 1 : 0)
+                    
+                    TaskCompleteCheckbox(task: self.task)
+                        .buttonStyle(KillerInlineButtonStyle())
+                        .id(task.instanceID)
+                        .opacity(pending ? 0 : 1)
+                }
             }
             else if let deletedAt = self.task.deletedAt {
                 WillBeDeletedInMessage(deletedAt: deletedAt)
@@ -89,6 +96,7 @@ struct TaskView: View {
         case trailing
     }
     
+    @Environment(\.focusedTaskID) var focusedTaskID
     @Environment(\.database) var database
     @Environment(\.contextQuery) var contextQuery
     @Environment(\.tasksPending) var pending
@@ -119,7 +127,6 @@ struct TaskView: View {
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }
-            .animation(.easeInOut(duration: 0.2), value: selection.chosen)
             
             Spacer()
             
@@ -138,6 +145,7 @@ struct TaskView: View {
                 }
             }
         }
+        .animation(.easeInOut(duration: 0.2), value: selection.chosen)
         .transition(.asymmetric(
             insertion: .scale(scale: 0.95).combined(with: .opacity),
             removal: .move(edge: .leading).combined(with: .opacity)
@@ -156,6 +164,7 @@ struct TaskView: View {
                 Label("Delete", systemImage: "trash")
             }
         }
+        .focused(focusedTaskID!, equals: task.id)
         .fadeOutScrollTransition()
     }
 }

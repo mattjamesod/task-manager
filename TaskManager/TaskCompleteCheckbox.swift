@@ -10,6 +10,27 @@ import KillerData
 /// the checkbox should now be unchecked
 
 struct TaskCompleteCheckbox: View {
+    struct Pending: View {
+        @ScaledMetric private var checkboxWidth: Double = 16
+        @ScaledMetric private var checkboxBorderWidth: Double = 1.5
+        
+        var body: some View {
+            ZStack {
+                RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
+                    .strokeBorder(style: .init(
+                        lineWidth: self.checkboxBorderWidth, dash: [2]
+                    ))
+                    .foregroundStyle(.gray)
+                
+                RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
+                    .foregroundStyle(.clear)
+            }
+            .aspectRatio(1, contentMode: .fit)
+            .frame(width: self.checkboxWidth)
+            .contentShape(Rectangle())
+        }
+    }
+    
     @Environment(\.database) var database
     @Environment(\.contextQuery) var query
     @Environment(\.taskListMonitor) var taskListMonitor
@@ -19,7 +40,6 @@ struct TaskCompleteCheckbox: View {
     @ScaledMetric private var checkboxBorderWidth: Double = 1.5
     
     @State private var isOn: Bool = false
-    private var completedStyling: Bool { isOn && !pending }
     
     private let delay: Duration = .seconds(0.3)
     
@@ -35,22 +55,20 @@ struct TaskCompleteCheckbox: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
                         .strokeBorder(style: .init(
-                            lineWidth: completedStyling ? 0 : self.checkboxBorderWidth,
-                            dash: pending ? [2] : []
+                            lineWidth: isOn ? 0 : self.checkboxBorderWidth
                         ))
                         .foregroundStyle(.gray)
                     
                     RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
-                        .foregroundStyle(completedStyling ? Color.accentColor : .clear)
+                        .foregroundStyle(isOn ? Color.accentColor : .clear)
                     
-                    if completedStyling {
-                        Image(systemName: "checkmark")
-                            .resizable()
-                            .fontWeight(.bold)
-                            .foregroundStyle(.white)
-                            .padding(4)
-                            .transition(.scale)
-                    }
+                    Image(systemName: "checkmark")
+                        .resizable()
+                        .fontWeight(.bold)
+                        .foregroundStyle(.white)
+                        .padding(4)
+                        .scaleEffect(isOn ? 1 : 0.5)
+                        .opacity(isOn ? 1 : 0)
                 }
                 .aspectRatio(1, contentMode: .fit)
                 .frame(width: self.checkboxWidth)

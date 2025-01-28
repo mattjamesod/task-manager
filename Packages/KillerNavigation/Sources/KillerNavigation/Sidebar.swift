@@ -70,8 +70,6 @@ public extension KillerNavigation {
     }
 }
 
-
-
 public extension Notification.Name {
     static let toggleSidebar = Notification.Name("toggleSidebar")
 }
