@@ -10,6 +10,37 @@ import KillerData
 /// the checkbox should now be unchecked
 
 struct TaskCompleteCheckbox: View {
+    struct CheckedOrUnchecked: View {
+        @ScaledMetric private var checkboxWidth: Double = 16
+        @ScaledMetric private var checkboxBorderWidth: Double = 1.5
+        
+        @Binding var isOn: Bool
+        
+        var body: some View {
+            ZStack {
+                RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
+                    .strokeBorder(style: .init(
+                        lineWidth: isOn ? 0 : self.checkboxBorderWidth
+                    ))
+                    .foregroundStyle(.gray)
+                
+                RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
+                    .foregroundStyle(isOn ? Color.accentColor : .clear)
+                
+                Image(systemName: "checkmark")
+                    .resizable()
+                    .fontWeight(.bold)
+                    .foregroundStyle(.white)
+                    .padding(4)
+                    .scaleEffect(isOn ? 1 : 0.5)
+                    .opacity(isOn ? 1 : 0)
+            }
+            .aspectRatio(1, contentMode: .fit)
+            .frame(width: self.checkboxWidth)
+            .contentShape(Rectangle())
+        }
+    }
+    
     struct Pending: View {
         @ScaledMetric private var checkboxWidth: Double = 16
         @ScaledMetric private var checkboxBorderWidth: Double = 1.5
@@ -51,29 +82,7 @@ struct TaskCompleteCheckbox: View {
     
     var body: some View {
         Toggle(isOn: $isOn) {
-            HStack {
-                ZStack {
-                    RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
-                        .strokeBorder(style: .init(
-                            lineWidth: isOn ? 0 : self.checkboxBorderWidth
-                        ))
-                        .foregroundStyle(.gray)
-                    
-                    RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
-                        .foregroundStyle(isOn ? Color.accentColor : .clear)
-                    
-                    Image(systemName: "checkmark")
-                        .resizable()
-                        .fontWeight(.bold)
-                        .foregroundStyle(.white)
-                        .padding(4)
-                        .scaleEffect(isOn ? 1 : 0.5)
-                        .opacity(isOn ? 1 : 0)
-                }
-                .aspectRatio(1, contentMode: .fit)
-                .frame(width: self.checkboxWidth)
-                .contentShape(Rectangle())
-            }
+            CheckedOrUnchecked(isOn: self.$isOn)
         }
         .disabled(pending)
         .sensoryFeedback(.success, trigger: isOn)
