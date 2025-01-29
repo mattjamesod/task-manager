@@ -37,10 +37,10 @@ extension TaskView {
         var body: some View {
             if thisPosition == desiredPosition {
                 ZStack {
-                    TaskCompleteCheckbox.Pending()
+                    TaskCheckbox.Pending()
                         .opacity(pending ? 1 : 0)
                     
-                    TaskCompleteCheckbox(task: self.task)
+                    TaskCheckbox(task: self.task)
                         .buttonStyle(KillerInlineButtonStyle())
                         .id(task.instanceID)
                         .opacity(pending ? 0 : 1)

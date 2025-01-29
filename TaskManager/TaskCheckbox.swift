@@ -9,62 +9,16 @@ import KillerData
 /// Since in both instances of the view, completed\_at is nil, the view is not re-rendered... even though
 /// the checkbox should now be unchecked
 
-struct TaskCompleteCheckbox: View {
-    struct Interactive: View {
-        @ScaledMetric private var checkboxWidth: Double = 16
-        @ScaledMetric private var checkboxBorderWidth: Double = 1.5
-        
-        @Binding var isOn: Bool
-        
-        var body: some View {
-            ZStack {
-                RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
-                    .strokeBorder(style: .init(
-                        lineWidth: isOn ? 0 : self.checkboxBorderWidth
-                    ))
-                    .foregroundStyle(.gray)
-                
-                RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
-                    .foregroundStyle(isOn ? Color.accentColor : .clear)
-                
-                Image(systemName: "checkmark")
-                    .resizable()
-                    .fontWeight(.bold)
-                    .foregroundStyle(.white)
-                    .padding(4)
-                    .scaleEffect(isOn ? 1 : 0.5)
-                    .opacity(isOn ? 1 : 0)
-            }
-            .aspectRatio(1, contentMode: .fit)
-            .frame(width: self.checkboxWidth)
-            .contentShape(Rectangle())
-        }
-    }
+struct TaskCheckbox: View {
+    static let WIDTH: Double = 16
+    static let BORDER_WIDTH: Double = 1.5
     
-    struct Pending: View {
-        @ScaledMetric private var checkboxWidth: Double = 16
-        @ScaledMetric private var checkboxBorderWidth: Double = 1.5
-        
-        var body: some View {
-            ZStack {
-                RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
-                    .strokeBorder(style: .init(
-                        lineWidth: self.checkboxBorderWidth, dash: [2]
-                    ))
-                    .foregroundStyle(.gray)
-                
-                RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
-                    .foregroundStyle(.clear)
-            }
-            .aspectRatio(1, contentMode: .fit)
-            .frame(width: self.checkboxWidth)
-            .contentShape(Rectangle())
-        }
-    }
+    @ScaledMetric private var checkboxWidth: Double = WIDTH
+    @ScaledMetric private var checkboxBorderWidth: Double = BORDER_WIDTH
     
     @Environment(\.database) var database
     @Environment(\.contextQuery) var query
-    
+        
     @State private var isOn: Bool = false
     
     private let delay: Duration = .seconds(0.3)
@@ -77,7 +31,27 @@ struct TaskCompleteCheckbox: View {
     
     var body: some View {
         Toggle(isOn: $isOn) {
-            Interactive(isOn: self.$isOn)
+            ZStack {
+                RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
+                    .strokeBorder(style: .init(
+                        lineWidth: isOn ? 0 : self.checkboxBorderWidth
+                    ))
+                    .foregroundStyle(.gray)
+            
+                RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
+                    .foregroundStyle(isOn ? Color.accentColor : .clear)
+            
+                Image(systemName: "checkmark")
+                    .resizable()
+                    .fontWeight(.bold)
+                    .foregroundStyle(.white)
+                    .padding(4)
+                    .scaleEffect(isOn ? 1 : 0.5)
+                    .opacity(isOn ? 1 : 0)
+            }
+            .aspectRatio(1, contentMode: .fit)
+            .frame(width: self.checkboxWidth)
+            .contentShape(Rectangle())
         }
         .sensoryFeedback(.success, trigger: isOn)
         .animation(.snappy(duration: 0.1), value: isOn)
