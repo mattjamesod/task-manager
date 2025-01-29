@@ -74,17 +74,47 @@ extension TaskView {
     }
     
     struct AddSubtaskButton: View {
-        @Environment(\.database) var database
-        @Environment(\.contextQuery) var query
         @Environment(PendingTaskProvider.self) var newTaskContainer
+        @Environment(Selection<KillerTask>.self) var selection
         
         let task: KillerTask
         
+        init(for task: KillerTask) {
+            self.task = task
+        }
+        
         var body: some View {
-            Button.async {
-                await newTaskContainer.push(shortCircuit: true)
-            } label: {
-                Label("Add Subtask", systemImage: "arrow.turn.down.right")
+            HStack {
+                if selection.chosen == task.id {
+                    Button.async {
+                        await newTaskContainer.push(shortCircuit: true)
+                    } label: {
+                        Label("Add Subtask", systemImage: "arrow.turn.down.right")
+                    }
+                    .foregroundStyle(.gray)
+                    .buttonStyle(KillerInlineButtonStyle())
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+                else {
+                    EmptyView()
+                }
+            }
+            .animation(.easeInOut(duration: 0.2), value: selection.chosen)
+        }
+    }
+    
+    struct SelectionBackground: View {
+        @Environment(Selection<KillerTask>.self) var selection
+        let task: KillerTask
+        
+        var body: some View {
+            ZStack {
+                Rectangle()
+                    .foregroundStyle(Color.clear)
+                if selection.ids.contains(task.id) {
+                    RoundedRectangle(cornerRadius: 12)
+                        .foregroundStyle(.ultraThinMaterial)
+                }
             }
         }
     }
@@ -100,32 +130,21 @@ struct TaskView: View {
     @Environment(\.database) var database
     @Environment(\.contextQuery) var contextQuery
     @Environment(\.tasksPending) var pending
-    @Environment(\.taskCompleteButtonPosition) var completeButtonPosition
-    @Environment(Selection<KillerTask>.self) var selection
         
     let task: KillerTask
     
     // TODO: return false if task already has children
     private var showSubtaskButton: Bool {
-        let allowsTaskEntry = contextQuery?.allowsTaskEntry ?? false
-        let shouldEverShowButton = !pending && allowsTaskEntry
-        
-        return shouldEverShowButton && selection.chosen == task.id
+        !pending && (contextQuery?.allowsTaskEntry ?? false)
     }
     
     var body: some View {
-        HStack {
+        HStack(spacing: 8) {
             CompleteOrDeleteMetaData(.leading, task: task)
             
             VStack(alignment: .leading) {
                 TaskBodyField(task: self.task)
-                
-                if showSubtaskButton {
-                    AddSubtaskButton(task: self.task)
-                        .foregroundStyle(.gray)
-                        .buttonStyle(KillerInlineButtonStyle())
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                }
+                if showSubtaskButton { AddSubtaskButton(for: self.task) }
             }
             
             Spacer()
@@ -135,17 +154,7 @@ struct TaskView: View {
         .fixedSize(horizontal: false, vertical: true)
         .containerPadding()
         .contentShape(Rectangle())
-        .background {
-            ZStack {
-                Rectangle()
-                    .foregroundStyle(Color.clear)
-                if selection.ids.contains(task.id) {
-                    RoundedRectangle(cornerRadius: 12)
-                        .foregroundStyle(.ultraThinMaterial)
-                }
-            }
-        }
-        .animation(.easeInOut(duration: 0.2), value: selection.chosen)
+        .background(SelectionBackground(task: self.task))
         .transition(.asymmetric(
             insertion: .scale(scale: 0.95).combined(with: .opacity),
             removal: .move(edge: .leading).combined(with: .opacity)
