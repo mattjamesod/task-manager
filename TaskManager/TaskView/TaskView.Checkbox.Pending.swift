@@ -1,9 +1,9 @@
 import SwiftUI
 
-extension TaskCheckbox {
+extension TaskView.Checkbox {
     struct Pending: View {
-        @ScaledMetric private var checkboxWidth: Double = TaskCheckbox.WIDTH
-        @ScaledMetric private var checkboxBorderWidth: Double = TaskCheckbox.BORDER_WIDTH
+        @ScaledMetric private var checkboxWidth: Double = TaskView.Checkbox.WIDTH
+        @ScaledMetric private var checkboxBorderWidth: Double = TaskView.Checkbox.BORDER_WIDTH
         
         var body: some View {
             ZStack {
