@@ -10,7 +10,7 @@ import KillerData
 /// the checkbox should now be unchecked
 
 struct TaskCompleteCheckbox: View {
-    struct CheckedOrUnchecked: View {
+    struct Interactive: View {
         @ScaledMetric private var checkboxWidth: Double = 16
         @ScaledMetric private var checkboxBorderWidth: Double = 1.5
         
@@ -64,11 +64,6 @@ struct TaskCompleteCheckbox: View {
     
     @Environment(\.database) var database
     @Environment(\.contextQuery) var query
-    @Environment(\.taskListMonitor) var taskListMonitor
-    @Environment(\.tasksPending) var pending
-    
-    @ScaledMetric private var checkboxWidth: Double = 16
-    @ScaledMetric private var checkboxBorderWidth: Double = 1.5
     
     @State private var isOn: Bool = false
     
@@ -82,9 +77,8 @@ struct TaskCompleteCheckbox: View {
     
     var body: some View {
         Toggle(isOn: $isOn) {
-            CheckedOrUnchecked(isOn: self.$isOn)
+            Interactive(isOn: self.$isOn)
         }
-        .disabled(pending)
         .sensoryFeedback(.success, trigger: isOn)
         .animation(.snappy(duration: 0.1), value: isOn)
         .toggleStyle(.button)
