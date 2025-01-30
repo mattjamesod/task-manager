@@ -5,7 +5,6 @@ import KillerData
 struct TaskListView: View {
     @Environment(\.database) var database
     @Environment(\.contextQuery) var contextQuery
-    @Environment(\.taskListMonitor) var taskListMonitor
         
     @State var taskContainer: TaskContainer
     @State var loadState: TaskContainerState = .loading
@@ -20,14 +19,15 @@ struct TaskListView: View {
         self.detailQuery = detailQuery
     }
     
-    init(parentID: UUID?) {
+    init(parentID: UUID?, monitor: QueryMonitor<TaskContainer>?) {
         self.taskContainer = TaskContainer(filter: { $0.parentID == parentID })
-        self.monitor = nil
+        self.monitor = monitor
         self.detailQuery = .children(of: parentID)
     }
     
     var body: some View {
-        TaskSpacing {
+        print(self.taskContainer.tasks.first?.body ?? "")
+        return TaskSpacing {
             ForEach(taskContainer.tasks, id: \.id) { task in
                 TaskWithChildrenView(task: task, context: contextQuery)
                     .tasksPending(task.id == pendingTaskProvider.task?.id)
@@ -63,7 +63,7 @@ struct TaskListView: View {
     }
     
     private func load() async {
-        await activeMonitor?.register(container: taskContainer)
+        await self.monitor?.register(container: taskContainer)
         
         guard let database else { return }
         
@@ -90,14 +90,10 @@ struct TaskListView: View {
         self.pendingTaskProvider.clear()
         
         Task {
-            await activeMonitor?.deregister(container: taskContainer)
+            await self.monitor?.deregister(container: taskContainer)
             guard let database else { return }
             await pendingTaskProvider.stopMonitoring(database: database)
         }
-    }
-    
-    private var activeMonitor: QueryMonitor<TaskContainer>? {
-        self.monitor ?? taskListMonitor
     }
 }
 

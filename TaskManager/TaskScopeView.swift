@@ -16,6 +16,11 @@ final class Selection<T: Identifiable> {
         ids.last
     }
     
+    func repeatedlyChoose(_ obj: T) {
+        guard ids.first != obj.id else { return }
+        choose(obj)
+    }
+    
     func choose(_ obj: T) {
         choose(id: obj.id)
     }
@@ -38,10 +43,10 @@ final class Selection<T: Identifiable> {
             ids.remove(at: index)
         }
     }
-}
-
-extension EnvironmentValues {
-    @Entry var focusedTaskID: FocusState<KillerTask.ID?>.Binding?
+    
+    func clear() {
+        self.ids = []
+    }
 }
 
 extension TaskScopeView {
@@ -83,7 +88,6 @@ struct TaskScopeView: View {
     @Environment(\.database) var database
     @Environment(\.navigationSizeClass) var navigationSizeClass
     
-    @FocusState var focusedTaskID: KillerTask.ID?
     @State var taskSelection = Selection<KillerTask>()
     @State var state: TaskContainerState = .loading
     @State var pendingTaskProvider: PendingTaskProvider
@@ -99,14 +103,6 @@ struct TaskScopeView: View {
         ZStack(alignment: .top) {
             TaskHierarchyView(scope: self.scope)
                 .environment(pendingTaskProvider)
-                .onChange(of: focusedTaskID) {
-                    Task {
-                        try? await Task.sleep(for: .seconds(0.1))
-                        Task { @MainActor in
-                            taskSelection.choose(id: focusedTaskID)
-                        }
-                    }
-                }
                 .opacity(state.isDone ? 1 : 0)
                 
             if state == .empty {
@@ -125,7 +121,7 @@ struct TaskScopeView: View {
         .containerPadding(axis: .horizontal)
         .safeAreaInset(edge: .bottom) {
             HStack {
-                if focusedTaskID != nil {
+                if taskSelection.chosen != nil {
                     DoneButton()
                 }
                 Spacer()
@@ -139,26 +135,22 @@ struct TaskScopeView: View {
             .containerPadding(axis: .horizontal)
             .padding(.bottom, 8)
         }
-        .after(.seconds(0.5)) {
-            print("----")
-        }
         .onPreferenceChange(TaskContainerStateKey.self) { state in
             Task { @MainActor in
                 self.state = state
             }
         }
-        .environment(\.focusedTaskID, $focusedTaskID)
         .environment(taskSelection)
     }
 }
 
 struct DoneButton: View {
+    @Environment(Selection<KillerTask>.self) var selection
     @Environment(\.database) var database
-    @Environment(\.focusedTaskID) var focusedTaskID
     
     var body: some View {
         Button("Done") {
-            focusedTaskID?.wrappedValue = nil
+            selection.clear()
         }
         .keyboardShortcut(.escape, modifiers: [])
     }

@@ -3,6 +3,9 @@ import KillerData
 import KillerModels
 
 struct TaskWithChildrenView: View {
+    @Environment(Selection<KillerTask>.self) var selection
+    @Environment(\.taskListMonitor) var taskListMonitor
+    
     @State var pendingTaskProvider: PendingTaskProvider
     
     init(task: KillerTask, context: Database.Scope?) {
@@ -15,11 +18,13 @@ struct TaskWithChildrenView: View {
     let task: KillerTask
     
     var body: some View {
-        Self._printChanges()
-        return TaskSpacing {
+        TaskSpacing {
             TaskView(task: task)
                 .id(task.id)
-            TaskListView(parentID: task.id)
+                .onTapGesture {
+                    selection.repeatedlyChoose(self.task)
+                }
+            TaskListView(parentID: task.id, monitor: taskListMonitor)
                 .id(task.id)
                 .padding(.leading, 24)
         }

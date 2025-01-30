@@ -19,7 +19,6 @@ struct TaskView: View {
         case trailing
     }
     
-    @Environment(\.focusedTaskID) var focusedTaskID
     @Environment(\.database) var database
     @Environment(\.contextQuery) var contextQuery
     @Environment(\.tasksPending) var pending
@@ -36,7 +35,7 @@ struct TaskView: View {
             CompleteOrDeleteMetaData(.leading, task: task)
             
             VStack(alignment: .leading) {
-                BodyField(task: self.task)
+                BodyView(task: self.task)
                 if showSubtaskButton {
                     AddSubtaskButton(for: self.task)
                 }
@@ -68,7 +67,6 @@ struct TaskView: View {
                 Label("Delete", systemImage: "trash")
             }
         }
-        .focused(focusedTaskID!, equals: task.id)
         .fadeOutScrollTransition()
     }
 }

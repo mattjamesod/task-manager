@@ -13,6 +13,7 @@ public extension KillerNavigation {
         @Environment(\.appearsActive) var appearsActive
 #endif
         
+        @Binding var selectionCache: [Selection]
         @Binding var selection: Selection?
         
         let selectorView: (Binding<Selection?>) -> SelectorView
@@ -23,10 +24,12 @@ public extension KillerNavigation {
         
         public init(
             selection: Binding<Selection?>,
+            selectionCache: Binding<[Selection]>,
             selectorView: @escaping (Binding<Selection?>) -> SelectorView,
             contentView: @escaping (Selection) -> ContentView
         ) {
             self._selection = selection
+            self._selectionCache = selectionCache
             self.selectorView = selectorView
             self.contentView = contentView
         }
@@ -42,12 +45,10 @@ public extension KillerNavigation {
                 }
                 
                 ZStack {
-                    if let selection {
+                    ForEach(selectionCache, id: \.hashValue) { selection in
                         contentView(selection)
                             .id(selection)
-                    }
-                    else {
-                        NoContentView()
+                            .opacity(selection == self.selection ? 1 : 0)
                     }
                 }
                 .frame(minWidth: KillerNavigation.sidebarContentMinWidth)
