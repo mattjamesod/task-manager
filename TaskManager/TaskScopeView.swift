@@ -4,51 +4,6 @@ import KillerStyle
 import KillerModels
 import KillerData
 
-@Observable @MainActor
-final class Selection<T: Identifiable> {
-    private(set) var ids: [T.ID] = []
-    
-    var chosen: T.ID? {
-        ids.count == 1 ? ids.first! : nil
-    }
-    
-    var last: T.ID? {
-        ids.last
-    }
-    
-    func repeatedlyChoose(_ obj: T) {
-        guard ids.first != obj.id else { return }
-        choose(obj)
-    }
-    
-    func choose(_ obj: T) {
-        choose(id: obj.id)
-    }
-    
-    func choose(id: T.ID?) {
-        if id == nil {
-            ids.removeAll()
-        }
-        else if let index = ids.firstIndex(of: id!) {
-            ids.remove(at: index)
-        }
-        else {
-            ids.removeAll()
-            ids.append(id!)
-        }
-    }
-    
-    func remove(_ obj: T) {
-        if let index = ids.firstIndex(of: obj.id) {
-            ids.remove(at: index)
-        }
-    }
-    
-    func clear() {
-        self.ids = []
-    }
-}
-
 extension TaskScopeView {
     struct EmptyView: View {
         @Environment(PendingTaskProvider.self) var newTaskContainer
@@ -71,7 +26,7 @@ extension TaskScopeView {
     }
 }
 
-// shows a progress veiw if it's taking a while to render something else
+// shows a progress view if it's taking a while to render something else
 struct EventuallyProgressView: View {
     @State var takingAWhile = false
     

@@ -22,7 +22,7 @@ struct TaskWithChildrenView: View {
             TaskView(task: task)
                 .id(task.id)
                 .onTapGesture {
-                    selection.repeatedlyChoose(self.task)
+                    selection.choose(self.task)
                 }
             TaskListView(parentID: task.id, monitor: taskListMonitor)
                 .id(task.id)
