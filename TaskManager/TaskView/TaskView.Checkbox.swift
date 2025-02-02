@@ -28,10 +28,12 @@ extension TaskView {
         
         init(task: KillerTask) {
             self.task = task
+            self._isOn = State(initialValue: task.isComplete)
         }
         
         var body: some View {
-            Toggle(isOn: $isOn) {
+            Self._printChanges()
+            return Toggle(isOn: $isOn) {
                 ZStack {
                     RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
                         .strokeBorder(style: .init(
@@ -57,7 +59,7 @@ extension TaskView {
             .sensoryFeedback(.success, trigger: isOn)
             .animation(.snappy(duration: 0.1), value: isOn)
             .toggleStyle(.button)
-            .onLocalChange(of: $isOn, source: task.isComplete, setupFromSource: true) {
+            .onLocalChange(of: $isOn, source: task.isComplete) {
                 let isOn = self.isOn
                 
                 Task.detached {

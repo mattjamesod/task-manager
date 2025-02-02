@@ -88,6 +88,6 @@ struct ScopeListLabelStyle: LabelStyle {
         }
         .containerPadding(axis: .horizontal)
         .contentShape(Rectangle())
-        .animation(.interactiveSpring(duration: 0.1), value: self.selected)
+        .animation(.snappy(duration: 0.05), value: self.selected)
     }
 }
