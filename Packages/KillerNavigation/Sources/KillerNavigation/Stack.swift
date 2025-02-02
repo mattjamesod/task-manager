@@ -30,20 +30,34 @@ public extension KillerNavigation {
                 
                 // Group is weird here for unknown reasons, the animations don't play
                 ZStack {
-                    ForEach(selectionCache, id: \.hashValue) { selection in
-                        contentView(selection)
-                            .backgroundFill()
-                            .safeAreaPadding(.top, 12)
-                            .safeAreaInset(edge: .top) {
-                                self.backButton
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .buttonStyle(KillerInlineButtonStyle())
-                            }
-                            .geometryGroup()
-                            .id(selection)
-                            .opacity(selection == self.selection ? 1 : 0)
-                            .transition(.move(edge: .trailing))
-                    }
+                        if let selection {
+                            contentView(selection)
+                                .backgroundFill()
+                                .safeAreaPadding(.top, 12)
+                                .safeAreaInset(edge: .top) {
+                                    self.backButton
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .buttonStyle(KillerInlineButtonStyle())
+                                }
+                                .geometryGroup()
+                                .id(selection)
+                                .opacity(selection == self.selection ? 1 : 0)
+                                .transition(.move(edge: .trailing))
+                        }
+//                    ForEach(selectionCache, id: \.hashValue) { selection in
+//                        contentView(selection)
+//                            .backgroundFill()
+//                            .safeAreaPadding(.top, 12)
+//                            .safeAreaInset(edge: .top) {
+//                                self.backButton
+//                                    .frame(maxWidth: .infinity, alignment: .leading)
+//                                    .buttonStyle(KillerInlineButtonStyle())
+//                            }
+//                            .geometryGroup()
+//                            .id(selection)
+//                            .opacity(selection == self.selection ? 1 : 0)
+//                            .transition(.move(edge: .trailing))
+//                    }
                 }
                 .onEdgeSwipe { selection = nil }
             }

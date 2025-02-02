@@ -45,11 +45,15 @@ public extension KillerNavigation {
                 }
                 
                 ZStack {
-                    ForEach(selectionCache, id: \.hashValue) { selection in
+                    if let selection {
                         contentView(selection)
                             .id(selection)
-                            .opacity(selection == self.selection ? 1 : 0)
                     }
+//                    ForEach(selectionCache, id: \.hashValue) { selection in
+//                        contentView(selection)
+//                            .id(selection)
+//                            .opacity(selection == self.selection ? 1 : 0)
+//                    }
                 }
                 .frame(minWidth: KillerNavigation.sidebarContentMinWidth)
             }
