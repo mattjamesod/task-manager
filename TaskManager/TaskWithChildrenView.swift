@@ -3,9 +3,7 @@ import KillerData
 import KillerModels
 
 struct TaskWithChildrenView: View {
-    @Environment(Selection<KillerTask>.self) var selection
     @Environment(\.taskListMonitor) var taskListMonitor
-    
     @State var pendingTaskProvider: PendingTaskProvider
     
     init(task: KillerTask, context: Database.Scope?) {
@@ -21,13 +19,36 @@ struct TaskWithChildrenView: View {
         TaskSpacing {
             TaskView(task: task)
                 .id(task.id)
-                .onTapGesture {
-                    selection.choose(self.task)
-                }
             TaskListView(parentID: task.id, monitor: taskListMonitor)
                 .id(task.id)
                 .padding(.leading, 24)
         }
         .environment(pendingTaskProvider)
+    }
+}
+
+struct AllowsTaskSelectionViewModifier: ViewModifier {
+    @Environment(Selection<KillerTask>.self) var selection
+    @FocusState var isFocused: Bool
+    
+    init(task: KillerTask) {
+        self.task = task
+    }
+    
+    let task: KillerTask
+    
+    func body(content: Content) -> some View {
+        content
+            .focused($isFocused)
+            .onTapGesture {
+                isFocused = true
+                selection.choose(self.task)
+            }
+    }
+}
+
+extension View {
+    func allowsTaskSelection(of task: KillerTask) -> some View {
+        self.modifier(AllowsTaskSelectionViewModifier(task: task))
     }
 }

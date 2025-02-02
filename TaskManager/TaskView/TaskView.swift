@@ -49,6 +49,7 @@ struct TaskView: View {
         .containerPadding()
         .contentShape(Rectangle())
         .background(SelectionBackground(task: self.task))
+        .allowsTaskSelection(of: task)
         .transition(.asymmetric(
             insertion: .scale(scale: 0.95).combined(with: .opacity),
             removal: .move(edge: .leading).combined(with: .opacity)
