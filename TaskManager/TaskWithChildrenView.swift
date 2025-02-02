@@ -2,53 +2,32 @@ import SwiftUI
 import KillerData
 import KillerModels
 
-struct TaskWithChildrenView: View {
+extension View {
+    func withChildren(of task: KillerTask, context: Database.Scope? = nil) -> some View {
+        modifier(WithChildrenOfTaskViewModifier(task: task, context: context))
+    }
+}
+
+struct WithChildrenOfTaskViewModifier: ViewModifier {
     @Environment(\.taskListMonitor) var taskListMonitor
     @State var pendingTaskProvider: PendingTaskProvider
     
     init(task: KillerTask, context: Database.Scope?) {
         self.task = task
         
-        let listContext = context?.compose(with: .children(of: task.id))
+        let listContext = Database.Scope.children(of: task.id).compose(with: context)
         self.pendingTaskProvider = .init(listContext: listContext)
     }
     
     let task: KillerTask
     
-    var body: some View {
+    func body(content: Content) -> some View {
         TaskSpacing {
-            TaskView(task: task)
+            content
                 .id(task.id)
             TaskListView(parentID: task.id, monitor: taskListMonitor)
-                .id(task.id)
                 .padding(.leading, 24)
         }
         .environment(pendingTaskProvider)
-    }
-}
-
-struct AllowsTaskSelectionViewModifier: ViewModifier {
-    @Environment(Selection<KillerTask>.self) var selection
-    @FocusState var isFocused: Bool
-    
-    init(task: KillerTask) {
-        self.task = task
-    }
-    
-    let task: KillerTask
-    
-    func body(content: Content) -> some View {
-        content
-            .focused($isFocused)
-            .onTapGesture {
-                isFocused = true
-                selection.choose(self.task)
-            }
-    }
-}
-
-extension View {
-    func allowsTaskSelection(of task: KillerTask) -> some View {
-        self.modifier(AllowsTaskSelectionViewModifier(task: task))
     }
 }

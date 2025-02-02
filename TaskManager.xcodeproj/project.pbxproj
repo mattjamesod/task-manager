@@ -21,6 +21,7 @@
 		A04E9EFE2D4AA50F00313133 /* TaskView.SelectionBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = A04E9EFD2D4AA50900313133 /* TaskView.SelectionBackground.swift */; };
 		A04E9F012D4BB2B400313133 /* TaskView.BodyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A04E9F002D4BB27000313133 /* TaskView.BodyView.swift */; };
 		A04E9F032D4C144200313133 /* Selection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A04E9F022D4C144000313133 /* Selection.swift */; };
+		A04E9F052D4F6FED00313133 /* AllowsTaskSelectionViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A04E9F042D4F6FE500313133 /* AllowsTaskSelectionViewModifier.swift */; };
 		A05115712C2DC08900923202 /* KillerModels in Frameworks */ = {isa = PBXBuildFile; productRef = A05115702C2DC08900923202 /* KillerModels */; };
 		A055B5BE2C25E52200BCB5C2 /* TaskManagerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */; };
 		A055B5C02C25E52200BCB5C2 /* TaskScopeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A055B5BF2C25E52200BCB5C2 /* TaskScopeView.swift */; };
@@ -77,6 +78,7 @@
 		A04E9EFD2D4AA50900313133 /* TaskView.SelectionBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskView.SelectionBackground.swift; sourceTree = "<group>"; };
 		A04E9F002D4BB27000313133 /* TaskView.BodyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskView.BodyView.swift; sourceTree = "<group>"; };
 		A04E9F022D4C144000313133 /* Selection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Selection.swift; sourceTree = "<group>"; };
+		A04E9F042D4F6FE500313133 /* AllowsTaskSelectionViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AllowsTaskSelectionViewModifier.swift; sourceTree = "<group>"; };
 		A055B5BA2C25E52200BCB5C2 /* TaskManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TaskManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManagerApp.swift; sourceTree = "<group>"; };
 		A055B5BF2C25E52200BCB5C2 /* TaskScopeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskScopeView.swift; sourceTree = "<group>"; };
@@ -147,6 +149,7 @@
 				A04E9EF92D4AA49000313133 /* TaskView.AddSubtaskButton.swift */,
 				A04E9EF72D4AA42A00313133 /* TaskView.CompleteOrDeleteMetaData.swift */,
 				A04E9EFB2D4AA4D600313133 /* TaskView.WillBeDeletedInMessage.swift */,
+				A04E9F042D4F6FE500313133 /* AllowsTaskSelectionViewModifier.swift */,
 			);
 			path = TaskView;
 			sourceTree = "<group>";
@@ -373,6 +376,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A0891AD62D36D8550044AE63 /* TaskWithChildrenView.swift in Sources */,
+				A04E9F052D4F6FED00313133 /* AllowsTaskSelectionViewModifier.swift in Sources */,
 				A055B5C02C25E52200BCB5C2 /* TaskScopeView.swift in Sources */,
 				A031618C2CA53E450031B2E6 /* AboutView.swift in Sources */,
 				A09BB03D2CD165FE00740468 /* TaskView.Checkbox.swift in Sources */,

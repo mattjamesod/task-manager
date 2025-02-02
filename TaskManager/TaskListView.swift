@@ -26,10 +26,10 @@ struct TaskListView: View {
     }
     
     var body: some View {
-        print(self.taskContainer.tasks.first?.body ?? "")
-        return TaskSpacing {
+        TaskSpacing {
             ForEach(taskContainer.tasks, id: \.id) { task in
-                TaskWithChildrenView(task: task, context: contextQuery)
+                TaskView(task: task)
+                    .withChildren(of: task, context: contextQuery)
                     .tasksPending(task.id == pendingTaskProvider.task?.id)
             }
         }
@@ -63,11 +63,10 @@ struct TaskListView: View {
     }
     
     private func load() async {
+        self.loadState = .loading
         await self.monitor?.register(container: taskContainer)
         
         guard let database else { return }
-        
-//        try? await Task.sleep(for: .seconds(0.1))
         
         let tasks = await database.fetch(
             KillerTask.self,
@@ -86,7 +85,7 @@ struct TaskListView: View {
     }
     
     private func unload() async {
-//        self.taskContainer.tasks = []
+        self.taskContainer.tasks = []
         self.pendingTaskProvider.clear()
         
         Task {
