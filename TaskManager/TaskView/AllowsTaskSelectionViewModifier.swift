@@ -1,7 +1,13 @@
 import SwiftUI
 import KillerModels
 
-struct AllowsTaskSelectionViewModifier: ViewModifier {
+extension View {
+    func allowsTaskSelection(of task: KillerTask) -> some View {
+        self.modifier(AllowsTaskSelectionViewModifier(task: task))
+    }
+}
+
+fileprivate struct AllowsTaskSelectionViewModifier: ViewModifier {
     @Environment(Selection<KillerTask>.self) var selection
     @FocusState var isFocused: Bool
     
@@ -21,8 +27,3 @@ struct AllowsTaskSelectionViewModifier: ViewModifier {
     }
 }
 
-extension View {
-    func allowsTaskSelection(of task: KillerTask) -> some View {
-        self.modifier(AllowsTaskSelectionViewModifier(task: task))
-    }
-}

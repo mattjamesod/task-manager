@@ -8,7 +8,7 @@ extension View {
     }
 }
 
-struct WithChildrenOfTaskViewModifier: ViewModifier {
+fileprivate struct WithChildrenOfTaskViewModifier: ViewModifier {
     @Environment(\.taskListMonitor) var taskListMonitor
     @State var pendingTaskProvider: PendingTaskProvider
     
