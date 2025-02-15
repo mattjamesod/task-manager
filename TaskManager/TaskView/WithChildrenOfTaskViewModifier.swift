@@ -15,7 +15,7 @@ fileprivate struct WithChildrenOfTaskViewModifier: ViewModifier {
     init(task: KillerTask, context: Database.Scope?) {
         self.task = task
         
-        let listContext = Database.Scope.children(of: task.id).compose(with: context)
+        let listContext = HardcodedScopes.children(of: task.id).compose(with: context)
         self.pendingTaskProvider = .init(listContext: listContext)
     }
     

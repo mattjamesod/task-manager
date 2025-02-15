@@ -34,7 +34,7 @@ extension Database {
             )
         }
         
-        fileprivate init(
+        init(
             name: String,
             symbolName: String = "list.bullet.indent",
             allowsTaskEntry: Bool = true,
@@ -72,91 +72,6 @@ extension Database {
             self.updatedAt = Date.now
             self.deletedAt = nil
         }
-        
-        public static let allActiveTasks: Scope = .init(
-            name: "Active",
-            tableExpression: { base in
-                let table = Schema.Tasks.baseExpression
-                
-                return base
-                    .filter(table[Schema.Tasks.completedAt] == nil && table[Schema.Tasks.deletedAt] == nil)
-                    .order(table[Schema.Tasks.createdAt].asc)
-            },
-            modelScopingRules: { base in
-                base.cloned(suchThat: \.completedAt, \.deletedAt, are: nil, nil)
-            }
-        )
-        
-        public static let completedTasks: Scope = .init(
-            name: "Completed",
-            symbolName: "checkmark",
-            allowsTaskEntry: false,
-            insertArguments: [
-                Schema.Tasks.completedAt <- Date.now
-            ],
-            tableExpression: { base in
-                let table = Schema.Tasks.baseExpression
-                
-                return base
-                    .filter(table[Schema.Tasks.completedAt] != nil && table[Schema.Tasks.deletedAt] == nil)
-                    .order(table[Schema.Tasks.createdAt].asc)
-            },
-            modelScopingRules: { base in
-                base.cloned(suchThat: \.completedAt, \.deletedAt, are: Date.now, nil)
-            }
-        )
-        
-        public static let orphaned: Scope = .init(
-            name: "Orphaned",
-            tableExpression: { base in
-                let tasks = Schema.Tasks.baseExpression
-                let cte = Table("cte")
-                
-                return base
-                    .with(cte, as: base.select(Schema.Tasks.id))
-                    .join(.leftOuter, cte, on: tasks[Schema.Tasks.parentID] == cte[Schema.Tasks.id])
-                    .select(Schema.Tasks.baseExpression[*])
-                    .filter(cte[SQLite.Expression<Int?>("id")] == nil)
-                },
-            modelScopingRules: { base in
-                // not all tasks returned by the query will have this property,
-                // but this gaurentees a new task created in this context will match
-                base.cloned(suchThat: \.parentID, is: nil)
-            }
-        )
-        
-        public static func children(of parentID: UUID?) -> Scope {
-            .init(
-                name: "Children of \(parentID)",
-                insertArguments: [
-                    Schema.Tasks.parentID <- parentID
-                ],
-                tableExpression: { base in
-                    let tasks = Schema.Tasks.baseExpression
-                    return base.filter(tasks[Schema.Tasks.parentID] == parentID)
-                },
-                modelScopingRules: { base in
-                    base.cloned(suchThat: \.parentID, is: parentID)
-                }
-            )
-        }
-        
-        public static let deletedTasks: Scope = .init(
-            name: "Deleted",
-            symbolName: "trash",
-            allowsTaskEntry: false,
-            insertArguments: [
-                Schema.Tasks.deletedAt <- Date.now
-            ],
-            tableExpression: { base in
-                base
-                    .filter(Schema.Tasks.deletedAt != nil)
-                    .order(Schema.Tasks.deletedAt.asc)
-            },
-            modelScopingRules: { base in
-                base.cloned(suchThat: \.deletedAt, is: Date.now)
-            }
-        )
     }
 }
 

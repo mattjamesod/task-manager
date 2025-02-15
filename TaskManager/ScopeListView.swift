@@ -23,9 +23,9 @@ struct ScopeNavigation: View {
 
 struct ScopeListView: View {
     let hardCodedScopes: [Database.Scope] = [
-        .allActiveTasks,
-        .completedTasks,
-        .deletedTasks
+        HardcodedScopes.allActiveTasks,
+        HardcodedScopes.completedTasks,
+        HardcodedScopes.deletedTasks
     ]
     
     @Namespace private var namespace

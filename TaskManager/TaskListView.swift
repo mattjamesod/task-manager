@@ -22,7 +22,7 @@ struct TaskListView: View {
     init(parentID: UUID?, monitor: QueryMonitor<TaskContainer>?) {
         self.taskContainer = TaskContainer(filter: { $0.parentID == parentID })
         self.monitor = monitor
-        self.detailQuery = .children(of: parentID)
+        self.detailQuery = HardcodedScopes.children(of: parentID)
     }
     
     var body: some View {

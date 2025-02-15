@@ -28,7 +28,7 @@ class TaskHierarchyViewModel {
         )
         
         await orphanMonitor.waitForChanges(
-            query.compose(with: .orphaned), recursive: true, on: database
+            query.compose(with: HardcodedScopes.orphaned), recursive: true, on: database
         )
     }
     
@@ -59,7 +59,7 @@ struct TaskHierarchyView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .containerPadding(axis: .horizontal)
             
-            TaskListView(.orphaned, monitor: viewModel.orphanMonitor)
+            TaskListView(HardcodedScopes.orphaned, monitor: viewModel.orphanMonitor)
                 .environment(\.taskListMonitor, viewModel.taskListMonitor)
         }
         .environment(\.contextQuery, viewModel.query)
