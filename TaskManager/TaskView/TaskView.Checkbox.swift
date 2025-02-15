@@ -32,8 +32,7 @@ extension TaskView {
         }
         
         var body: some View {
-            Self._printChanges()
-            return Toggle(isOn: $isOn) {
+            Toggle(isOn: $isOn) {
                 ZStack {
                     RoundedRectangle(cornerRadius: self.checkboxWidth / 3)
                         .strokeBorder(style: .init(

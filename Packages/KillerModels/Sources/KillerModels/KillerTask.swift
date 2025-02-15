@@ -45,12 +45,6 @@ public struct KillerTask: Sendable, Identifiable, Equatable, Clonable, Timestamp
     public var deletedAt: Date?
 }
 
-public protocol RecursiveData: Identifiable {
-    var parentID: Self.ID? { get }
-}
-
-extension KillerTask: RecursiveData { }
-
 public protocol Timestamped {
     var createdAt: Date? { get }
     var updatedAt: Date? { get set }

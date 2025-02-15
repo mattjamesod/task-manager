@@ -2,6 +2,8 @@ import KillerModels
 import CloudKit
 @preconcurrency import SQLite
 
+extension KillerTask: RecursiveData { }
+
 extension KillerTask: SchemaBacked {
     public typealias Schema = Database.Schema.Tasks
     

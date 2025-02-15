@@ -14,6 +14,29 @@ struct KillerCriterion: Sendable, Identifiable, Timestamped {
         case orphaned = 9
     }
     
+    enum ComparisonProperty: Int {
+        case createdAt = 0
+        case updatedAt = 1
+        case deletedAt = 2
+        case completedAt = 3
+        case parentID = 4
+        
+//        var value: KeyPath<KillerCriterion, Optional<Any.Type>> {
+//            switch self {
+//            case .createdAt:
+//                \.comparisonValueDate
+//            case .updatedAt:
+//                \.comparisonValueDate
+//            case .deletedAt:
+//                \.comparisonValueDate
+//            case .completedAt:
+//                \.comparisonValueDate
+//            case .parentID:
+//                \.comparisonValueInt
+//            }
+//        }
+    }
+    
     public let id: UUID
     
     public var createdAt: Date?
@@ -21,13 +44,7 @@ struct KillerCriterion: Sendable, Identifiable, Timestamped {
     public var deletedAt: Date?
     
     public var kind: Kind
-    public var comparisonPropertyKey: Int
-    
-//    public var comparisonProperty: ModelType.ComparisonProperty
-}
-
-protocol CriterionApplicable {
-    associatedtype ComparisonProperty
-    
-    
+    public var comparisonProperty: ComparisonProperty
+    public var comparisonValueInt: Int?
+    public var comparisonValueDate: Date?
 }
