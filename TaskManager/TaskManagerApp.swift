@@ -1,4 +1,5 @@
 import SwiftUI
+import KillerModels
 import KillerData
 import CloudKit
 import KillerNavigation
@@ -23,6 +24,8 @@ struct TaskManagerApp: App {
         
         do {
             let database = try helper.setupDatabase()
+            
+            database.registry.register(KillerTask.self, as: "KillerTask")
             
             self.database = database
             self.cloudKitMonitor = database.enableCloudkitUpload()

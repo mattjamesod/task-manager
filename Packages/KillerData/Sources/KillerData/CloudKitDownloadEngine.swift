@@ -1,12 +1,7 @@
-import KillerModels
 import CloudKit
 @preconcurrency import SQLite
 
 public actor CloudKitDownloadEngine {
-    let typeRegistry: [String: any DataBacked.Type] = [
-        "KillerTask": KillerTask.self
-    ]
-    
     private let database: Database
     private let client: CloudKitClient
     
@@ -36,7 +31,7 @@ public actor CloudKitDownloadEngine {
         let partitionedCloudRecords = Dictionary(grouping: modifications.map(\.record), by: \.recordType)
         
         for partition in partitionedCloudRecords {
-            guard let modelType = typeRegistry[partition.key] else { continue }
+            guard let modelType = database.registry.fetch(partition.key) else { continue }
             
             let localRecords = await matchRecords(modelType, partition.value)
             
@@ -66,7 +61,7 @@ public actor CloudKitDownloadEngine {
         let partitions = Dictionary(grouping: deletions, by: \.recordType)
         
         for partition in partitions {
-            guard let modelType = typeRegistry[partition.key] else { continue }
+            guard let modelType = database.registry.fetch(partition.key) else { continue }
             
             let localRecords = await fetchRecords(modelType, partition.value.map(\.recordID))
             

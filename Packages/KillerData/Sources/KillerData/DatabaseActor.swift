@@ -50,6 +50,8 @@ public actor Database {
     let schema: SchemaDescription
     private let connection: Connection
     
+    nonisolated public let registry: ModelRegistry = .init()
+    
     private let history: MutationHistory = .init()
     
     public func undo() async { await history.undo() }
