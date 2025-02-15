@@ -47,9 +47,9 @@ struct TaskScopeView: View {
     @State var state: TaskContainerState = .loading
     @State var pendingTaskProvider: PendingTaskProvider
     
-    let scope: Database.Scope
+    let scope: Database.Scope<KillerTask>
     
-    init(scope: Database.Scope) {
+    init(scope: Database.Scope<KillerTask>) {
         self.scope = scope
         self.pendingTaskProvider = .init(listContext: scope)
     }

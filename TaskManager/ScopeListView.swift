@@ -4,12 +4,12 @@ import KillerStyle
 import KillerNavigation
 
 extension EnvironmentValues {
-    @Entry var selectedScope: Binding<Database.Scope?>?
+    @Entry var selectedScope: Binding<Database.Scope<KillerTask>?>?
 }
 
 struct ScopeNavigation: View {
     @Environment(\.database) var database
-    @State var selection: Database.Scope?
+    @State var selection: Database.Scope<KillerTask>?
     
     var body: some View {
         KillerNavigation.Flexible(
@@ -22,14 +22,14 @@ struct ScopeNavigation: View {
 }
 
 struct ScopeListView: View {
-    let hardCodedScopes: [Database.Scope] = [
+    let hardCodedScopes: [Database.Scope<KillerTask>] = [
         HardcodedScopes.allActiveTasks,
         HardcodedScopes.completedTasks,
         HardcodedScopes.deletedTasks
     ]
     
     @Namespace private var namespace
-    @Binding var selectedScope: Database.Scope?
+    @Binding var selectedScope: Database.Scope<KillerTask>?
     
     var body: some View {
         ScrollView {

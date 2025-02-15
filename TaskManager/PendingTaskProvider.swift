@@ -10,7 +10,7 @@ import KillerModels
 
 @Observable @MainActor
 class PendingTaskProvider {
-    init(listContext: Database.Scope?) {
+    init(listContext: Database.Scope<KillerTask>?) {
         self.context = listContext
         self.task = nil
     }
@@ -18,7 +18,7 @@ class PendingTaskProvider {
     var task: KillerTask?
     
     private var shortCircuit: Bool = false
-    private let context: Database.Scope?
+    private let context: Database.Scope<KillerTask>?
     private var monitorTask: Task<Void, Never>? = nil
     private var thread: AsyncMessageHandler<DatabaseMessage>.Thread? = nil
     
@@ -73,7 +73,7 @@ class PendingTaskProvider {
 }
 
 extension KillerTask {
-    static func empty(context: Database.Scope? = nil) -> KillerTask {
+    static func empty(context: Database.Scope<KillerTask>? = nil) -> KillerTask {
         let base = KillerTask(
             id: UUID(),
             body: "",

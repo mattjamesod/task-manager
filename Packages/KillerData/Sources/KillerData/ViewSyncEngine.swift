@@ -22,9 +22,9 @@ public enum SyncResult<Model: Sendable>: Sendable {
 
 actor ViewSyncEngine<Model: SchemaBacked & Identifiable> {
     let database: Database
-    let query: Database.Scope
+    let query: Database.Scope<Model>
     
-    init(for database: Database, context query: Database.Scope) {
+    init(for database: Database, context query: Database.Scope<Model>) {
         self.database = database
         self.query = query
     }

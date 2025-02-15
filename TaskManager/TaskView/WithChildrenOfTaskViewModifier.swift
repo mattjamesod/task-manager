@@ -3,7 +3,7 @@ import KillerData
 import KillerModels
 
 extension View {
-    func withChildren(of task: KillerTask, context: Database.Scope? = nil) -> some View {
+    func withChildren(of task: KillerTask, context: Database.Scope<KillerTask>? = nil) -> some View {
         modifier(WithChildrenOfTaskViewModifier(task: task, context: context))
     }
 }
@@ -12,7 +12,7 @@ fileprivate struct WithChildrenOfTaskViewModifier: ViewModifier {
     @Environment(\.taskListMonitor) var taskListMonitor
     @State var pendingTaskProvider: PendingTaskProvider
     
-    init(task: KillerTask, context: Database.Scope?) {
+    init(task: KillerTask, context: Database.Scope<KillerTask>?) {
         self.task = task
         
         let listContext = HardcodedScopes.children(of: task.id).compose(with: context)

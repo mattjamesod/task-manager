@@ -5,7 +5,7 @@ import KillerModels
 public struct HardcodedScopes {
     typealias TaskSchema = Database.Schema.Tasks
     
-    public static let allActiveTasks: Database.Scope = .init(
+    public static let allActiveTasks: Database.Scope<KillerTask> = .init(
         name: "Active",
         tableExpression: { base in
             let table = TaskSchema.baseExpression
@@ -19,7 +19,7 @@ public struct HardcodedScopes {
         }
     )
     
-    public static let completedTasks: Database.Scope = .init(
+    public static let completedTasks: Database.Scope<KillerTask> = .init(
         name: "Completed",
         symbolName: "checkmark",
         allowsTaskEntry: false,
@@ -38,7 +38,7 @@ public struct HardcodedScopes {
         }
     )
     
-    public static let orphaned: Database.Scope = .init(
+    public static let orphaned: Database.Scope<KillerTask> = .init(
         name: "Orphaned",
         tableExpression: { base in
             let tasks = TaskSchema.baseExpression
@@ -57,7 +57,7 @@ public struct HardcodedScopes {
         }
     )
     
-    public static func children(of parentID: UUID?) -> Database.Scope {
+    public static func children(of parentID: UUID?) -> Database.Scope<KillerTask> {
         .init(
             name: "Children of \(parentID)",
             insertArguments: [
@@ -73,7 +73,7 @@ public struct HardcodedScopes {
         )
     }
     
-    public static let deletedTasks: Database.Scope = .init(
+    public static let deletedTasks: Database.Scope<KillerTask> = .init(
         name: "Deleted",
         symbolName: "trash",
         allowsTaskEntry: false,

@@ -103,7 +103,7 @@ public actor Database {
         try! Database(schema: .testing, connection: Connection())
     }
     
-    public func fetch<Model: SchemaBacked>(_ type: Model.Type, context: Database.Scope?) -> [Model] {
+    public func fetch<Model: SchemaBacked>(_ type: Model.Type, context: Database.Scope<Model>?) -> [Model] {
         do {
             let table = Model.Schema.baseExpression
             let query = context?.apply(table) ?? table
@@ -120,7 +120,7 @@ public actor Database {
         }
     }
     
-    public func pluck<Model: SchemaBacked>(_ type: Model.Type, id: UUID, context: Database.Scope? = nil) -> Model? {
+    public func pluck<Model: SchemaBacked>(_ type: Model.Type, id: UUID, context: Database.Scope<Model>? = nil) -> Model? {
         do {
             let table = Model.Schema.baseExpression
             let query = context?.apply(table) ?? table
@@ -141,7 +141,7 @@ public actor Database {
         }
     }
     
-    public func fetch<Model: SchemaBacked>(_ type: Model.Type, ids: Set<UUID>, context: Database.Scope? = nil) -> [Model] {
+    public func fetch<Model: SchemaBacked>(_ type: Model.Type, ids: Set<UUID>, context: Database.Scope<Model>? = nil) -> [Model] {
         do {
             let table = Model.Schema.baseExpression
             let query = context?.apply(table) ?? table
@@ -160,7 +160,7 @@ public actor Database {
         }
     }
     
-    public func fetchRecursive<Model: SchemaBacked & RecursiveData>(_ type: Model.Type, ids: Set<UUID>, context: Database.Scope? = nil) -> [Model] {
+    public func fetchRecursive<Model: SchemaBacked & RecursiveData>(_ type: Model.Type, ids: Set<UUID>, context: Database.Scope<Model>? = nil) -> [Model] {
         do {
             let table = Model.Schema.baseExpression
             let query = context?.apply(table) ?? table
@@ -184,7 +184,7 @@ public actor Database {
     
     public func fetchChildren<Model: SchemaBacked>(
         _ type: Model.Type, id: UUID?,
-        context: Database.Scope? = nil
+        context: Database.Scope<Model>? = nil
     ) -> [Model] where Model : RecursiveData {
         do {
             let table = Model.Schema.baseExpression
@@ -201,7 +201,7 @@ public actor Database {
         }
     }
     
-    public func count<Model: SchemaBacked>(_ type: Model.Type, query: Database.Scope) -> Int {
+    public func count<Model: SchemaBacked>(_ type: Model.Type, query: Database.Scope<Model>) -> Int {
         do {
             return try connection.scalar(query.apply(Model.Schema.baseExpression).count)
         }
@@ -216,7 +216,7 @@ public actor Database {
     public func insert<Model: SchemaBacked, PropertyType1: SQLite.Value>(
         _ type: Model.Type,
         _ property1: PropertyArgument<Model, PropertyType1>,
-        context: Database.Scope? = nil
+        context: Database.Scope<Model>? = nil
     ) async {
         let id = UUID()
         let creation = Model.creationProperties()
@@ -239,7 +239,7 @@ public actor Database {
         _ type: Model.Type,
         _ property1: PropertyArgument<Model, PropertyType1>,
         _ property2: PropertyArgument<Model, PropertyType2>,
-        context: Database.Scope? = nil
+        context: Database.Scope<Model>? = nil
     ) async {
         let id = UUID()
         let creation = Model.creationProperties()
@@ -405,7 +405,7 @@ public actor Database {
     public func update<Model: SchemaBacked & RecursiveData, PropertyType1: SQLite.Value>(
         _ model: Model,
         recursive: Bool = false,
-        context query: Database.Scope? = nil,
+        context query: Database.Scope<Model>? = nil,
         _ property1: PropertyArgument<Model, PropertyType1>
     ) async {
         let id = model.id

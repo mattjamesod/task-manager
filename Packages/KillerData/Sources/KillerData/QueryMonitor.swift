@@ -25,7 +25,7 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
         registeredStateContainers.remove(at: index)
     }
     
-    public func waitForChanges(_ query: Database.Scope, on database: Database) async {
+    public func waitForChanges(_ query: Database.Scope<StateContainer.Model>, on database: Database) async {
         self.log("started monitoring")
         dbMessageThread = await database.subscribe(to: StateContainer.Model.self)
         let syncEngine = ViewSyncEngine<StateContainer.Model>(for: database, context: query)
@@ -51,7 +51,7 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
         }
     }
     
-    public func waitForChanges(_ query: Database.Scope, recursive: Bool, on database: Database) async where StateContainer.Model: RecursiveData {
+    public func waitForChanges(_ query: Database.Scope<StateContainer.Model>, recursive: Bool, on database: Database) async where StateContainer.Model: RecursiveData {
         self.log("started monitoring")
         dbMessageThread = await database.subscribe(to: StateContainer.Model.self)
         let syncEngine = ViewSyncEngine<StateContainer.Model>(for: database, context: query)

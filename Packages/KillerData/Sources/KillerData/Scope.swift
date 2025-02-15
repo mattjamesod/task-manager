@@ -3,14 +3,14 @@ import Foundation
 import KillerModels
 
 extension Database {
-    public struct Scope: Identifiable, Sendable {
+    public struct Scope<Model>: Identifiable, Sendable {
         public let id: Int
         public let name: String
         public let symbolName: String
         public let allowsTaskEntry: Bool
         
         public let apply: @Sendable (SQLite.Table) -> (SQLite.Table)
-        public let applyToModel: @Sendable (KillerTask) -> (KillerTask)
+        public let applyToModel: @Sendable (Model) -> (Model)
         
         public let createdAt: Date
         public var updatedAt: Date
@@ -40,7 +40,7 @@ extension Database {
             allowsTaskEntry: Bool = true,
             insertArguments: [Setter] = [],
             tableExpression: @escaping @Sendable (SQLite.Table) -> (SQLite.Table),
-            modelScopingRules: @escaping @Sendable (KillerTask) -> (KillerTask)
+            modelScopingRules: @escaping @Sendable (Model) -> (Model)
         ) {
             self.name = name
             self.symbolName = symbolName
@@ -75,13 +75,13 @@ extension Database {
     }
 }
 
-extension Database.Scope: Equatable {
-    public static func ==(lhs: Database.Scope, rhs: Database.Scope) -> Bool {
+extension Database.Scope<KillerTask>: Equatable {
+    public static func ==(lhs: Database.Scope<KillerTask>, rhs: Database.Scope<KillerTask>) -> Bool {
         lhs.id == rhs.id
     }
 }
 
-extension Database.Scope: Hashable {
+extension Database.Scope<KillerTask>: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }

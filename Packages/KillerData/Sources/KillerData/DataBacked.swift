@@ -24,6 +24,46 @@ public protocol SchemaBacked: Sendable {
     var deletedAt: Date? { get }
 }
 
+struct AnySchemaBacked: SchemaBacked {
+    static func create(from databaseRecord: SQLite.Row) throws -> AnySchemaBacked {
+        <#code#>
+    }
+    
+    static func getSchemaExpression<T>(for keyPath: KeyPath<AnySchemaBacked, T>) throws -> SQLite.Expression<T> where T : SQLite.Value {
+        <#code#>
+    }
+    
+    static func getSchemaExpression<T>(optional keyPath: KeyPath<AnySchemaBacked, T?>) throws -> SQLite.Expression<T?> where T : SQLite.Value {
+        <#code#>
+    }
+    
+    func allProperties() -> [SQLite.Setter] {
+        <#code#>
+    }
+    
+    static func creationProperties() -> [SQLite.Setter] {
+        wrapped. .creationProperties()
+    }
+    
+    func duplicationProperties() -> [SQLite.Setter] {
+        wrapped.duplicationProperties()
+    }
+    
+    var id: UUID { wrapped.id }
+    var createdAt: Date? { wrapped.createdAt }
+    var updatedAt: Date? { wrapped.updatedAt }
+    var deletedAt: Date? { wrapped.deletedAt }
+    
+    private let wrapped: any SchemaBacked
+    
+    init(_ wrapped: any SchemaBacked) {
+        self.wrapped = wrapped
+    }
+    
+    
+}
+
+
 // MARK: - CloudKitBacked
 
 public protocol CloudKitBacked: Sendable {

@@ -4,7 +4,7 @@ import KillerData
 
 extension EnvironmentValues {
     @Entry var taskListMonitor: QueryMonitor<TaskContainer>? = nil
-    @Entry var contextQuery: Database.Scope? = nil
+    @Entry var contextQuery: Database.Scope<KillerTask>? = nil
 }
 
 @Observable @MainActor
@@ -12,9 +12,9 @@ class TaskHierarchyViewModel {
     let taskListMonitor: QueryMonitor<TaskContainer> = .init()
     let orphanMonitor: QueryMonitor<TaskContainer> = .init()
     
-    let query: Database.Scope
+    let query: Database.Scope<KillerTask>
     
-    init(query: Database.Scope) {
+    init(query: Database.Scope<KillerTask>) {
         self.query = query
     }
     
@@ -43,7 +43,7 @@ struct TaskHierarchyView: View {
     
     @State var viewModel: TaskHierarchyViewModel
     
-    init(scope: Database.Scope) {
+    init(scope: Database.Scope<KillerTask>) {
         self.viewModel = .init(query: scope)
     }
     

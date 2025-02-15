@@ -82,7 +82,7 @@ public actor CloudKitDownloadEngine {
     ) async -> [CKRecord : Model?] {
         let uuids = cloudRecords.compactMap { UUID(uuidString: $0.recordID.recordName) }
         
-        let scope = Database.Scope { table in
+        let scope = Database.Scope<Model> { table in
             table.filter(uuids.contains(Model.Schema.id))
         }
         
@@ -99,7 +99,7 @@ public actor CloudKitDownloadEngine {
     ) async -> [Model] {
         let uuids = cloudIDs.compactMap { UUID(uuidString: $0.recordName) }
         
-        let scope = Database.Scope { table in
+        let scope = Database.Scope<Model> { table in
             table.filter(uuids.contains(Model.Schema.id))
         }
         

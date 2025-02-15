@@ -11,9 +11,9 @@ struct TaskListView: View {
     @Environment(PendingTaskProvider.self) var pendingTaskProvider
     
     let monitor: QueryMonitor<TaskContainer>?
-    let detailQuery: Database.Scope?
+    let detailQuery: Database.Scope<KillerTask>?
     
-    init(_ detailQuery: Database.Scope? = nil, monitor: QueryMonitor<TaskContainer>) {
+    init(_ detailQuery: Database.Scope<KillerTask>? = nil, monitor: QueryMonitor<TaskContainer>) {
         self.taskContainer = TaskContainer()
         self.monitor = monitor
         self.detailQuery = detailQuery

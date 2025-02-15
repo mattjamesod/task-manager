@@ -40,12 +40,15 @@ extension Database {
             do {
                 switch message {
                 case .recordChange(let localType, let id, let _):
-                    guard let recordType = localType as? any DataBacked.Type else { return }
+//                    guard let recordType = localType as? any DataBacked.Type else { return }
+                    guard let recordType = localDatabase.registry.fetch("KillerTask") else { return }
                     guard let record = await localDatabase.pluck(recordType, id: id) else { return }
                     
                     try await engine.handleRecordChanged(record)
                 case .recordsChanged(let localType, let ids, let _):
-                    guard let recordType = localType as? any DataBacked.Type else { return }
+//                    guard let recordType = localType as? any DataBacked.Type else { return }
+                    
+                    guard let recordType = localDatabase.registry.fetch("KillerTask") else { return }
                     let records = await localDatabase.fetch(recordType, ids: ids)
                     
                     let castRecords = records.map(AnyCloudKitBacked.init)
