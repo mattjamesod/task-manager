@@ -74,7 +74,6 @@ func buildCloudID(id: UUID) -> CKRecord.ID {
     CKRecord.ID(recordName: id.uuidString, zoneID: CloudKitZone.userData.id)
 }
 
-
 extension KillerTask: CloudKitBacked {
     public var cloudID: CKRecord.ID {
         buildCloudID(id: self.id)
