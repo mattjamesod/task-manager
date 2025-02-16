@@ -70,13 +70,14 @@ extension KillerTask: SchemaBacked {
     ] }
 }
 
+func buildCloudID(id: UUID) -> CKRecord.ID {
+    CKRecord.ID(recordName: id.uuidString, zoneID: CloudKitZone.userData.id)
+}
+
+
 extension KillerTask: CloudKitBacked {
-    static func buildCloudID(id: UUID) -> CKRecord.ID {
-        CKRecord.ID(recordName: id.uuidString, zoneID: CloudKitZone.userData.id)
-    }
-    
     public var cloudID: CKRecord.ID {
-        Self.buildCloudID(id: self.id)
+        buildCloudID(id: self.id)
     }
     
     public var cloudBackedProperties: [String : Any] { [

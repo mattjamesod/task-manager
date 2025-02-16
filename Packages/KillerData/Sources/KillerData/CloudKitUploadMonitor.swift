@@ -52,9 +52,9 @@ extension Database {
                     
                     try await engine.handleRecordsChanged(castRecords)
                 case .recordDeleted(let _, let id, let _):
-                    try await engine.handleRecordDeleted(KillerTask.buildCloudID(id: id))
+                    try await engine.handleRecordDeleted(buildCloudID(id: id))
                 case .recordsDeleted(let _, let ids, let _):
-                    try await engine.handleRecordsDeleted(ids.map { KillerTask.buildCloudID(id: $0) })
+                    try await engine.handleRecordsDeleted(ids.map { buildCloudID(id: $0) })
                 }
             }
             catch {
