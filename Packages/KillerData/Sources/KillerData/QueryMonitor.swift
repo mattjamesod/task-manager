@@ -1,7 +1,6 @@
 @preconcurrency import SQLite
 import Foundation
 import Logging
-import KillerModels
 
 public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomConsoleLogger {
     public init() {  }

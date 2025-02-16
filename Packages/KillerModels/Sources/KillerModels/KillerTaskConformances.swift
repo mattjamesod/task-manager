@@ -1,4 +1,4 @@
-import KillerModels
+import KillerData
 import CloudKit
 @preconcurrency import SQLite
 
@@ -70,13 +70,9 @@ extension KillerTask: SchemaBacked {
     ] }
 }
 
-func buildCloudID(id: UUID) -> CKRecord.ID {
-    CKRecord.ID(recordName: id.uuidString, zoneID: CloudKitZone.userData.id)
-}
-
 extension KillerTask: CloudKitBacked {
     public var cloudID: CKRecord.ID {
-        buildCloudID(id: self.id)
+        CKRecord.ID.from(id: self.id)
     }
     
     public var cloudBackedProperties: [String : Any] { [
@@ -92,12 +88,12 @@ extension KillerTask: CloudKitBacked {
 extension KillerTask: DataBacked {
     // TODO: encode these defaults and key names somewhere sensible
     public static func databaseSetters(from cloudRecord: CKRecord) -> [Setter] { [
-        KillerTask.Schema.body <- cloudRecord.value(forKey: "body") as? String ?? "",
-        KillerTask.Schema.completedAt <- cloudRecord.value(forKey: "completedAt") as? Date,
-        KillerTask.Schema.parentID <- parentID(from: cloudRecord),
-        KillerTask.Schema.createdAt <- cloudRecord.value(forKey: "createdAt") as? Date ?? Date.now,
-        KillerTask.Schema.updatedAt <- cloudRecord.value(forKey: "updatedAt") as? Date ?? Date.now,
-        KillerTask.Schema.deletedAt <- cloudRecord.value(forKey: "deletedAt") as? Date,
+        KillerTask.Schema.body <- (cloudRecord.value(forKey: "body") as? String ?? ""),
+        KillerTask.Schema.completedAt <- (cloudRecord.value(forKey: "completedAt") as? Date),
+        KillerTask.Schema.parentID <- (parentID(from: cloudRecord)),
+        KillerTask.Schema.createdAt <- (cloudRecord.value(forKey: "createdAt") as? Date ?? Date.now),
+        KillerTask.Schema.updatedAt <- (cloudRecord.value(forKey: "updatedAt") as? Date ?? Date.now),
+        KillerTask.Schema.deletedAt <- (cloudRecord.value(forKey: "deletedAt") as? Date),
     ] }
     
     private static func parentID(from cloudRecord: CKRecord) -> UUID? {

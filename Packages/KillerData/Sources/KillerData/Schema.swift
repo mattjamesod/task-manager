@@ -1,7 +1,6 @@
 import Foundation
 import AsyncAlgorithms
 @preconcurrency import SQLite
-import KillerModels
 
 public protocol TableSchema {
     static var baseExpression: SQLite.Table { get }
@@ -21,9 +20,9 @@ extension Database {
             public static let updatedAt = SQLite.Expression<Date?>("updatedAt")
             public static let deletedAt = SQLite.Expression<Date?>("deletedAt")
             
-            static let parentID = SQLite.Expression<UUID?>("parentID")
-            static let body = SQLite.Expression<String>("body")
-            static let completedAt = SQLite.Expression<Date?>("completedAt")
+            public static let parentID = SQLite.Expression<UUID?>("parentID")
+            public static let body = SQLite.Expression<String>("body")
+            public static let completedAt = SQLite.Expression<Date?>("completedAt")
             
             static var create: String {
                 self.baseExpression.create(ifNotExists: true, withoutRowid: true) {

@@ -11,9 +11,17 @@ let package = Package(
             name: "KillerModels",
             targets: ["KillerModels"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/stephencelis/SQLite.swift.git", from: "0.15.3"),
+        .package(path: "../KillerData"),
+    ],
     targets: [
         .target(
-            name: "KillerModels"
+            name: "KillerModels",
+            dependencies: [
+                .product(name: "SQLite", package: "SQLite.swift"),
+                "KillerData",
+            ]
         ),
     ]
 )

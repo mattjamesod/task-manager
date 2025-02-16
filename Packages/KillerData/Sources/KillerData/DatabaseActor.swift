@@ -1,7 +1,6 @@
 @preconcurrency import SQLite
 import SwiftUI
 import UtilExtensions
-import KillerModels
 
 enum DatabaseConnectionError: Error {
     case couldNotAccessDocumentsDirectory

@@ -1,6 +1,5 @@
 @preconcurrency import SQLite
 import Foundation
-import KillerModels
 
 extension Database {
     public struct Scope<Model>: Identifiable, Sendable {
@@ -34,7 +33,7 @@ extension Database {
             )
         }
         
-        init(
+        public init(
             name: String,
             symbolName: String = "list.bullet.indent",
             allowsTaskEntry: Bool = true,

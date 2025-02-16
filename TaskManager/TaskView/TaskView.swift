@@ -63,7 +63,7 @@ struct TaskView: View {
             Divider()
             Button.async(role: .destructive) {
                 let query = await self.contextQuery
-                await database?.update(task, recursive: true, context: query, \.deletedAt <- Date.now)
+                await database?.update(task, recursive: true, context: query, \.deletedAt <<- Date.now)
             } label: {
                 Label("Delete", systemImage: "trash")
             }

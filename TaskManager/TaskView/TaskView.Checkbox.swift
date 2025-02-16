@@ -65,10 +65,10 @@ extension TaskView {
                     try? await Task.sleep(for: self.delay)
                     
                     if isOn {
-                        await database?.update(task, recursive: true, context: self.query, \.completedAt <- Date.now)
+                        await database?.update(task, recursive: true, context: self.query, \.completedAt <<- Date.now)
                     }
                     else {
-                        await database?.update(task, recursive: true, context: self.query, \.completedAt <- nil)
+                        await database?.update(task, recursive: true, context: self.query, \.completedAt <<- nil)
                     }
                 }
             }

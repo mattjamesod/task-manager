@@ -1,6 +1,6 @@
 @preconcurrency import SQLite
 import Foundation
-import KillerModels
+import KillerData
 
 public struct HardcodedScopes {
     typealias TaskSchema = Database.Schema.Tasks

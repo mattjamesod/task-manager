@@ -1,5 +1,4 @@
 import Foundation
-import KillerModels
 
 @MainActor
 public protocol SynchronisedStateContainer: Identifiable, Sendable, AnyObject {

@@ -1,4 +1,3 @@
-import KillerModels
 import Foundation
 import CloudKit
 
@@ -52,9 +51,9 @@ extension Database {
                     
                     try await engine.handleRecordsChanged(castRecords)
                 case .recordDeleted(let _, let id, let _):
-                    try await engine.handleRecordDeleted(buildCloudID(id: id))
+                    try await engine.handleRecordDeleted(CKRecord.ID.from(id: id))
                 case .recordsDeleted(let _, let ids, let _):
-                    try await engine.handleRecordsDeleted(ids.map { buildCloudID(id: $0) })
+                    try await engine.handleRecordsDeleted(ids.map { CKRecord.ID.from(id: $0) })
                 }
             }
             catch {
@@ -67,3 +66,8 @@ extension Database {
     }
 }
 
+public extension CKRecord.ID {
+    public static func from(id: UUID) -> CKRecord.ID {
+        CKRecord.ID(recordName: id.uuidString, zoneID: CloudKitZone.userData.id)
+    }
+}

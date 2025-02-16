@@ -1,12 +1,12 @@
 import SQLite
 
-infix operator <-
+infix operator <<-
 
-public func <-<Model: SchemaBacked, T: SQLite.Value>(keyPath: WritableKeyPath<Model, T>, value: T) -> PropertyArgument<Model, T> {
+public func <<-<Model: SchemaBacked, T: SQLite.Value>(keyPath: WritableKeyPath<Model, T>, value: T) -> PropertyArgument<Model, T> {
     PropertyArgument(keyPath, value)
 }
 
-public func <-<Model: SchemaBacked, T: SQLite.Value>(keyPath: WritableKeyPath<Model, T?>, value: T?) -> PropertyArgument<Model, T> {
+public func <<-<Model: SchemaBacked, T: SQLite.Value>(keyPath: WritableKeyPath<Model, T?>, value: T?) -> PropertyArgument<Model, T> {
     PropertyArgument(keyPath, value)
 }
 

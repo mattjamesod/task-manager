@@ -19,7 +19,7 @@ extension TaskView {
                     guard permit() else { return }
                     
                     Task.detached {
-                        await database?.upsert(task, \.body <- taskBody)
+                        await database?.upsert(task, \.body <<- taskBody)
                     }
                 }
         }

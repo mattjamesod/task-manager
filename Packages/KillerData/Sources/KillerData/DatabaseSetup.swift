@@ -1,6 +1,5 @@
 import Foundation
 import SQLite
-import KillerModels
 
 public class DatabaseSetupHelper {
     private let schema: Database.SchemaDescription
