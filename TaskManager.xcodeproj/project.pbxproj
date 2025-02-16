@@ -43,7 +43,6 @@
 		A0891AD82D3D44780044AE63 /* TaskHierarchyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0891AD72D3D44730044AE63 /* TaskHierarchyView.swift */; };
 		A09B7A6E2C3B0DA500C01586 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = A09B7A6D2C3B0DA500C01586 /* AsyncAlgorithms */; };
 		A09BB03D2CD165FE00740468 /* TaskView.Checkbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = A09BB03C2CD165F800740468 /* TaskView.Checkbox.swift */; };
-		A0D1EBED2C26C5C7008636CB /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = A0D1EBEC2C26C5C7008636CB /* SQLite */; };
 		A0DB377C2C2DD02A00D17C00 /* KillerModels in Frameworks */ = {isa = PBXBuildFile; productRef = A0DB377B2C2DD02A00D17C00 /* KillerModels */; };
 		A0DB37812C2E0ED200D17C00 /* KillerModels in Frameworks */ = {isa = PBXBuildFile; productRef = A0DB37802C2E0ED200D17C00 /* KillerModels */; };
 /* End PBXBuildFile section */
@@ -106,7 +105,6 @@
 			files = (
 				A06498722C7B4D4C005C545B /* Logging in Frameworks */,
 				A06498782C7B4D4C005C545B /* UtilViews in Frameworks */,
-				A0D1EBED2C26C5C7008636CB /* SQLite in Frameworks */,
 				A09B7A6E2C3B0DA500C01586 /* AsyncAlgorithms in Frameworks */,
 				A0456FE12C2EA10200DC2879 /* KillerModels in Frameworks */,
 				A06498742C7B4D4C005C545B /* UtilAlgorithms in Frameworks */,
@@ -239,7 +237,6 @@
 			);
 			name = TaskManager;
 			packageProductDependencies = (
-				A0D1EBEC2C26C5C7008636CB /* SQLite */,
 				A05115702C2DC08900923202 /* KillerModels */,
 				A0DB377B2C2DD02A00D17C00 /* KillerModels */,
 				A0DB37802C2E0ED200D17C00 /* KillerModels */,
@@ -326,7 +323,6 @@
 			);
 			mainGroup = A055B5B12C25E52200BCB5C2;
 			packageReferences = (
-				A0D1EBEB2C26C5C7008636CB /* XCRemoteSwiftPackageReference "SQLite" */,
 				A0456FDF2C2EA10200DC2879 /* XCLocalSwiftPackageReference "Packages/KillerModels" */,
 				A0456FE22C2EA11500DC2879 /* XCLocalSwiftPackageReference "Packages/KillerData" */,
 				A09B7A6C2C3B0DA500C01586 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
@@ -791,14 +787,6 @@
 				minimumVersion = 0.0.1;
 			};
 		};
-		A0D1EBEB2C26C5C7008636CB /* XCRemoteSwiftPackageReference "SQLite" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/stephencelis/SQLite.swift";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.15.3;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -842,11 +830,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A09B7A6C2C3B0DA500C01586 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
 			productName = AsyncAlgorithms;
-		};
-		A0D1EBEC2C26C5C7008636CB /* SQLite */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = A0D1EBEB2C26C5C7008636CB /* XCRemoteSwiftPackageReference "SQLite" */;
-			productName = SQLite;
 		};
 		A0DB377B2C2DD02A00D17C00 /* KillerModels */ = {
 			isa = XCSwiftPackageProductDependency;
