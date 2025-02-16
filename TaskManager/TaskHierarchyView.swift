@@ -1,6 +1,7 @@
 import SwiftUI
 import UtilViews
 import KillerData
+import KillerModels
 
 extension EnvironmentValues {
     @Entry var taskListMonitor: QueryMonitor<TaskContainer>? = nil

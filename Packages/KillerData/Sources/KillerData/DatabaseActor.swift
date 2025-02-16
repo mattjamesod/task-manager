@@ -120,6 +120,10 @@ public actor Database {
         }
     }
     
+    public func pluck<Model: SchemaBacked>(_ type: Model.Type, id: UUID) -> Model? {
+        self.pluck(type, id: id, context: nil)
+    }
+    
     public func pluck<Model: SchemaBacked>(_ type: Model.Type, id: UUID, context: Database.Scope<Model>? = nil) -> Model? {
         do {
             let table = Model.Schema.baseExpression
@@ -139,6 +143,10 @@ public actor Database {
             print("\(#file):\(#function):\(#line)")
             return nil
         }
+    }
+    
+    public func fetch<Model: SchemaBacked>(_ type: Model.Type, ids: Set<UUID>) -> [Model] {
+        self.fetch(type, ids: ids, context: nil)
     }
     
     public func fetch<Model: SchemaBacked>(_ type: Model.Type, ids: Set<UUID>, context: Database.Scope<Model>? = nil) -> [Model] {

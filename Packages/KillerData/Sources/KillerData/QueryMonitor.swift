@@ -33,8 +33,6 @@ public actor QueryMonitor<StateContainer: SynchronisedStateContainer>: CustomCon
         self.monitorTask = Task {
             guard let thread = self.dbMessageThread else { return }
             for await event in thread.events {
-                print("received event: \(event)")
-                
                 switch event {
                 case .recordChange(let _, let id, let _):
                     await push(syncResult: await syncEngine.sync(id))
