@@ -75,13 +75,13 @@ extension Database {
     }
 }
 
-extension Database.Scope<KillerTask>: Equatable {
-    public static func ==(lhs: Database.Scope<KillerTask>, rhs: Database.Scope<KillerTask>) -> Bool {
+extension Database.Scope: Equatable where Model: Identifiable {
+    public static func ==(lhs: Database.Scope<Model>, rhs: Database.Scope<Model>) -> Bool {
         lhs.id == rhs.id
     }
 }
 
-extension Database.Scope<KillerTask>: Hashable {
+extension Database.Scope: Hashable where Model: Identifiable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
