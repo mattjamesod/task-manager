@@ -1,9 +1,13 @@
 import SwiftUI
 import KillerStyle
 
+public protocol ProvidesNavigationHeader {
+    associatedtype HeaderContent: View
+    var headerContent: HeaderContent { get }
+}
+
 public extension KillerNavigation {
-    struct Stack<Selection: Hashable, SelectorView: View, ContentView: View>: View {
-        @Binding var selectionCache: [Selection]
+    struct Stack<Selection: Hashable & ProvidesNavigationHeader, SelectorView: View, ContentView: View>: View {
         @Binding var selection: Selection?
         
         let selectorView: (Binding<Selection?>) -> SelectorView
@@ -11,12 +15,10 @@ public extension KillerNavigation {
         
         public init(
             selection: Binding<Selection?>,
-            selectionCache: Binding<[Selection]>,
             selectorView: @escaping (Binding<Selection?>) -> SelectorView,
             contentView: @escaping (Selection) -> ContentView
         ) {
             self._selection = selection
-            self._selectionCache = selectionCache
             self.selectorView = selectorView
             self.contentView = contentView
         }
@@ -24,42 +26,42 @@ public extension KillerNavigation {
         public var body: some View {
             ZStack {
                 selectorView($selection)
-                    .scaleEffect(selection != nil ? 0.95 : 1)
+//                    .scaleEffect(selection != nil ? 0.95 : 1)
                     .backgroundFill(style: .ultraThinMaterial)
                     .brightness(selection != nil ? -0.05 : 0)
                 
                 // Group is weird here for unknown reasons, the animations don't play
                 ZStack {
-                        if let selection {
-                            contentView(selection)
-                                .backgroundFill()
-                                .safeAreaPadding(.top, 12)
-                                .safeAreaInset(edge: .top) {
-                                    self.backButton
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .buttonStyle(KillerInlineButtonStyle())
+                    if let selection {
+                        contentView(selection)
+                            .backgroundFill()
+                            .safeAreaInset(edge: .top) {
+                                VStack(spacing: 0) {
+                                    HStack {
+                                        self.backButton
+                                            .buttonStyle(KillerInlineButtonStyle())
+                                        
+                                        self.selection?.headerContent
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 12)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    
+                                    Divider()
                                 }
-                                .geometryGroup()
-                                .id(selection)
-                                .opacity(selection == self.selection ? 1 : 0)
-                                .transition(.move(edge: .trailing))
-                        }
-//                    ForEach(selectionCache, id: \.hashValue) { selection in
-//                        contentView(selection)
-//                            .backgroundFill()
-//                            .safeAreaPadding(.top, 12)
-//                            .safeAreaInset(edge: .top) {
-//                                self.backButton
-//                                    .frame(maxWidth: .infinity, alignment: .leading)
-//                                    .buttonStyle(KillerInlineButtonStyle())
-//                            }
-//                            .geometryGroup()
-//                            .id(selection)
-//                            .opacity(selection == self.selection ? 1 : 0)
-//                            .transition(.move(edge: .trailing))
-//                    }
+                                .background {
+                                    Rectangle()
+                                        .foregroundStyle(.ultraThinMaterial)
+                                        .ignoresSafeArea()
+                                }
+                            }
+                            .geometryGroup()
+                            .id(selection)
+                            .opacity(selection == self.selection ? 1 : 0)
+                            .onEdgeSwipe { self.selection = nil }
+                            .transition(.move(edge: .trailing))
+                    }
                 }
-                .onEdgeSwipe { selection = nil }
             }
             .animation(.interactiveSpring(duration: 0.4), value: selection)
         }

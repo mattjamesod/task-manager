@@ -49,6 +49,15 @@ public extension KillerNavigation {
                         contentView(selection)
                             .id(selection)
                     }
+                    else {
+                        ZStack {
+                            Rectangle()
+                                .foregroundStyle(.thickMaterial)
+                                .ignoresSafeArea()
+                            Text("Please select from the sidebar.")
+                                .fontWeight(.semibold)
+                        }
+                    }
 //                    ForEach(selectionCache, id: \.hashValue) { selection in
 //                        contentView(selection)
 //                            .id(selection)

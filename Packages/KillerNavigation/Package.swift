@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "KillerNavigation",
-    platforms: [.macOS(.v15), .iOS(.v18)],
+    platforms: [.macOS(.v15), .iOS(.v17)],
     products: [
         .library(
             name: "KillerNavigation",

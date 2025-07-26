@@ -141,7 +141,7 @@ actor CloudKitClient {
     
     func findOrCreateRecords<Model: CloudKitBacked>(
         for localRecords: [Model]
-    ) async throws(CloudKitResponseError) -> [RecordPair<Model>] {
+    ) async throws -> [RecordPair<Model>] { // future matthew - swift is crashing because of the signature, changing return type allows it to compile
         let cloudRecords = try await fetch(ids: localRecords.map(\.cloudID))
         let indexedLocalRecords = Dictionary(uniqueKeysWithValues: localRecords.map { ($0.cloudID, $0) })
         

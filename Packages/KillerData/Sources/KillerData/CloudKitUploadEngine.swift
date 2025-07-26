@@ -28,7 +28,7 @@ actor CloudKitUploadEngine: CustomConsoleLogger {
     
     func handleRecordsChanged<Model: CloudKitBacked>(
         _ localRecords: [Model]
-    ) async throws(CloudKitResponseError) {
+    ) async throws {
         log("CK handleRecordsChanged: \(localRecords.map(\.cloudID).map(\.recordName))")
         
         let recordPairs = try await client.findOrCreateRecords(for: localRecords)

@@ -22,6 +22,12 @@ struct ScopeNavigation: View {
     }
 }
 
+extension Database.Scope<KillerTask>: @retroactive ProvidesNavigationHeader {
+    public var headerContent: some View {
+        Text(self.name)
+    }
+}
+
 struct ScopeListView: View {
     let hardCodedScopes: [Database.Scope<KillerTask>] = [
         HardcodedScopes.allActiveTasks,

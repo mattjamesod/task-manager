@@ -22,20 +22,27 @@ struct EdgeSwipeViewModifier: ViewModifier {
     }
     
     func body(content: Content) -> some View {
-        content
-            .offset(x: dragAmount)
-            .gesture(
-                DragGesture()
-                    .onChanged { gesture in
-                        guard gesture.startLocation.x < threshold else { return }
-                        dragAmount = max(0, gesture.translation.width)
-                    }
-                    .onEnded { gesture in
-                        guard gesture.startLocation.x < threshold else { return }
-                        if gesture.translation.width > threshold { onSuccess() }
-                        withAnimation(.interactiveSpring(duration: 0.4)) { dragAmount = 0 }
-                    }
-            )
+        ZStack(alignment: .leading) {
+            content
+                .offset(x: dragAmount)
+            Rectangle()
+                .opacity(0)
+                .frame(width: threshold)
+                .contentShape(Rectangle())
+                .highPriorityGesture(
+                    DragGesture()
+                        .onChanged { gesture in
+                            guard gesture.startLocation.x < threshold else { return }
+                            dragAmount = max(0, gesture.translation.width)
+                        }
+                        .onEnded { gesture in
+                            guard gesture.startLocation.x < threshold else { return }
+                            if gesture.translation.width > threshold { onSuccess() }
+                            withAnimation(.interactiveSpring(duration: 0.4)) { dragAmount = 0 }
+                        }
+                )
+        }
+            
     }
 }
 

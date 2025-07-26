@@ -23,6 +23,7 @@ let package = Package(
             dependencies: [
                 .product(name: "SQLite", package: "SQLite.swift"),
                 .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
+                .product(name: "UtilViews", package: "AndHashUtilities"),
                 .product(name: "UtilExtensions", package: "AndHashUtilities"),
                 .product(name: "Logging", package: "AndHashUtilities"),
             ]

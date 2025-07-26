@@ -3,7 +3,7 @@ import SwiftUI
 public extension KillerNavigation {
     private static var flexibleBreakPoint: Double { sidebarContentMinWidth + sidebarMaxWidth }
     
-    struct Flexible<Selection: Hashable, SelectorView: View, ContentView: View>: View {
+    struct Flexible<Selection: Hashable & ProvidesNavigationHeader, SelectorView: View, ContentView: View>: View {
         @State var selectionCache: [Selection] = []
         
         @Binding var selection: Selection?
@@ -34,7 +34,6 @@ public extension KillerNavigation {
                                 
                 KillerNavigation.Stack(
                     selection: $selection,
-                    selectionCache: $selectionCache,
                     selectorView: selectorView,
                     contentView: contentView
                 )
