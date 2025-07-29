@@ -1,61 +1,67 @@
 {
   "images" : [
     {
-      "filename" : "Killer16.png",
+      "filename" : "Killer1024.png",
+      "idiom" : "universal",
+      "platform" : "ios",
+      "size" : "1024x1024"
+    },
+    {
+      "filename" : "mac16.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "16x16"
     },
     {
-      "filename" : "Killer32 1.png",
+      "filename" : "mac32 1.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "16x16"
     },
     {
-      "filename" : "Killer32.png",
+      "filename" : "mac32.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "32x32"
     },
     {
-      "filename" : "Killer64.png",
+      "filename" : "mac64.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "32x32"
     },
     {
-      "filename" : "Killer128.png",
+      "filename" : "mac128.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "128x128"
     },
     {
-      "filename" : "Killer256 1.png",
+      "filename" : "mac256 1.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "128x128"
     },
     {
-      "filename" : "Killer256.png",
+      "filename" : "mac256.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "256x256"
     },
     {
-      "filename" : "Killer512.png",
+      "filename" : "mac512 1.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "256x256"
     },
     {
-      "filename" : "Killer512 1.png",
+      "filename" : "mac512.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "512x512"
     },
     {
-      "filename" : "Killer1024.png",
+      "filename" : "mac1024.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "512x512"

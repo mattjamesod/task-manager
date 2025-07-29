@@ -41,11 +41,10 @@ struct ScopeListView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading) {
-                Text("Scopes")
-                    .fontWeight(.bold)
-                    .foregroundStyle(.gray)
-                    .fadeOutScrollTransition()
-                    .containerPadding(axis: .horizontal)
+//                Text("Scopes")
+//                    .font(.title2)
+//                    .fadeOutScrollTransition()
+//                    .containerPadding(axis: .horizontal)
                 
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(self.hardCodedScopes) { scope in
