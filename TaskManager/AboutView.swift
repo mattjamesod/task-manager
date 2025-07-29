@@ -40,7 +40,7 @@ struct AboutView: View {
                 .frame(width: 128)
             
             VStack(alignment: .leading, spacing: 8) {
-                Text("Scopes")
+                Text(Killer.appName)
                     .font(.title)
                     .fontWeight(.semibold)
                 VStack(alignment: .leading) {

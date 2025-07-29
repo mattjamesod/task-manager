@@ -54,7 +54,7 @@ struct TaskHierarchyView: View {
                 Text(viewModel.title)
                     .lineLimit(1)
                     .font(.title)
-                    .fontWeight(.semibold)
+                    .fontWeight(.regular)
             }
             .fadeOutScrollTransition()
             .frame(maxWidth: .infinity, alignment: .leading)

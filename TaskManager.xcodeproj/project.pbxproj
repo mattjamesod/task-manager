@@ -43,6 +43,7 @@
 		A0891AD82D3D44780044AE63 /* TaskHierarchyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0891AD72D3D44730044AE63 /* TaskHierarchyView.swift */; };
 		A09B7A6E2C3B0DA500C01586 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = A09B7A6D2C3B0DA500C01586 /* AsyncAlgorithms */; };
 		A09BB03D2CD165FE00740468 /* TaskView.Checkbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = A09BB03C2CD165F800740468 /* TaskView.Checkbox.swift */; };
+		A0DAB06E2E3948A200A98C48 /* Killer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0DAB06D2E3948A000A98C48 /* Killer.swift */; };
 		A0DB377C2C2DD02A00D17C00 /* KillerModels in Frameworks */ = {isa = PBXBuildFile; productRef = A0DB377B2C2DD02A00D17C00 /* KillerModels */; };
 		A0DB37812C2E0ED200D17C00 /* KillerModels in Frameworks */ = {isa = PBXBuildFile; productRef = A0DB37802C2E0ED200D17C00 /* KillerModels */; };
 /* End PBXBuildFile section */
@@ -96,6 +97,7 @@
 		A0891AD52D36D8520044AE63 /* WithChildrenOfTaskViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WithChildrenOfTaskViewModifier.swift; sourceTree = "<group>"; };
 		A0891AD72D3D44730044AE63 /* TaskHierarchyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskHierarchyView.swift; sourceTree = "<group>"; };
 		A09BB03C2CD165F800740468 /* TaskView.Checkbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskView.Checkbox.swift; sourceTree = "<group>"; };
+		A0DAB06D2E3948A000A98C48 /* Killer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Killer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -176,6 +178,7 @@
 		A055B5BC2C25E52200BCB5C2 /* TaskManager */ = {
 			isa = PBXGroup;
 			children = (
+				A0DAB06D2E3948A000A98C48 /* Killer.swift */,
 				A0456FE52C2FEAE900DC2879 /* Info.plist */,
 				A055B5BD2C25E52200BCB5C2 /* TaskManagerApp.swift */,
 				A06244A42CF46EA900F86255 /* KillerAppDelegate.swift */,
@@ -389,6 +392,7 @@
 				A03581E02C5771690078F59E /* TaskView.swift in Sources */,
 				A04E9EFC2D4AA4E200313133 /* TaskView.WillBeDeletedInMessage.swift in Sources */,
 				A04E9F032D4C144200313133 /* Selection.swift in Sources */,
+				A0DAB06E2E3948A200A98C48 /* Killer.swift in Sources */,
 				A04E9EFE2D4AA50F00313133 /* TaskView.SelectionBackground.swift in Sources */,
 				A003DE8B2C95711A005057A9 /* ScopeListView.swift in Sources */,
 				A06244A32CE4A5C100F86255 /* TaskContainerState.swift in Sources */,
