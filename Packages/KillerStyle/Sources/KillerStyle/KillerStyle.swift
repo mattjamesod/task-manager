@@ -128,6 +128,26 @@ public struct KillerInlineButtonStyle: ButtonStyle {
     }
 }
 
+public struct KillerFloatingButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) var isEnabled
+    
+    public init() { }
+    
+    public func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .contentShape(Rectangle())
+            .foregroundStyle(isEnabled ? Color.accentColor : Color.gray)
+            .containerPadding()
+            .containerPadding(axis: .horizontal)
+            .background {
+                Capsule()
+                    .foregroundStyle(.ultraThinMaterial)
+            }
+            .brightness(configuration.isPressed ? 0.1 : 0)
+            .animation(.easeInOut, value: configuration.isPressed)
+    }
+}
+
 struct BackgroundFillViewModifier<StyleType: ShapeStyle>: ViewModifier {
     let style: StyleType
     
